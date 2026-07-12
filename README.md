@@ -35,6 +35,11 @@ Most voice-AI demos are a single script. This is the whole loop, structured the
 way you'd actually ship it, and split into three pieces you can run, deploy, and
 swap independently.
 
+> This gets you a working voice agent you own. To turn it into a product you can
+> charge your users for (per-minute Stripe metered billing, auth, a call
+> dashboard, and one-command deploy), see [ShipVoice](https://shipvoice.dev), the
+> batteries-included layer built on this core.
+
 ## What's inside
 
 | Package         | What it is                                                                                                                                                                  |
@@ -118,6 +123,27 @@ Open `http://localhost:5173`, click **Start conversation**, allow the mic, and t
 - **Zero-downtime deploys**: the worker drains in-flight calls on SIGTERM (blue/green on Fly), so a deploy mid-call finishes the call instead of dropping it.
 - **Standard token endpoint** so LiveKit client SDKs connect with zero glue.
 - **Copy-to-extend** patterns: a `User` slice in the backend, a bare `Assistant` in the agent.
+
+## Charge for it: ShipVoice
+
+This starter gets you a working voice agent. The part it does not include is the
+business layer: metering every minute across STT, LLM, TTS, and telephony,
+adding your margin, and billing your own users through Stripe, plus auth, a call
+dashboard with per-call cost, and one-command deploy.
+
+That layer is **[ShipVoice](https://shipvoice.dev)**: a LiveKit boilerplate for
+voice-AI SaaS with per-minute Stripe metered billing, built on top of this
+open-source core. If you want to charge your users by the minute and keep the
+margin (instead of renting a managed platform like Vapi or Retell that bills
+your users for you), ShipVoice is the version with the money layer wired in.
+
+- Per-minute Stripe metered billing (STT + LLM + TTS + telephony), your margin baked in
+- Auth, per-user accounts, and a call dashboard (recordings, transcripts, per-call cost)
+- Telephony (SIP / PSTN) set up, plus receptionist and outbound-caller templates
+- One-command deploy (Docker + Fly / Render / LiveKit Cloud)
+
+Founding access is $199 (from $399), one-time, lifetime updates. Launches
+September 2, 2026: https://shipvoice.dev
 
 ## Docs
 
