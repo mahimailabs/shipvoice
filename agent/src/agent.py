@@ -55,7 +55,9 @@ async def entrypoint(ctx: JobContext) -> None:
     if not CONSOLE_MODE:
         participant = await ctx.wait_for_participant()
         caller = identify(participant)
-        logger.info("participant joined: kind=%s identity=%s", caller.kind, caller.identity)
+        logger.info(
+            "participant joined: kind=%s identity=%s", caller.kind, caller.identity
+        )
 
     session: AgentSession = AgentSession(
         stt=deepgram.STT(model="nova-3"),

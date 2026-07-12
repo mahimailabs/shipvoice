@@ -16,8 +16,12 @@ class Assistant(Agent):
     """
 
     def __init__(self, agent_name: str | None = None) -> None:
-        super().__init__(instructions=INSTRUCTIONS.format(agent_name=agent_name or config.AGENT_NAME))
+        super().__init__(
+            instructions=INSTRUCTIONS.format(agent_name=agent_name or config.AGENT_NAME)
+        )
 
     async def on_enter(self) -> None:
         # Speak first so the user hears the agent immediately on connect.
-        self.session.generate_reply(instructions="Greet the user warmly in one short sentence and offer to help.")
+        self.session.generate_reply(
+            instructions="Greet the user warmly in one short sentence and offer to help."
+        )

@@ -21,7 +21,9 @@ def register_event_handlers(session: AgentSession) -> Callable[[], None]:
 
     @session.on("agent_state_changed")
     def _on_agent_state_changed(ev) -> None:
-        logger.info("agent_state: %s -> %s", getattr(ev, "old_state", "?"), ev.new_state)
+        logger.info(
+            "agent_state: %s -> %s", getattr(ev, "old_state", "?"), ev.new_state
+        )
 
     @session.on("conversation_item_added")
     def _on_item_added(ev) -> None:

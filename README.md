@@ -115,6 +115,7 @@ Open `http://localhost:5173`, click **Start conversation**, allow the mic, and t
 - **One command per service** to run locally; one `.env.example` each.
 - **Web and telephony** (SIP) on the same agent, via a single participant branch.
 - **Swappable providers** and self-hosted ↔ LiveKit Cloud with a one-line change.
+- **Zero-downtime deploys**: the worker drains in-flight calls on SIGTERM (blue/green on Fly), so a deploy mid-call finishes the call instead of dropping it.
 - **Standard token endpoint** so LiveKit client SDKs connect with zero glue.
 - **Copy-to-extend** patterns: a `User` slice in the backend, a bare `Assistant` in the agent.
 
