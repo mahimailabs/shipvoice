@@ -1,10 +1,10 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.webp">
   <source media="(prefers-color-scheme: light)" srcset="assets/banner-light.webp">
-  <img src="assets/banner-light.webp" alt="LiveKit Voice AI Starter" width="100%" />
+  <img src="assets/banner-light.webp" alt="ShipVoice" width="100%" />
 </picture>
 
-<h1 align="center">LiveKit Voice AI Starter</h1>
+<h1 align="center">ShipVoice</h1>
 
 <p align="center">
   <b>Talk to an AI agent in your browser, in minutes.</b><br/>
@@ -14,7 +14,6 @@
 </p>
 
 <p align="center">
-  <!--<a href="https://your-demo-url"><img src="assets/badges/live-demo.svg" alt="Live Demo" height="30"></a>-->
   <a href="https://livekit.io"><img src="assets/badges/livekit.svg" alt="LiveKit" height="30"></a>
   <img src="assets/badges/voice-first.svg" alt="Voice First" height="30">
   <a href="https://www.python.org"><img src="assets/badges/python.svg" alt="Python" height="30"></a>
@@ -35,10 +34,11 @@ Most voice-AI demos are a single script. This is the whole loop, structured the
 way you'd actually ship it, and split into three pieces you can run, deploy, and
 swap independently.
 
-> This gets you a working voice agent you own. To go from an idea to a
-> monetized product in an afternoon, see [ShipVoice](https://shipvoice.dev): an
-> AI engineer (subagents that scaffold your agent), 10 templates, per-minute
-> Stripe billing, auth, a dashboard, and one-command deploy, on top of this core.
+> This gets you a voice agent you own. Turning one into a product you charge for
+> is a separate problem, and it is what [ShipVoice Pro](https://shipvoice.dev)
+> is: per-call cost metered by provider, per-minute Stripe billing, auth with an
+> entitlement gate, compliance gates that fail closed, and a console that shows
+> what every call cost you. It is its own repository, not a plugin for this one.
 
 ## What's inside
 
@@ -124,41 +124,46 @@ Open `http://localhost:5173`, click **Start conversation**, allow the mic, and t
 - **Standard token endpoint** so LiveKit client SDKs connect with zero glue.
 - **Copy-to-extend** patterns: a `User` slice in the backend, a bare `Assistant` in the agent.
 
-## Build and monetize it: ShipVoice
+## Charge for it: ShipVoice Pro
 
 <a href="https://shipvoice.dev">
-  <img src="assets/shipvoice-banner.png" alt="ShipVoice: build and monetize a voice agent in an afternoon" width="100%" />
+  <img src="assets/shipvoice-banner.png" alt="ShipVoice Pro" width="100%" />
 </a>
 
-This starter gets you a working voice agent. What it does not include is the
-speed and the business layer: an AI engineer that scaffolds a new agent from a
-one-line idea, ready-made templates, per-minute Stripe billing, auth, a call
-dashboard, and one-command deploy.
+This starter gets you a voice agent. It does not get you a business. The part
+that does not one-shot is metering, billing, auth, telephony registration, and
+compliance, and that is what **[ShipVoice Pro](https://shipvoice.dev)** ships.
 
-That layer is **[ShipVoice](https://shipvoice.dev)**: a LiveKit boilerplate for
-voice-AI SaaS with an AI engineer built in. Open it in any coding agent (Claude
-Code, Cursor, whatever you use), describe your agent in a line, and its subagents
-scaffold it on a proven pattern, so you build and monetize a voice product in an
-afternoon instead of a quarter.
+It is a separate repository that shares this one's stack and lineage. It is not
+a plugin for this repo and does not depend on it.
 
-- **AI engineer built in**: subagents (architect, prompt engineer, task scaffolder, reviewer) scaffold a new agent from one line
-- **10 templates + `shipvoice init`**: pick a template, add keys, scaffold, run
-- **Per-minute Stripe billing**, auth, and a call dashboard (recordings, transcripts, per-call cost)
-- **Telephony (SIP / PSTN)** set up, plus receptionist and outbound-caller templates
-- **One-command deploy** (Docker + Fly / Render / LiveKit Cloud)
+- **An AI engineer**: describe an agent in one line and its subagents generate it, then a validation gate refuses to ship one that is malformed. No gallery to pick from.
+- **Own your margin**: every minute of STT, LLM, TTS, and telephony metered per provider, so each call carries a cost you can read.
+- **Per-minute billing**: Stripe Billing Meters, checkout, and webhook, wired.
+- **Auth and entitlement**: end-user accounts behind a paid entitlement gate.
+- **Compliance that fails closed**: TCPA and HIPAA gates refuse to author or start an agent that would breach them.
+- **Telephony (SIP / PSTN)** with a 10DLC registration runbook.
+- **One-command deploy** to Fly.
 
 <a href="https://shipvoice.dev">
-  <img src="assets/shipvoice-dashboard.png" alt="ShipVoice call dashboard: each call metered per minute and billed through Stripe" width="100%" />
+  <img src="assets/shipvoice-dashboard.png" alt="The ShipVoice Pro console, showing per-call cost metered by provider and billed through Stripe. Sample data." width="100%" />
 </a>
 
-Founding access is open now, with lifetime updates. Launches September 2, 2026:
-[shipvoice.dev](https://shipvoice.dev)
+<p align="center"><i>Console shown with sample data.</i></p>
+
+Lifetime updates. Launches September 2, 2026: [shipvoice.dev](https://shipvoice.dev)
 
 ## Docs
 
 Each package has its own README with details:
 [`agent/`](agent/README.md) · [`backend/`](backend/README.md) · [`frontend/`](frontend/README.md)
 
+## Third-party code
+
+Some UI components are vendored from public component registries and are
+licensed by their upstream authors, not by this repository. See
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+MIT for the code written here. See [`LICENSE`](LICENSE) and the note above.
