@@ -5,6 +5,8 @@ import type {
   CallListResponse,
   CallSummaryResponse,
   DeploymentRead,
+  LiveKitRead,
+  LiveKitWrite,
   RoomTokenResponse,
 } from "./types";
 
@@ -135,4 +137,23 @@ export async function getTestCallToken(agentName: string): Promise<RoomTokenResp
 
 export async function getDeployment(): Promise<DeploymentRead> {
   return get<DeploymentRead>("/api/v1/deployment", "Loading the deployment");
+}
+
+export async function getLiveKit(): Promise<LiveKitRead> {
+  return get<LiveKitRead>("/api/v1/livekit", "Loading the LiveKit project");
+}
+
+export async function saveLiveKit(payload: LiveKitWrite): Promise<LiveKitRead> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/api/v1/livekit`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new ApiError(0, "Could not reach the backend");
+  }
+  await guard(res, "Saving the LiveKit project");
+  return (await res.json()) as LiveKitRead;
 }

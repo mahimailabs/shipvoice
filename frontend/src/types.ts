@@ -69,6 +69,19 @@ export interface DeploymentRead {
   project_name: string;
   env: string;
   livekit_url: string | null;
-  allow_open_registration: boolean;
-  cors_origins: string[];
+}
+
+/** The LiveKit project. The secret is never sent, only whether one is set. */
+export interface LiveKitRead {
+  url: string | null;
+  api_key_hint: string | null;
+  secret_set: boolean;
+  source: "database" | "environment";
+}
+
+export interface LiveKitWrite {
+  url: string;
+  api_key: string;
+  /** Blank means keep the stored secret: the console cannot read it back. */
+  api_secret?: string;
 }

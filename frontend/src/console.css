@@ -1034,3 +1034,41 @@
   text-decoration: none;
   color: #fff;
 }
+
+/* ---------- form fields ---------- */
+/* The console is read-only apart from the LiveKit project, so this is the only
+   input styling in it. */
+
+.sv-console .kvs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.sv-console .fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sv-console .in {
+  height: var(--control-h);
+  padding: 0 var(--pad-control-x);
+  border: var(--border-control);
+  border-radius: var(--sv-radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font: var(--type-body-sm);
+  font-family: var(--font-mono);
+  width: 100%;
+  max-width: 420px;
+}
+
+.sv-console .in:focus {
+  outline: none;
+  border-color: var(--sv-accent);
+}
+
+.sv-console .in::placeholder {
+  color: var(--text-faint);
+}

@@ -1,119 +1,201 @@
 import { useEffect, useState } from "react";
-import { API_BASE, ApiError, getDeployment, getSummary } from "../api";
+import { ApiError, getLiveKit, saveLiveKit } from "../api";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, KV, Panel } from "../components/ds";
-import type { DeploymentRead } from "../types";
+import { Badge, Button, Panel } from "../components/ds";
+import type { LiveKitRead } from "../types";
 
-// What this deployment is pointed at, and who can reach it. Nothing about the
-// agent lives here: its name, its prompt and its voice stack belong to the
-// agent, and duplicating them on a deployment-wide page was how this page ended
-// up as a second, worse copy of Agent detail.
+// Two things: the LiveKit project this deployment talks to, and the compliance
+// position. Nothing about the agent lives here, that belongs to the agent.
 //
-// It is called Deployment and not Settings because nothing on it is settable.
-// The console reads; the terminal writes.
-//
-// No file line numbers anywhere. A row that says agent.py:63 is wrong the next
-// time somebody adds an import. Rows name the env var that owns the value, or
-// the file, never a position inside one.
+// The credentials are stored in the database, seeded once from the environment,
+// so a change made here survives a restart. The secret is write-only: this
+// backend has no authentication, so an endpoint that handed it back would hand
+// your LiveKit project to anyone who can reach the port.
 
-/** A value the console cannot read. Never a zero, never a plausible default. */
-function Dash() {
-  return <span className="na">-</span>;
-}
-
-/** The muted line under a value, naming what owns it. */
-function Owner({ children }: { children: string }) {
-  return (
-    <span className="fnt" style={{ display: "block", font: "var(--type-caption)" }}>
-      {children}
-    </span>
-  );
-}
-
-/**
- * The honest answers to "is the backend there". Collapsing these into a boolean
- * sends people to restart Docker when the real problem is CORS.
- */
-type Reach = "checking" | "ok" | "unreachable" | "missing" | "refused";
-
-const REACH: Record<Reach, { text: string; tone: "neutral" | "success" | "warning" | "danger" }> = {
-  checking: { text: "Checking", tone: "neutral" },
-  ok: { text: "Reachable", tone: "success" },
-  unreachable: { text: "No answer", tone: "danger" },
-  missing: { text: "Reachable, call log not wired", tone: "warning" },
-  refused: { text: "Reachable, request refused", tone: "warning" },
-};
+type Save = "idle" | "saving" | "saved" | "error";
 
 export function Deployment() {
-  const [dep, setDep] = useState<DeploymentRead | null>(null);
-  const [reach, setReach] = useState<Reach>("checking");
+  const [lk, setLk] = useState<LiveKitRead | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [url, setUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [apiSecret, setApiSecret] = useState("");
+  const [save, setSave] = useState<Save>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
-
-    getDeployment()
-      .then((d) => live && setDep(d))
-      .catch(() => undefined);
-
-    // One probe, when the page loads. This is not a health monitor.
-    getSummary()
-      .then(() => live && setReach("ok"))
+    getLiveKit()
+      .then((v) => live && setLk(v))
       .catch((e: unknown) => {
         if (!live) return;
-        if (e instanceof ApiError && e.isMissing) return setReach("missing");
-        if (e instanceof ApiError && e.isForbidden) return setReach("refused");
-        setReach("unreachable");
+        setLoadError(
+          e instanceof ApiError && e.isMissing
+            ? "This backend has no /api/v1/livekit route."
+            : "Could not reach the backend.",
+        );
       });
-
     return () => {
       live = false;
     };
   }, []);
 
-  const origin = window.location.origin;
-  const corsAllowsUs =
-    dep == null ? null : dep.cors_origins.includes("*") || dep.cors_origins.includes(origin);
+  function startEditing(): void {
+    setUrl(lk?.url ?? "");
+    setApiKey("");
+    setApiSecret("");
+    setSave("idle");
+    setSaveError(null);
+    setEditing(true);
+  }
+
+  async function submit(): Promise<void> {
+    setSave("saving");
+    setSaveError(null);
+    try {
+      const next = await saveLiveKit({
+        url: url.trim(),
+        api_key: apiKey.trim(),
+        // Blank means keep whatever is stored.
+        api_secret: apiSecret.trim() || undefined,
+      });
+      setLk(next);
+      setSave("saved");
+      setEditing(false);
+    } catch (e: unknown) {
+      setSave("error");
+      setSaveError(
+        e instanceof ApiError && e.isForbidden
+          ? "Editing is only allowed when the backend runs with ENV=dev. Set these in the environment and restart."
+          : "Save failed. Check the URL starts with wss:// and the key is not blank.",
+      );
+    }
+  }
+
+  const canSave = url.trim().length > 0 && apiKey.trim().length > 0 && save !== "saving";
 
   return (
     <>
       <TopBar
         title="Deployment"
-        badge={<Badge tone={REACH[reach].tone}>{REACH[reach].text}</Badge>}
-        meta={dep?.env ? `env ${dep.env}` : undefined}
+        badge={
+          lk == null ? undefined : (
+            <Badge tone={lk.secret_set ? "success" : "warning"}>
+              {lk.secret_set ? "LiveKit configured" : "LiveKit incomplete"}
+            </Badge>
+          )
+        }
+        meta={lk?.source === "database" ? "stored" : lk ? "from the environment" : undefined}
       />
 
       <div className="pad">
-        <Panel title="Connection" meta="where this console is pointed">
-          <KV k="Backend">
-            {API_BASE}
-            <Owner>VITE_API_BASE_URL, baked in at build time</Owner>
-          </KV>
-          <KV k="LiveKit project" mono>
-            {dep?.livekit_url ?? <Dash />}
-            <Owner>LIVEKIT_URL, shared by the backend and the worker</Owner>
-          </KV>
-          <KV k="This console">
-            {origin}
-            {corsAllowsUs === false && (
-              <span style={{ color: "var(--danger)" }}>
-                {" "}
-                not in the backend's allowed origins
-              </span>
-            )}
-            <Owner>CORS_ORIGINS_STR on the backend</Owner>
-          </KV>
+        <Panel
+          title="LiveKit"
+          meta={editing ? "the secret is never shown" : "the project this deployment calls"}
+          actions={
+            editing ? undefined : (
+              <Button size="sm" onClick={startEditing}>
+                Edit
+              </Button>
+            )
+          }
+        >
+          {loadError && <p className="na">{loadError}</p>}
+
+          {!loadError && !editing && (
+            <div className="kvs">
+              <div className="kv">
+                <span className="k">Project URL</span>
+                <span className="v mono">{lk?.url ?? <span className="na">-</span>}</span>
+              </div>
+              <div className="kv">
+                <span className="k">API key</span>
+                <span className="v mono">
+                  {lk?.api_key_hint ?? <span className="na">-</span>}
+                </span>
+              </div>
+              <div className="kv">
+                <span className="k">API secret</span>
+                <span className="v">
+                  {lk?.secret_set ? "Set" : <span className="na">Not set</span>}
+                </span>
+              </div>
+              <p className="mut" style={{ font: "var(--type-caption)", margin: "8px 0 0" }}>
+                {lk?.source === "database"
+                  ? "Stored here. The environment seeded it once and is no longer read."
+                  : "Read from the environment. It will be stored the first time you save."}
+              </p>
+            </div>
+          )}
+
+          {!loadError && editing && (
+            <form
+              className="kvs"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void submit();
+              }}
+            >
+              <label className="fld">
+                <span className="lb">Project URL</span>
+                <input
+                  className="in"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="wss://your-project.livekit.cloud"
+                  autoComplete="off"
+                />
+              </label>
+              <label className="fld">
+                <span className="lb">API key</span>
+                <input
+                  className="in"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={lk?.api_key_hint ?? "APIxxxxxxxx"}
+                  autoComplete="off"
+                />
+              </label>
+              <label className="fld">
+                <span className="lb">API secret</span>
+                <input
+                  className="in"
+                  type="password"
+                  value={apiSecret}
+                  onChange={(e) => setApiSecret(e.target.value)}
+                  placeholder={lk?.secret_set ? "leave blank to keep the stored one" : "required"}
+                  autoComplete="off"
+                />
+              </label>
+
+              <div className="row" style={{ gap: 8, marginTop: 4 }}>
+                <button type="submit" className="btn p sm" disabled={!canSave}>
+                  {save === "saving" ? "Saving" : "Save"}
+                </button>
+                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                  Cancel
+                </Button>
+              </div>
+
+              {saveError && (
+                <p role="alert" className="na" style={{ margin: 0 }}>
+                  {saveError}
+                </p>
+              )}
+            </form>
+          )}
         </Panel>
 
-        <Panel title="Access" meta="who can open this">
-          <KV k="Sign-in">
-            None. Whoever can reach this page can read everything on it.
-            <Owner>frontend/src/App.tsx</Owner>
-          </KV>
-          <KV k="Registration">
-            {dep == null ? <Dash /> : dep.allow_open_registration ? "Open" : "Closed"}
-            <Owner>ALLOW_OPEN_REGISTRATION on the backend</Owner>
-          </KV>
-        </Panel>
+        <div className="banner planned" role="note">
+          <Badge tone="warning">worker</Badge>
+          <span>
+            The voice worker reads its own LIVEKIT_ variables from agent/.env and does not see this.
+            After changing the project here, change it there too and restart the worker, or tokens
+            will be signed for one project while the worker waits on another and calls will connect
+            to silence.
+          </span>
+        </div>
 
         <Panel
           title={<span style={{ color: "var(--warning)" }}>Compliance</span>}
@@ -128,8 +210,8 @@ export function Deployment() {
         </Panel>
 
         <Ann>
-          Nothing here is editable. Each row names the variable or file that owns the value, and
-          changing it means editing that file and restarting the process that reads it.
+          The secret is write-only. This backend has no sign-in, so nothing that could be used as a
+          credential is ever sent back to the browser.
         </Ann>
       </div>
     </>
