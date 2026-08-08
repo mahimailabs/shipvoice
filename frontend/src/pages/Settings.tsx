@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { API_BASE, ApiError, getSummary, listAgents } from "../api";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, Button, LockedBlock, Panel } from "../components/ds";
+import { Badge, Button, Panel } from "../components/ds";
 import type { AgentSummary } from "../types";
 
 // One page, stacked, mostly a mirror. Every row names the env var or the file
@@ -58,7 +58,7 @@ function classify(err: unknown): Reach {
 
 const NOTE_STYLE = { font: "var(--type-body-sm)", margin: 0, color: "var(--text-secondary)" };
 
-export function Settings({ onLogout }: { onLogout?: () => void }) {
+export function Settings() {
   const [agent, setAgent] = useState<AgentSummary | null>(null);
   const [reach, setReach] = useState<Reach>("checking");
 
@@ -87,18 +87,13 @@ export function Settings({ onLogout }: { onLogout?: () => void }) {
         title="Settings"
         badge={<Badge tone="neutral">Deployment-wide</Badge>}
         actions={
-          <>
-            <Button
-              size="sm"
-              disabled
-              title="Not built: the console has no clipboard export of the values on this page."
-            >
-              Copy .env
-            </Button>
-            <Button size="sm" onClick={onLogout}>
-              Sign out
-            </Button>
-          </>
+          <Button
+            size="sm"
+            disabled
+            title="Not built: the console has no clipboard export of the values on this page."
+          >
+            Copy .env
+          </Button>
         }
       />
 
@@ -161,20 +156,30 @@ export function Settings({ onLogout }: { onLogout?: () => void }) {
             <table className="tb">
               <tbody>
                 <Row
+                  k="This console"
+                  v="No sign-in. Whoever can open it can read it."
+                  owner="frontend/src/App.tsx"
+                />
+                <Row
                   k="Registration"
                   v="Closed by default. This console cannot read the deployed value."
                   owner="ALLOW_OPEN_REGISTRATION"
                 />
-                <Row k="Call log" v="Superuser accounts only" owner="backend/src/api/deps.py" />
+                <Row
+                  k="Account API"
+                  v="Bearer token, and listing accounts needs a superuser"
+                  owner="backend/src/api/deps.py"
+                />
               </tbody>
             </table>
           </div>
           <div className="pb" style={{ borderTop: "1px solid var(--border-default)" }}>
             <p style={NOTE_STYLE}>
-              The call log requires a superuser account. Being signed in is not enough. Registration
-              can be reopened, and a self-registered account is a valid bearer of a valid token, so
-              every surface that exposes call content checks the superuser flag rather than the
-              session alone.
+              No sign-in is the right trade on your own machine and the wrong one on a public
+              address. Everything this console reads, an anonymous visitor reads too, including call
+              transcripts once the call log is wired. The backend still ships a JWT user slice with a
+              superuser flag, so gating it is adding a dependency to the routes, not building auth
+              from nothing.
             </p>
           </div>
         </Panel>
@@ -202,13 +207,8 @@ export function Settings({ onLogout }: { onLogout?: () => void }) {
           </div>
         </Panel>
 
-        <Panel title="Billing" meta="not in this starter">
-          <LockedBlock what="Per-minute billing through your own Stripe account, with usage metered per call. ShipVoice Pro." />
-        </Panel>
-
         <Panel title={<span style={{ color: "var(--warning)" }}>Compliance</span>} meta="read this one">
-          <LockedBlock what="TCPA and HIPAA gates that fail closed, refusing to author or start an agent that would breach them. ShipVoice Pro." />
-          <p style={{ ...NOTE_STYLE, marginTop: "var(--space-12)" }}>
+          <p style={NOTE_STYLE}>
             This starter has no compliance gate. Nothing in it checks consent, a suppression list,
             or the local calling window, and it will dial whoever you point it at. There is no
             setting on this page that changes that, because there is no code behind one. You are the

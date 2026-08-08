@@ -983,94 +983,44 @@
   width: 100%;
 }
 
-/* ---------- in-page Pro lock ---------- */
-/* The console's real sales surface. The four locked routes are roadmap
-   previews; these are shipped Pro features shown in place and greyed, so the
-   absence is felt exactly where the value would appear. */
+/* ---------- ShipVoice Pro rail item ---------- */
+/* Inert on purpose. There is nothing behind these in this repo, so they show
+   the shape of the full product without pretending to be a door. */
 
-.sv-console .lk {
-  position: relative;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--sv-radius-md);
-  background: var(--surface-sunken);
-  overflow: hidden;
-}
-
-.sv-console .lk-under {
-  opacity: 0.28;
-  filter: grayscale(1);
-  pointer-events: none;
-  user-select: none;
-}
-
-.sv-console .lk-over {
+.sv-console .rail nav .pro-item {
+  height: var(--nav-item-h);
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  padding: var(--space-12) var(--pad-panel);
-}
-
-.sv-console .lk-under + .lk-over {
-  position: absolute;
-  inset: 0;
-  justify-content: center;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.35), rgba(10, 10, 10, 0.72));
-}
-
-.sv-console .lk.inline .lk-over {
-  padding: var(--space-4) var(--space-8);
-}
-
-.sv-console .lk-tag {
-  flex: none;
-  height: var(--badge-h);
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--space-8);
+  padding: 0 var(--space-12);
   border-radius: var(--sv-radius-sm);
-  background: var(--sv-accent);
-  color: var(--text-on-accent);
-  font: var(--type-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-}
-
-.sv-console .lk-what {
-  color: var(--text-secondary);
+  color: var(--text-faint);
   font: var(--type-body-sm);
+  cursor: default;
+  user-select: none;
 }
 
-.sv-console .lk-link {
-  margin-left: auto;
-  flex: none;
-  color: var(--text-link);
-  font: var(--type-body-sm);
-}
-
-.sv-console .lk.inline .lk-link {
-  margin-left: var(--space-8);
-}
-
-/* ---------- locked rail item ---------- */
-
-.sv-console .rail nav a.lkd {
-  color: var(--text-muted);
-}
-
-.sv-console .rail nav a.lkd:hover {
-  color: var(--text-secondary);
-}
-
-.sv-console .nav-lock {
+.sv-console .nav-pro {
   margin-left: auto;
   flex: none;
   height: 16px;
   display: inline-flex;
   align-items: center;
   padding: 0 6px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-default);
   border-radius: var(--sv-radius-sm);
-  color: var(--sv-accent);
+  color: var(--text-faint);
   font: var(--type-caption);
   letter-spacing: var(--tracking-label);
+}
+
+/* The Upgrade button is an anchor, so it needs the flex centring .btn gets
+   from being a button element, and it must not inherit the rail link colour. */
+.sv-console .top .upgrade,
+.sv-console .top .upgrade:hover {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: #fff;
 }

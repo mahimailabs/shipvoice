@@ -13,7 +13,6 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from src.api.deps import get_current_admin, get_current_user_record
 from src.api.endpoints.agents import (
     DECLARED_IN,
     DECLARED_LLM,
@@ -31,7 +30,7 @@ from src.models.users_model import User
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 
 
-def _build_app(actor: User):
+def _build_app(_actor: User):
     cfg = Config(
         ENV="dev",
         _env_file=None,
@@ -45,9 +44,6 @@ def _build_app(actor: User):
     app = FastAPI()
     app.include_router(agents_router, prefix="/api/v1")
     # Bypass the JWT decode; this suite is about the endpoint and its gate.
-    app.dependency_overrides[get_current_user_record] = lambda: actor
-    if actor.is_superuser:
-        app.dependency_overrides[get_current_admin] = lambda: actor
     return app, container
 
 
@@ -77,14 +73,20 @@ async def test_lists_the_single_configured_agent():
 
 
 @pytest.mark.asyncio
-async def test_a_non_admin_cannot_list_agents():
+async def test_listing_agents_needs_no_account():
+    """The console has no sign-in, so this route must stay open.
+
+    It exposes the agent name and the provider names, both already published in
+    this repo's source and README. If you gate it, gate the console too or the
+    Agents page goes blank with a 403 nobody can act on.
+    """
     plain = User(
         id=2, email="s@e.co", hashed_password="x", is_active=True, is_superuser=False
     )
     app, container = _build_app(plain)
     try:
         resp = await _get_agents(app)
-        assert resp.status_code == 403
+        assert resp.status_code == 200
     finally:
         container.unwire()
 

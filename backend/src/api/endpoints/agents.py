@@ -1,7 +1,6 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
-from src.api.deps import AdminUser
 from src.core.config import Config
 from src.core.container import Container
 from src.schemas.agents_schemas import AgentListResponse, AgentSummary
@@ -27,14 +26,17 @@ PROMPT_PATH = "agent/src/prompts/instructions.py"
 @router.get("", response_model=AgentListResponse)
 @inject
 async def list_agents(
-    _actor: AdminUser,
     config: Config = Depends(Provide[Container.config]),
 ) -> AgentListResponse:
     """List the agents this deployment runs.
 
-    Free runs exactly one worker serving one agent, selected by AGENT_NAME,
-    so this returns a single row. Running several agents from one account is
-    ShipVoice Pro.
+    One worker serves one agent, selected by AGENT_NAME, so this returns a
+    single row.
+
+    Unauthenticated, because the console has no sign-in. What it exposes is the
+    agent's name and the provider names already published in this repo's source
+    and README, so there is nothing here a reader of the repo does not have.
+    Adding "_actor: AdminUser" from src.api.deps gates it if you want it gated.
     """
     return AgentListResponse(
         agents=[

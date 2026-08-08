@@ -40,7 +40,6 @@ export function AgentDetail() {
       })
       .catch((e: unknown) => {
         if (!live) return;
-        if (e instanceof ApiError && e.isExpiredSession) return;
         if (e instanceof ApiError && e.isForbidden) setForbidden(true);
         else setError(true);
       });

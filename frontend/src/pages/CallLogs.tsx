@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { API_BASE, ApiError, listCalls } from "../api";
+import { API_BASE, listCalls } from "../api";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, Button, LockedBlock } from "../components/ds";
+import { Badge, Button } from "../components/ds";
 import { duration } from "../lib/format";
 import type { CallRead, CallStatus } from "../types";
 
-// Every call the agent reported, filterable. The two columns on the right are
-// the ones this repo cannot fill: they are drawn in place and locked, so the
-// absence sits exactly where the number would be rather than being left out.
+// Every call the agent reported, filterable. Every column here is something the
+// backend actually recorded.
 
 const CHANNELS: { key: string; label: string }[] = [
   { key: "all", label: "Any channel" },
@@ -50,10 +49,8 @@ export function CallLogs() {
         setTotal(r.total);
         setState("ok");
       })
-      .catch((e: unknown) => {
+      .catch(() => {
         if (!live) return;
-        // A lapsed token is not an outage: App drops back to the login form.
-        if (e instanceof ApiError && e.isExpiredSession) return;
         setState("unwired");
       });
     return () => {
@@ -185,12 +182,10 @@ export function CallLogs() {
                   <th>Duration</th>
                   <th>Turns</th>
                   <th>Status</th>
-                  <th>Cost</th>
-                  <th>Kept</th>
                 </tr>
               </thead>
               <tbody>
-                {shown.map((c, i) => (
+                {shown.map((c) => (
                   <tr key={c.id} className="clickable" onClick={() => navigate(`/calls/${c.id}`)}>
                     {/* A web call has no caller id. The room name is what was
                         actually recorded, so it stands in rather than a dash. */}
@@ -217,30 +212,6 @@ export function CallLogs() {
                     </td>
                     <td>{c.turn_count}</td>
                     <td>{statusBadge(c.status)}</td>
-                    {/* The Cost and Kept columns, drawn once across every row.
-                        One lock over the whole region beats repeating the same
-                        upsell on all fifty lines, and it still lands in the
-                        exact cells the numbers would occupy. */}
-                    {i === 0 && (
-                      <td
-                        colSpan={2}
-                        rowSpan={shown.length}
-                        // This cell belongs to the first row, so without this a
-                        // click on the Pro link would also open call one.
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          whiteSpace: "normal",
-                          minWidth: 320,
-                          verticalAlign: "middle",
-                          background: "var(--surface-base)",
-                        }}
-                      >
-                        <LockedBlock
-                          inline
-                          what="Per-call cost metered by provider, and what you kept after billing it on. ShipVoice Pro."
-                        />
-                      </td>
-                    )}
                   </tr>
                 ))}
               </tbody>

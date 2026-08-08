@@ -3,13 +3,13 @@ import { Link } from "react-router";
 import { ApiError, listAgents } from "../api";
 import type { AgentSummary } from "../types";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, Button, LockedBlock, Panel } from "../components/ds";
+import { Badge, Button, Panel } from "../components/ds";
 
-// Free runs one worker serving one agent, selected by AGENT_NAME, so this table
-// has one row. Several agents under one account is ShipVoice Pro.
+// One worker serves one agent, selected by AGENT_NAME, so this table has one
+// row.
 //
 // Every column here is something the backend can actually answer for. The
-// column Pro fills from call aggregation stays a dash rather than a zero,
+// column that would need call aggregation stays a dash rather than a zero,
 // because this deployment does not roll calls up by agent and a zero would read
 // as a measured "no calls".
 
@@ -82,8 +82,6 @@ export function Agents() {
       .catch((e: unknown) => {
         if (!live) return;
         // 401 is handled globally by dropping back to the login form, so it is
-        // not an outage and must not be drawn as one.
-        if (e instanceof ApiError && e.isExpiredSession) return;
         if (e instanceof ApiError && e.isForbidden) setLoad("forbidden");
         else if (e instanceof ApiError && e.isMissing) setLoad("missing");
         else setLoad("error");
@@ -142,12 +140,7 @@ export function Agents() {
       </Panel>
     );
   } else {
-    content = (
-      <>
-        <AgentTable agents={agents} />
-        <LockedBlock what="Generate a new agent from one sentence, then validate it before it ships. That is the ShipVoice Pro AI engineer." />
-      </>
-    );
+    content = <AgentTable agents={agents} />;
   }
 
   return (

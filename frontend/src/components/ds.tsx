@@ -333,39 +333,3 @@ export function PlannedNotice({ what }: { what: string }) {
     </div>
   );
 }
-
-export const PRO_URL = "https://shipvoice.dev";
-
-/**
- * An in-page lock: a real ShipVoice Pro feature, shown in place and greyed.
- *
- * This is the console's actual sales surface, not the four locked routes.
- * Every use must name something Pro has SHIPPED, because a lock over a feature
- * that does not exist is worse than no lock at all.
- */
-export function LockedBlock({
-  what,
-  children,
-  inline,
-}: {
-  what: string;
-  children?: ReactNode;
-  inline?: boolean;
-}) {
-  return (
-    <div className={inline ? "lk inline" : "lk"} data-locked="true" role="note">
-      {children && (
-        <div className="lk-under" aria-hidden="true">
-          {children}
-        </div>
-      )}
-      <div className="lk-over">
-        <span className="lk-tag">Pro</span>
-        <span className="lk-what">{what}</span>
-        <a className="lk-link" href={PRO_URL} target="_blank" rel="noreferrer noopener">
-          shipvoice.dev
-        </a>
-      </div>
-    </div>
-  );
-}

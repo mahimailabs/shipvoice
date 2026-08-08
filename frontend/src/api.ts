@@ -1,4 +1,4 @@
-// The only module that knows the base URL, token storage, and auth headers.
+// The only module that knows the backend's base URL.
 import type {
   AgentListResponse,
   CallDetailResponse,
@@ -9,34 +9,19 @@ import type {
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-const TOKEN_KEY = "shipvoice_token";
-
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
-export function authHeaders(): Record<string, string> {
-  const t = getToken();
-  return t ? { Authorization: `Bearer ${t}` } : {};
-}
-
-/** Broadcast when a request comes back 401, so App can drop to the login form. */
-export const SESSION_EXPIRED_EVENT = "shipvoice:session-expired";
+// This console has no sign-in. It is a local tool for the person who owns the
+// deployment, and a login screen between someone and their own agent is
+// friction that buys nothing on localhost.
+//
+// That is a deliberate trade, and it has a consequence worth knowing before
+// you put this on the public internet: anything the console can read, an
+// anonymous visitor can read too. See the deploy section of the README.
 
 /**
- * A failed request, with the three states the UI must never conflate.
+ * A failed request, with the states the UI must never conflate.
  *
- * Rendering "API unreachable" for a lapsed token sends people to check Docker
- * when the fix is to sign in again, and rendering it for a 403 hides the fact
- * that the account simply is not an admin.
+ * Rendering "API unreachable" for a 404 sends people to check Docker when the
+ * real answer is that the route does not exist in this checkout yet.
  */
 export class ApiError extends Error {
   readonly status: number;
@@ -47,12 +32,9 @@ export class ApiError extends Error {
     this.status = status;
   }
 
-  get isExpiredSession(): boolean {
-    return this.status === 401;
-  }
-
+  /** Only reachable if you have gated the backend yourself. */
   get isForbidden(): boolean {
-    return this.status === 403;
+    return this.status === 401 || this.status === 403;
   }
 
   get isUnreachable(): boolean {
@@ -67,39 +49,18 @@ export class ApiError extends Error {
 
 async function guard(res: Response, what: string): Promise<void> {
   if (res.ok) return;
-  if (res.status === 401) {
-    clearToken();
-    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
-  }
   throw new ApiError(res.status, `${what} failed (${res.status})`);
 }
 
 async function get<T>(path: string, what: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
+    res = await fetch(`${API_BASE}${path}`);
   } catch {
     throw new ApiError(0, `${what} could not reach the backend`);
   }
   await guard(res, what);
   return (await res.json()) as T;
-}
-
-export async function login(email: string, password: string): Promise<void> {
-  let res: Response;
-  try {
-    // Free's route is /users/login. Pro's is /auth/login; a verbatim port 404s.
-    res = await fetch(`${API_BASE}/api/v1/users/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-  } catch {
-    throw new ApiError(0, "Could not reach the backend");
-  }
-  await guard(res, "Sign in");
-  const data = (await res.json()) as { access_token: string };
-  setToken(data.access_token);
 }
 
 export interface CallListParams {
@@ -131,10 +92,7 @@ export async function getCall(id: number | string): Promise<CallDetailResponse> 
 export async function deleteCall(id: number | string): Promise<void> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/api/v1/calls/${id}`, {
-      method: "DELETE",
-      headers: authHeaders(),
-    });
+    res = await fetch(`${API_BASE}/api/v1/calls/${id}`, { method: "DELETE" });
   } catch {
     throw new ApiError(0, "Could not reach the backend");
   }
@@ -160,7 +118,7 @@ export async function getTestCallToken(agentName: string): Promise<RoomTokenResp
   try {
     res = await fetch(`${API_BASE}/api/v1/token`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         room_name: room,
         participant_identity: `console-${Math.random().toString(16).slice(2, 10)}`,

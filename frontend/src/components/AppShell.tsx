@@ -70,9 +70,15 @@ export function AppShell() {
   );
 }
 
+/** The one upsell in the console: book a call, not a checkout page. */
+export const UPGRADE_URL = "https://cal.com/mahimairaja/shipvoice";
+
 /**
  * Page header. Optional back link, title, status badge, a meta line, then
- * right-aligned actions.
+ * right-aligned actions, and always the Upgrade button last.
+ *
+ * It lives here rather than on each page so there is exactly one of it, in one
+ * place, on every screen.
  */
 export function TopBar({
   back,
@@ -103,6 +109,9 @@ export function TopBar({
       )}
       <div style={{ flex: 1 }} />
       {actions}
+      <a className="btn p sm upgrade" href={UPGRADE_URL} target="_blank" rel="noreferrer noopener">
+        Upgrade
+      </a>
     </header>
   );
 }

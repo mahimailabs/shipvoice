@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ApiError, deleteCall, getCall } from "../api";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, Button, KV, LockedBlock } from "../components/ds";
+import { Badge, Button, KV } from "../components/ds";
 import { duration } from "../lib/format";
 import type { CallDetailResponse } from "../types";
 
-// One call, in full: what was said, when, and by whom. The receipt that would
-// sit above the transcript is the ShipVoice Pro surface, so it is drawn here and
-// locked rather than quietly dropped.
+// One call, in full: what was said, when, and by whom.
 
 /** Offset from the start of the call. Absolute clock time is on the tooltip. */
 function elapsed(startedAt: string, at: string): string {
@@ -42,7 +40,6 @@ export function CallDetail() {
       })
       .catch((e: unknown) => {
         if (!live) return;
-        if (e instanceof ApiError && e.isExpiredSession) return;
         if (e instanceof ApiError && e.isMissing) {
           setError(
             "The backend answered 404. Either this call is not in the log, or the call log is not wired up in this checkout yet.",
@@ -172,20 +169,6 @@ export function CallDetail() {
         </div>
       </div>
 
-      <div className="pad">
-        {/* Where the receipt goes. Seven cells, all of them locked. */}
-        <LockedBlock what="The cost, billed and kept receipt for this call. ShipVoice Pro meters every minute by provider.">
-          <div className="statrow">
-            {["STT", "LLM", "TTS", "Telephony", "Cost", "Billed", "Kept"].map((cell) => (
-              <div className="stat" key={cell}>
-                <b className="num na">-</b>
-                <i>{cell}</i>
-              </div>
-            ))}
-          </div>
-        </LockedBlock>
-      </div>
-
       <div style={{ display: "flex", flex: 1, minHeight: 0, flexWrap: "wrap" }}>
         <div
           style={{
@@ -256,8 +239,8 @@ export function CallDetail() {
           </div>
           <div className="pb" style={{ flex: 1 }}>
             <p className="mut" style={{ font: "var(--type-body-sm)", margin: "0 0 10px" }}>
-              This repo records what happened on the call. What each minute cost, split by provider, and what was
-              left after you billed it on, is ShipVoice Pro.
+              This repo records what happened on the call. Nothing here meters what a minute cost, so there is no
+              per-provider cost on this record and no number to bill from.
             </p>
             <Ann>
               A dash above means the agent never reported that field. It is an absence, not an empty string.

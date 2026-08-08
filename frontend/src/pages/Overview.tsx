@@ -2,14 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { API_BASE, ApiError, getSummary, listCalls } from "../api";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, Button, DottedLineChart, LockedBlock } from "../components/ds";
+import { Badge, Button, DottedLineChart } from "../components/ds";
 import { duration } from "../lib/format";
 import type { CallRead, CallSummaryResponse } from "../types";
 
-// The one page that has to earn the console. It shows the buyer their own real
-// call activity, and directly below it, greyed out, the money they cannot see.
-// The contrast is the pitch: free records what happened on a call, ShipVoice Pro
-// records what it cost and what you kept.
+// The one page that has to earn the console. It shows this deployment's own real
+// call activity: what happened on each call, and nothing it cannot measure.
 
 type Load = "loading" | "ok" | "unwired" | "refused";
 
@@ -17,30 +15,6 @@ function statusBadge(c: CallRead) {
   if (c.status === "completed") return <Badge tone="success">Completed</Badge>;
   if (c.status === "failed") return <Badge tone="violation">Failed</Badge>;
   return <Badge tone="neutral">Active</Badge>;
-}
-
-/** The locked money strip. Rendered under the scrim, so every value is a dash. */
-function MoneyLoop() {
-  return (
-    <LockedBlock what="Per-call cost, what you billed, and what you kept. Metered per provider in ShipVoice Pro.">
-      <div className="loop">
-        <div className="leg">
-          <span className="lb">Provider cost</span>
-          <b className="num na">-</b>
-        </div>
-        <div className="arrow">→</div>
-        <div className="leg">
-          <span className="lb">Billed</span>
-          <b className="num na">-</b>
-        </div>
-        <div className="arrow">→</div>
-        <div className="leg kept">
-          <span className="lb">Kept</span>
-          <b className="num na">-</b>
-        </div>
-      </div>
-    </LockedBlock>
-  );
 }
 
 export function Overview() {
@@ -65,8 +39,6 @@ export function Overview() {
       })
       .catch((e: unknown) => {
         if (!live) return;
-        // A 401 is handled globally: App drops back to the login form.
-        if (e instanceof ApiError && e.isExpiredSession) return;
         if (e instanceof ApiError && e.isForbidden) setState("refused");
         else setState("unwired");
       });
@@ -183,8 +155,6 @@ export function Overview() {
               <span className="cmd">Open Agents, pick your agent, and start a test call</span>
             </div>
           </section>
-          <MoneyLoop />
-          <Ann>What the call cost you, and what you kept after billing it on, is ShipVoice Pro.</Ann>
         </div>
       </>
     );
@@ -241,9 +211,6 @@ export function Overview() {
       </div>
 
       <div className="pad">
-        {/* Directly under the real numbers, greyed: the numbers you do not get. */}
-        <MoneyLoop />
-
         <div className="split">
           <section className="pnl">
             <header className="ph">

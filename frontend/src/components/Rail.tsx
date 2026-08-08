@@ -4,11 +4,11 @@ import { NavLink } from "react-router";
 // what is dialling, Build what dials next. Settings is not a nav item; it lives
 // in the footer under the deployment identity.
 //
-// Four items are locked. They are ShipVoice Pro surfaces that Pro has designed
-// and not yet backed, so they are previews, not a paywall: the route still
-// opens and says plainly what is and is not there. The features actually worth
-// paying for are locked in place on the live pages instead, via LockedBlock.
-type Item = { label: string; to: string; count?: number | null; locked?: boolean };
+// Four items are ShipVoice Pro surfaces. They are shown so the shape of the
+// full product is visible, and they are inert: grey, no link, no route. There
+// is nothing behind them in this repo, so making them clickable would only
+// lead somewhere that exists to sell you something.
+type Item = { label: string; to?: string; count?: number | null; pro?: boolean };
 type Group = { title: string; items: Item[] };
 
 export function Rail({
@@ -29,16 +29,16 @@ export function Rail({
     {
       title: "Run",
       items: [
-        { label: "Campaigns", to: "/campaigns", locked: true },
-        { label: "Channels", to: "/channels", locked: true },
-        { label: "Customers", to: "/customers", locked: true },
+        { label: "Campaigns", pro: true },
+        { label: "Channels", pro: true },
+        { label: "Customers", pro: true },
       ],
     },
     {
       title: "Build",
       items: [
         { label: "Agents", to: "/agents", count: counts.agents ?? null },
-        { label: "Evaluations", to: "/evaluations", locked: true },
+        { label: "Evaluations", pro: true },
       ],
     },
   ];
@@ -46,10 +46,7 @@ export function Rail({
   return (
     <aside className="rail">
       <div className="brand">
-        <svg width={20} height={20} viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M3 13h14l-2.2 4H5.2L3 13Z" fill="var(--sv-accent)" />
-          <path d="M10 2 6.5 11h7L10 2Z" fill="var(--text-primary)" />
-        </svg>
+        <img src="/logo-boat.svg" alt="" width={20} height={20} />
         <span>ShipVoice</span>
       </div>
 
@@ -58,26 +55,26 @@ export function Rail({
           <div key={group.title}>
             <div className="sec">{group.title}</div>
             <nav aria-label={group.title}>
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === "/"}
-                  className={({ isActive }) =>
-                    [isActive ? "on" : "", item.locked ? "lkd" : ""].filter(Boolean).join(" ")
-                  }
-                >
-                  {item.label}
-                  {item.locked && (
-                    <span className="nav-lock" data-testid="nav-lock" title="ShipVoice Pro">
+              {group.items.map((item) =>
+                item.pro ? (
+                  <span key={item.label} className="pro-item" aria-disabled="true">
+                    {item.label}
+                    <span className="nav-pro" data-testid="nav-pro">
                       Pro
                     </span>
-                  )}
-                  {!item.locked && item.count != null && (
-                    <span className="ct num">{item.count.toLocaleString()}</span>
-                  )}
-                </NavLink>
-              ))}
+                  </span>
+                ) : (
+                  <NavLink
+                    key={item.label}
+                    to={item.to as string}
+                    end={item.to === "/"}
+                    className={({ isActive }) => (isActive ? "on" : "")}
+                  >
+                    {item.label}
+                    {item.count != null && <span className="ct num">{item.count.toLocaleString()}</span>}
+                  </NavLink>
+                ),
+              )}
             </nav>
           </div>
         ))}
