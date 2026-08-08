@@ -24,8 +24,11 @@ dependencies = [
   "sqlmodel>=0.0.38",
 ]
 
-[project.scripts]
-backend = "backend:main"
+[tool.uv]
+# This is an application, not a library: nothing imports it as a package.
+# The runtime resolves src.main through PYTHONPATH, so uv must not try to
+# build a distribution from a src/<name> directory that does not exist.
+package = false
 
 [dependency-groups]
 dev = [
