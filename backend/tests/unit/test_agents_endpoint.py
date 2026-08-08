@@ -19,6 +19,7 @@ from src.api.endpoints.agents import (
     DECLARED_LLM,
     DECLARED_STT,
     DECLARED_TTS,
+    PROMPT_PATH,
 )
 from src.api.endpoints.agents import (
     router as agents_router,
@@ -115,4 +116,19 @@ def test_declared_providers_still_match_the_worker():
     # this fails and the declared string has to be updated to match.
     assert "cartesia.TTS()" in source, (
         f"agent.py pinned a Cartesia model; {DECLARED_TTS!r} is now wrong"
+    )
+
+
+@pytest.mark.skipif(
+    not (REPO_ROOT / "agent").exists(),
+    reason="agent source not present (backend deployed on its own)",
+)
+def test_the_prompt_path_points_at_a_file_that_exists():
+    """The console tells the buyer where to edit their agent's prompt.
+
+    This shipped once pointing at a path that did not exist, which sends
+    someone to create a file the worker never reads.
+    """
+    assert (REPO_ROOT / PROMPT_PATH).exists(), (
+        f"agents.py advertises {PROMPT_PATH!r} and nothing is there"
     )

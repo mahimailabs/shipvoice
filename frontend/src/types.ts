@@ -1,0 +1,66 @@
+// Console domain types.
+//
+// There is deliberately no cost field anywhere in here. Free records what
+// happened on a call; what it cost is ShipVoice Pro. A nullable cost_usd in a
+// public schema is an invitation to fill it in with a guess.
+
+export type CallChannel = "web" | "sip";
+export type CallStatus = "active" | "completed" | "failed";
+
+export interface CallRead {
+  id: number;
+  room_name: string;
+  caller: string | null;
+  channel: CallChannel;
+  agent_name: string | null;
+  business_name: string | null;
+  status: CallStatus;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  turn_count: number;
+}
+
+export interface CallListResponse {
+  calls: CallRead[];
+  total: number;
+}
+
+export interface TurnRead {
+  id: number;
+  role: "user" | "agent";
+  text: string;
+  spoken_at: string;
+}
+
+export interface CallDetailResponse {
+  call: CallRead;
+  transcript: TurnRead[];
+}
+
+export interface CallSummaryResponse {
+  total_calls: number;
+  total_minutes: number;
+  total_turns: number;
+}
+
+export interface AgentSummary {
+  slug: string;
+  agent_name: string;
+  business_name: string | null;
+  active: boolean;
+  prompt_path: string;
+  stt: string | null;
+  llm: string | null;
+  tts: string | null;
+}
+
+export interface AgentListResponse {
+  agents: AgentSummary[];
+}
+
+/** Matches the backend's standardized LiveKit token shape exactly. */
+export interface RoomTokenResponse {
+  server_url: string;
+  participant_token: string;
+}

@@ -19,7 +19,9 @@ DECLARED_LLM = "openai gpt-4.1-mini"
 # plugin default applies. Naming a model here would be a guess.
 DECLARED_TTS = "cartesia (plugin default)"
 
-PROMPT_PATH = "agent/prompts/instructions.txt"
+# The prompt the worker actually loads today. It is a Python constant, not
+# a data file; the console links to it so the buyer knows where to edit.
+PROMPT_PATH = "agent/src/prompts/instructions.py"
 
 
 @router.get("", response_model=AgentListResponse)

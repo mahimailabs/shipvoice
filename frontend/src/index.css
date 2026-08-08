@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Geist was already a dependency and imported nowhere. ShipVoice Pro pulls it
+   from fonts.googleapis.com, which would put a third-party request on every
+   deployed console for a font sitting in node_modules. Imported here rather
+   than from main.tsx because the package ships no type declarations, and a
+   side-effect import of it fails the build under this tsconfig. */
+@import "@fontsource-variable/geist/index.css";
 
 @custom-variant dark (&:is(.dark *));
 

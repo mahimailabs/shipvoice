@@ -10,8 +10,10 @@ COPY . .
 # Vite bakes env at build time; the browser calls the backend on the host.
 ARG VITE_TOKEN_ENDPOINT=http://localhost:8000/api/v1/token
 ARG VITE_AGENT_NAME=assistant
+ARG VITE_API_BASE_URL=http://localhost:8000
 ENV VITE_TOKEN_ENDPOINT=$VITE_TOKEN_ENDPOINT
 ENV VITE_AGENT_NAME=$VITE_AGENT_NAME
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN pnpm build
 
 # ---- serve ----
