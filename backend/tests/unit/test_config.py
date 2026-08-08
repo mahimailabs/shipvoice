@@ -1,13 +1,8 @@
-import pytest
-from pydantic import ValidationError
-
 from src.core.config import (
-    _PLACEHOLDER_JWT_SECRET,
     Config,
     _to_async_url,
     _url_requires_ssl,
 )
-from src.schemas.users_schemas import UserUpdate
 
 
 def test_neon_url_coerced_to_asyncpg_and_libpq_params_stripped():
@@ -41,31 +36,9 @@ def test_ssl_requirement_inference():
     assert _url_requires_ssl("postgresql://u:p@h/db") is None
 
 
-def test_user_update_omits_privileged_fields():
-    # Mass-assignment guard: clients must not be able to set role/status.
-    fields = set(UserUpdate.model_fields)
-    assert "is_superuser" not in fields
-    assert "is_active" not in fields
-
-
-def test_prod_rejects_placeholder_jwt_secret():
-    with pytest.raises(ValidationError):
-        Config(ENV="prod", JWT_SECRET_KEY=_PLACEHOLDER_JWT_SECRET)
-
-
-def test_prod_rejects_short_jwt_secret():
-    with pytest.raises(ValidationError):
-        Config(ENV="prod", JWT_SECRET_KEY="too-short")
-
-
 def test_prod_accepts_strong_jwt_secret():
     cfg = Config(ENV="prod", JWT_SECRET_KEY="x" * 40)
     assert cfg.ENV.value == "prod"
-
-
-def test_dev_allows_placeholder_secret():
-    cfg = Config(ENV="dev", JWT_SECRET_KEY=_PLACEHOLDER_JWT_SECRET)
-    assert cfg.DEBUG is True
 
 
 def test_cors_origins_default_to_wildcard():

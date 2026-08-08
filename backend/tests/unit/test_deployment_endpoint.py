@@ -24,7 +24,6 @@ def _build_app():
         LIVEKIT_URL="wss://example.livekit.cloud",
         LIVEKIT_API_KEY="devkey",
         LIVEKIT_API_SECRET=SECRET,
-        JWT_SECRET_KEY="jwt-secret-value-that-must-never-be-served-either",
     )
     container = Container()
     container.config.override(cfg)
@@ -41,14 +40,14 @@ async def _get(app):
 
 
 @pytest.mark.asyncio
-async def test_reports_the_livekit_project_and_registration_posture():
+async def test_reports_the_project_and_environment():
     app, container = _build_app()
     try:
         resp = await _get(app)
         assert resp.status_code == 200
         body = resp.json()
-        assert body["livekit_url"] == "wss://example.livekit.cloud"
-        assert body["allow_open_registration"] is False
+        assert body["project_name"] == "ShipVoice"
+        assert body["env"] == "dev"
     finally:
         container.unwire()
 
@@ -61,7 +60,6 @@ async def test_serves_no_secret():
         raw = (await _get(app)).text
         assert SECRET not in raw
         assert "devkey" not in raw
-        assert "jwt-secret" not in raw
     finally:
         container.unwire()
 
@@ -70,7 +68,6 @@ def test_the_schema_cannot_grow_a_secret_field():
     banned = {
         "livekit_api_key",
         "livekit_api_secret",
-        "jwt_secret_key",
         "database_url",
         "db_password",
     }

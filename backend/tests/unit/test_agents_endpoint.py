@@ -25,12 +25,11 @@ from src.api.endpoints.agents import (
 )
 from src.core.config import Config
 from src.core.container import Container
-from src.models.users_model import User
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 
 
-def _build_app(_actor: User):
+def _build_app():
     cfg = Config(
         ENV="dev",
         _env_file=None,
@@ -39,7 +38,7 @@ def _build_app(_actor: User):
     )
     container = Container()
     container.config.override(cfg)
-    container.wire(modules=["src.api.endpoints.agents", "src.api.deps"])
+    container.wire(modules=["src.api.endpoints.agents"])
 
     app = FastAPI()
     app.include_router(agents_router, prefix="/api/v1")
@@ -55,10 +54,7 @@ async def _get_agents(app):
 
 @pytest.mark.asyncio
 async def test_lists_the_single_configured_agent():
-    admin = User(
-        id=1, email="f@e.co", hashed_password="x", is_active=True, is_superuser=True
-    )
-    app, container = _build_app(admin)
+    app, container = _build_app()
     try:
         resp = await _get_agents(app)
         assert resp.status_code == 200
@@ -80,10 +76,7 @@ async def test_listing_agents_needs_no_account():
     this repo's source and README. If you gate it, gate the console too or the
     Agents page goes blank with a 403 nobody can act on.
     """
-    plain = User(
-        id=2, email="s@e.co", hashed_password="x", is_active=True, is_superuser=False
-    )
-    app, container = _build_app(plain)
+    app, container = _build_app()
     try:
         resp = await _get_agents(app)
         assert resp.status_code == 200

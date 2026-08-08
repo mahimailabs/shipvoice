@@ -2,12 +2,12 @@
 
 Mints LiveKit room tokens and gives you a clean, layered FastAPI base
 (API → service → repository → model) to build on. Ships a `/token` endpoint plus
-a JWT `User` slice you copy for new resources.
+an API to service to repository slice you copy for new resources.
 
 ## Quickstart
 
 ```bash
-cp .env.example .env     # set LIVEKIT_*, DB_*, JWT_SECRET_KEY
+cp .env.example .env     # set LIVEKIT_* and DB_*
 uv sync
 # dev convenience: create tables (use migrations for real projects)
 uv run python -c "import asyncio; from src.main import db; asyncio.run(db.create_database())"
@@ -27,21 +27,21 @@ curl -s localhost:8000/api/v1/token -H 'content-type: application/json' \
 
 Fields (all optional): `room_name`, `participant_identity`, `participant_name`,
 `participant_metadata`, `participant_attributes`, `room_config` (agent dispatch).
-`LIVEKIT_API_KEY/SECRET` must match the agent's. Public by default; gate it by
-adding `get_current_user` in `src/api/endpoints/token.py`.
+`LIVEKIT_API_KEY/SECRET` must match the agent's.
 
-Also included: a JWT auth `User` slice (`/api/v1/users` register / login / me +
-admin), and an MCP surface at `/mcp`.
+There is no auth. Every route is open, which is the right trade for a tool you
+run on your own machine and the wrong one on a public address. Read the deploy
+section of the root README before exposing it.
 
 ## Layout
 
 ```
 src/
   main.py        app factory (AppCreator)
-  core/          config, DI container, database, security (JWT), errors
-  api/           routes.py + endpoints/ (health, token, users)
-  models/ schemas/ repository/ services/   the User slice (copy to extend)
-tests/           pytest (health, security, token)
+  core/          config, DI container, database, errors
+  api/           routes.py + endpoints/ (health, token, agents, deployment)
+  models/ schemas/ repository/ services/   the layering to copy
+tests/           pytest
 ```
 
 ## Add a resource

@@ -76,9 +76,8 @@ cp .env.example .env     # fill in LIVEKIT_* + OPENAI/DEEPGRAM/CARTESIA
 docker compose up --build
 ```
 
-Open `http://localhost:5173` and click **Start conversation**. Uses an external
-LiveKit project (a free LiveKit Cloud project works). The voice demo needs no
-database; for the auth/User endpoints, run once:
+Open `http://localhost:5173`, go to **Agents**, pick your agent and hit **Start test call**. Uses an external
+LiveKit project (a free LiveKit Cloud project works). The console needs the database; create the tables once with
 `docker compose exec backend alembic upgrade head`.
 
 ## Run manually
@@ -88,7 +87,7 @@ You'll need a LiveKit project (URL + API key/secret) and provider keys
 
 ```bash
 # 1. Backend: token server (http://localhost:8000)
-cd backend && cp .env.example .env   # add LIVEKIT_* + JWT_SECRET_KEY
+cd backend && cp .env.example .env   # add LIVEKIT_* + the database
 uv sync && uv run uvicorn src.main:app --reload
 
 # 2. Agent: voice worker
@@ -100,7 +99,7 @@ cd frontend && cp .env.example .env   # point VITE_TOKEN_ENDPOINT at the backend
 pnpm install && pnpm dev
 ```
 
-Open `http://localhost:5173`, click **Start conversation**, allow the mic, and talk.
+Open `http://localhost:5173`, go to **Agents**, start a test call, allow the mic, and talk.
 
 > No frontend yet? Talk to the agent from your terminal with
 > `cd agent && uv run python main.py console`.
@@ -111,7 +110,7 @@ Open `http://localhost:5173`, click **Start conversation**, allow the mic, and t
 | --------------- | ----------------------------------------------------------------------------- |
 | STT / LLM / TTS | Deepgram `nova-3` · OpenAI `gpt-4.1-mini` · Cartesia (all swappable)          |
 | Realtime        | LiveKit Agents (`livekit-agents`), WebRTC, Silero VAD, turn detector          |
-| Backend         | FastAPI, async SQLModel/Postgres, dependency-injector, PyJWT, `livekit-api`   |
+| Backend         | FastAPI, async SQLModel/Postgres, dependency-injector, `livekit-api`          |
 | Frontend        | React 19, Vite, TypeScript, Tailwind v4, shadcn + LiveKit Agents UI           |
 | Tooling         | uv, ruff, mypy, pytest · ESLint, Vitest · pre-commit, GitHub Actions, Codecov |
 
@@ -122,7 +121,7 @@ Open `http://localhost:5173`, click **Start conversation**, allow the mic, and t
 - **Swappable providers** and self-hosted ↔ LiveKit Cloud with a one-line change.
 - **Zero-downtime deploys**: the worker drains in-flight calls on SIGTERM (blue/green on Fly), so a deploy mid-call finishes the call instead of dropping it.
 - **Standard token endpoint** so LiveKit client SDKs connect with zero glue.
-- **Copy-to-extend** patterns: a `User` slice in the backend, a bare `Assistant` in the agent.
+- **Copy-to-extend** patterns: an API to service to repository slice in the backend, a bare `Assistant` in the agent.
 
 ## Charge for it: ShipVoice Pro
 

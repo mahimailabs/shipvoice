@@ -19,11 +19,6 @@ _LIBPQ_ONLY_PARAMS = {"sslmode", "channel_binding"}
 _SSL_DISABLED = {"disable", "false", "0", "no", "off"}
 _SSL_OPTIONAL = {"allow", "prefer"}
 
-# Dev placeholder for JWT_SECRET_KEY. Production startup fails fast (see the
-# Config validator) if this is left unchanged or the secret is too short.
-_PLACEHOLDER_JWT_SECRET = "change-me-in-prod-change-me-in-prod-32chars-min"
-_MIN_JWT_SECRET_LEN = 32
-
 
 def _to_async_url(url: str) -> str:
     """Coerce a Postgres URL to the asyncpg driver and drop libpq-only query
@@ -80,9 +75,6 @@ class Config(BaseSettings):
     API_V1_STR: str = "/api/v1"
     API_STR: str = "/api"
 
-    MCP_STR: str = "/mcp"
-    MCP_SERVER_URL: str = "http://127.0.0.1:8000/mcp"
-
     PROJECT_NAME: str = "ShipVoice"
 
     # The agent's dispatch identity. Must equal the worker's AGENT_NAME and the
@@ -90,11 +82,6 @@ class Config(BaseSettings):
     # worker into the room and the call sits in "connecting" with no error.
     AGENT_NAME: str = "assistant"
     BUSINESS_NAME: str | None = None
-
-    # Closed by default. The console reads call transcripts, so an open
-    # register endpoint on a deployed instance hands them to anyone who finds
-    # the URL. '/setup' creates the first superuser directly instead.
-    ALLOW_OPEN_REGISTRATION: bool = False
 
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""
@@ -113,18 +100,6 @@ class Config(BaseSettings):
     def set_debug_default(self):
         if self.DEBUG is None:
             self.DEBUG = self.ENV == EnvironmentOption.DEV
-        return self
-
-    @model_validator(mode="after")
-    def enforce_prod_secret(self):
-        """Fail fast in production if the JWT secret is the placeholder or weak."""
-        if self.ENV == EnvironmentOption.PROD:
-            secret = self.JWT_SECRET_KEY.get_secret_value()
-            if secret == _PLACEHOLDER_JWT_SECRET or len(secret) < _MIN_JWT_SECRET_LEN:
-                raise ValueError(
-                    "JWT_SECRET_KEY must be set to a strong, unique value "
-                    f"(>= {_MIN_JWT_SECRET_LEN} chars) when ENV=prod"
-                )
         return self
 
     @property
@@ -172,10 +147,6 @@ class Config(BaseSettings):
             o.strip() for o in (self.CORS_ORIGINS_STR or "").split(",") if o.strip()
         ]
         return origins or ["*"]
-
-    JWT_SECRET_KEY: SecretStr = SecretStr(_PLACEHOLDER_JWT_SECRET)
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # ---- LiveKit (room token minting) -------------------------------------
     # Required by POST /api/v1/token. The backend signs room tokens with the

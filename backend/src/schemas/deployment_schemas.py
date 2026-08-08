@@ -12,5 +12,3 @@ class DeploymentRead(BaseModel):
     project_name: str
     env: str
     livekit_url: str | None
-    allow_open_registration: bool
-    cors_origins: list[str]

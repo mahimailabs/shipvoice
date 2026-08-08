@@ -5,12 +5,10 @@ import sentry_sdk
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
-from fastapi_mcp import FastApiMCP
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.cors import CORSMiddleware
 
 from src.api.endpoints.health import router as health_router
-from src.api.mcps import router as mcps_routers
 from src.api.routes import routers
 from src.core.config import config
 from src.core.container import Container
@@ -75,12 +73,6 @@ class AppCreator:
 
         self.app.include_router(health_router)
         self.app.include_router(routers, prefix=config.API_STR)
-        self.app.include_router(mcps_routers, prefix=config.API_STR)
-        mcp = FastApiMCP(
-            self.app,
-            include_tags=["mcp-tools"],
-        )
-        mcp.mount_http(mount_path=config.MCP_STR)
         self._register_exception_handlers()
 
     def _configure_monitoring(self):
