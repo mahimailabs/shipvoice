@@ -85,6 +85,11 @@ class Config(BaseSettings):
 
     PROJECT_NAME: str = "ShipVoice"
 
+    # Closed by default. The console reads call transcripts, so an open
+    # register endpoint on a deployed instance hands them to anyone who finds
+    # the URL. '/setup' creates the first superuser directly instead.
+    ALLOW_OPEN_REGISTRATION: bool = False
+
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""
 

@@ -1,11 +1,10 @@
-from typing import Annotated, cast
-
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Query, status
 
+from src.api.deps import AdminUser, CurrentUser
+from src.core.config import Config
 from src.core.container import Container
 from src.core.exceptions import PermissionDeniedError
-from src.core.security import get_current_user
 from src.models.users_model import User
 from src.schemas.base_schema import FindBase
 from src.schemas.users_schemas import (
@@ -20,30 +19,12 @@ from src.services.users_service import UsersService
 router = APIRouter(prefix="/users")
 
 
-@inject
-async def get_current_user_record(
-    user_id: Annotated[int, Depends(get_current_user)],
-    service: UsersService = Depends(Provide[Container.users_service]),
-) -> User:
-    """Load the authenticated user's record (raises 404 if the account is gone)."""
-    return cast(User, await service.get_by_id(user_id))
-
-
-# The full authenticated user record; gives endpoints access to id + is_superuser.
-CurrentUser = Annotated[User, Depends(get_current_user_record)]
-
-
 def _require_self_or_admin(actor: User, target_user_id: int) -> None:
     if actor.id != target_user_id and not actor.is_superuser:
         raise PermissionDeniedError(detail="Not permitted to access this user")
 
 
-def _require_admin(actor: User) -> None:
-    if not actor.is_superuser:
-        raise PermissionDeniedError(detail="Administrator privileges required")
-
-
-# ---- Public: obtain or create credentials ----------------------------------
+# ---- Credentials -----------------------------------------------------------
 
 
 @router.post(
@@ -56,7 +37,15 @@ def _require_admin(actor: User) -> None:
 async def register_user(
     payload: UserCreate,
     service: UsersService = Depends(Provide[Container.users_service]),
+    config: Config = Depends(Provide[Container.config]),
 ):
+    # Closed by default. This console reads call transcripts, so an open
+    # register endpoint on a deployed instance hands them to whoever finds the
+    # URL. The gate runs before the service so no row is created and refused.
+    if not config.ALLOW_OPEN_REGISTRATION:
+        raise PermissionDeniedError(
+            detail="Registration is closed. Set ALLOW_OPEN_REGISTRATION=true to reopen it."
+        )
     return await service.register(payload)
 
 
@@ -85,14 +74,14 @@ async def read_me(current_user: CurrentUser):
 )
 @inject
 async def list_users(
-    current_user: CurrentUser,
+    current_user: AdminUser,
     service: UsersService = Depends(Provide[Container.users_service]),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
 ):
-    # Listing/enumerating all accounts is an admin-only operation.
-    _require_admin(current_user)
+    # Listing/enumerating all accounts is an admin-only operation. The gate is
+    # the dependency, not a call inside the body that a future edit can drop.
     result = await service.get_list(
         FindBase(page=page, page_size=page_size, search=search),
         searchable_fields=["full_name", "email"],
