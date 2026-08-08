@@ -1,4 +1,4 @@
-# Agent (LiveKit voice worker)
+# ShipVoice Agent
 
 A minimal LiveKit voice agent: joins a room (web or SIP), greets, and converses.
 Deepgram `nova-3` → OpenAI `gpt-4.1-mini` → Cartesia, with Silero VAD and the

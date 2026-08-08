@@ -50,8 +50,6 @@ async def entrypoint(ctx: JobContext) -> None:
     ctx.log_context_fields = {"room": ctx.room.name}
     await ctx.connect()
 
-    # Identify the caller. Web and SIP differ only here; the conversation is
-    # identical. Skipped in console mode (local mic, no remote participant).
     if not CONSOLE_MODE:
         participant = await ctx.wait_for_participant()
         caller = identify(participant)
