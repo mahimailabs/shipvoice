@@ -85,6 +85,12 @@ class Config(BaseSettings):
 
     PROJECT_NAME: str = "ShipVoice"
 
+    # The agent's dispatch identity. Must equal the worker's AGENT_NAME and the
+    # frontend's VITE_AGENT_NAME exactly, or LiveKit never dispatches the
+    # worker into the room and the call sits in "connecting" with no error.
+    AGENT_NAME: str = "assistant"
+    BUSINESS_NAME: str | None = None
+
     # Closed by default. The console reads call transcripts, so an open
     # register endpoint on a deployed instance hands them to anyone who finds
     # the URL. '/setup' creates the first superuser directly instead.

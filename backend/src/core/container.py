@@ -15,6 +15,7 @@ class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         modules=[
             "src.api.deps",
+            "src.api.endpoints.agents",
             "src.api.endpoints.users",
             "src.api.endpoints.token",
         ],
