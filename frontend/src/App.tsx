@@ -5,7 +5,7 @@ import { CallLogs } from "./pages/CallLogs";
 import { CallDetail } from "./pages/CallDetail";
 import { Agents } from "./pages/Agents";
 import { AgentDetail } from "./pages/AgentDetail";
-import { Settings } from "./pages/Settings";
+import { Deployment } from "./pages/Deployment";
 
 // No sign-in. The console is a local tool for whoever owns the deployment, so
 // it opens straight onto the agent. See the deploy note in the README before
@@ -19,7 +19,9 @@ export default function App() {
         <Route path="calls/:id" element={<CallDetail />} />
         <Route path="agents" element={<Agents />} />
         <Route path="agents/:slug" element={<AgentDetail />} />
-        <Route path="settings" element={<Settings />} />
+        <Route path="deployment" element={<Deployment />} />
+        {/* The page was called Settings before it was honest about being read-only. */}
+        <Route path="settings" element={<Navigate to="/deployment" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

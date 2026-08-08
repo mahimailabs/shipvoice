@@ -33,7 +33,7 @@ describe("Rail", () => {
   it("keeps the free surfaces navigable", () => {
     const { container } = withRouter(<Rail />);
     const hrefs = Array.from(container.querySelectorAll("a")).map((a) => a.getAttribute("href"));
-    expect(hrefs).toEqual(expect.arrayContaining(["/", "/calls", "/agents", "/settings"]));
+    expect(hrefs).toEqual(expect.arrayContaining(["/", "/calls", "/agents", "/deployment"]));
   });
 
   it("uses the real ShipVoice mark", () => {

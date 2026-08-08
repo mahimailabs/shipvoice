@@ -16,6 +16,7 @@ class Container(containers.DeclarativeContainer):
         modules=[
             "src.api.deps",
             "src.api.endpoints.agents",
+            "src.api.endpoints.deployment",
             "src.api.endpoints.users",
             "src.api.endpoints.token",
         ],

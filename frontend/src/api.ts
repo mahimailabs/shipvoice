@@ -4,6 +4,7 @@ import type {
   CallDetailResponse,
   CallListResponse,
   CallSummaryResponse,
+  DeploymentRead,
   RoomTokenResponse,
 } from "./types";
 
@@ -130,4 +131,8 @@ export async function getTestCallToken(agentName: string): Promise<RoomTokenResp
   }
   await guard(res, "Starting the test call");
   return (await res.json()) as RoomTokenResponse;
+}
+
+export async function getDeployment(): Promise<DeploymentRead> {
+  return get<DeploymentRead>("/api/v1/deployment", "Loading the deployment");
 }

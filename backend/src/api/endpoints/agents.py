@@ -7,19 +7,12 @@ from src.schemas.agents_schemas import AgentListResponse, AgentSummary
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
-# The worker builds its session with these, at agent/src/agent.py. They are
-# constants there, not configuration, so the backend cannot read them from the
-# environment and must not pretend to observe them. A drift test asserts these
-# still match the file.
+
 DECLARED_IN = "agent/src/agent.py"
 DECLARED_STT = "deepgram nova-3"
 DECLARED_LLM = "openai gpt-4.1-mini"
-# Cartesia is constructed as cartesia.TTS() with no model argument, so the
-# plugin default applies. Naming a model here would be a guess.
 DECLARED_TTS = "cartesia (plugin default)"
 
-# The prompt the worker actually loads today. It is a Python constant, not
-# a data file; the console links to it so the buyer knows where to edit.
 PROMPT_PATH = "agent/src/prompts/instructions.py"
 
 

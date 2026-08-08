@@ -81,14 +81,14 @@ export function Rail({
       </div>
 
       <div className="foot">
-        <NavLink to="/settings" className="who">
+        <NavLink to="/deployment" className="who">
           <span className="av" aria-hidden="true">
             {deployment.slice(0, 1).toUpperCase()}
           </span>
           <span style={{ minWidth: 0 }}>
             <span style={{ display: "block", font: "var(--type-body-sm)" }}>{deployment}</span>
             <span className="fnt" style={{ display: "block", font: "var(--type-caption)" }}>
-              Settings
+              Deployment
             </span>
           </span>
         </NavLink>

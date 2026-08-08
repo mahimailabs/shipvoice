@@ -213,7 +213,12 @@
 /* ---------- frame ---------- */
 
 .fr {
-  min-height: 100vh;
+  /* The shell owns the viewport and the page body scrolls inside .bd. The
+     design pins a footer strip, which only works if the document itself does
+     not scroll: otherwise the rail runs out at 100vh and the column below it
+     falls back to the frame background. */
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   background: var(--surface-base);
   color: var(--text-primary);
@@ -344,6 +349,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .top {
@@ -377,6 +383,10 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* min-height:0 lets a flex child actually shrink, which is what makes the
+     overflow below take effect instead of the container growing. */
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .ftr {

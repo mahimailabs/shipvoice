@@ -64,3 +64,11 @@ export interface RoomTokenResponse {
   server_url: string;
   participant_token: string;
 }
+
+export interface DeploymentRead {
+  project_name: string;
+  env: string;
+  livekit_url: string | null;
+  allow_open_registration: boolean;
+  cors_origins: string[];
+}
