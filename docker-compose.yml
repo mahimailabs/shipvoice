@@ -38,6 +38,11 @@ services:
   agent:
     build: ./agent
     env_file: .env
+    # The worker asks the backend for the LiveKit project at startup and
+    # restarts itself when it changes there. 'restart: unless-stopped' is what
+    # turns that restart into a running worker again, so keep it.
+    depends_on:
+      - backend
     restart: unless-stopped
 
   frontend:

@@ -8,9 +8,13 @@ import type { LiveKitRead } from "../types";
 // position. Nothing about the agent lives here, that belongs to the agent.
 //
 // The credentials are stored in the database, seeded once from the environment,
-// so a change made here survives a restart. The secret is write-only: this
-// backend has no authentication, so an endpoint that handed it back would hand
-// your LiveKit project to anyone who can reach the port.
+// so a change made here survives a restart. The worker reads them from the
+// backend too and restarts itself when they change, which is the only way an
+// edit here can reach the process that actually places calls.
+//
+// The secret is write-only: this backend has no authentication, so an endpoint
+// that handed it back would hand your LiveKit project to anyone who can reach
+// the port.
 
 type Save = "idle" | "saving" | "saved" | "error";
 
@@ -21,6 +25,7 @@ export function Deployment() {
   const [url, setUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
+  const [confirming, setConfirming] = useState(false);
   const [save, setSave] = useState<Save>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -42,6 +47,7 @@ export function Deployment() {
   }, []);
 
   function startEditing(): void {
+    setConfirming(false);
     setUrl(lk?.url ?? "");
     setApiKey("");
     setApiSecret("");
@@ -63,6 +69,7 @@ export function Deployment() {
       setLk(next);
       setSave("saved");
       setEditing(false);
+      setConfirming(false);
     } catch (e: unknown) {
       setSave("error");
       setSaveError(
@@ -94,8 +101,8 @@ export function Deployment() {
           title="LiveKit"
           meta={editing ? "the secret is never shown" : "the project this deployment calls"}
           actions={
-            editing ? undefined : (
-              <Button size="sm" onClick={startEditing}>
+            editing || confirming ? undefined : (
+              <Button size="sm" onClick={() => setConfirming(true)}>
                 Edit
               </Button>
             )
@@ -103,7 +110,28 @@ export function Deployment() {
         >
           {loadError && <p className="na">{loadError}</p>}
 
-          {!loadError && !editing && (
+          {!loadError && confirming && (
+            <div className="banner planned" role="alertdialog">
+              <Badge tone="warning">heads up</Badge>
+              <div>
+                <p style={{ margin: 0, font: "var(--type-body-sm)" }}>
+                  Saving a new project restarts the voice worker so it connects to it. Any call in
+                  progress finishes first, but the worker is unavailable for a few seconds while it
+                  comes back, and calls that arrive in that window are missed.
+                </p>
+                <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                  <button type="button" className="btn p sm" onClick={startEditing}>
+                    Edit anyway
+                  </button>
+                  <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!loadError && !editing && !confirming && (
             <div className="kvs">
               <div className="kv">
                 <span className="k">Project URL</span>
@@ -187,16 +215,6 @@ export function Deployment() {
           )}
         </Panel>
 
-        <div className="banner planned" role="note">
-          <Badge tone="warning">worker</Badge>
-          <span>
-            The voice worker reads its own LIVEKIT_ variables from agent/.env and does not see this.
-            After changing the project here, change it there too and restart the worker, or tokens
-            will be signed for one project while the worker waits on another and calls will connect
-            to silence.
-          </span>
-        </div>
-
         <Panel
           title={<span style={{ color: "var(--warning)" }}>Compliance</span>}
           meta="read this one"
@@ -209,9 +227,18 @@ export function Deployment() {
           </p>
         </Panel>
 
+        {save === "saved" && (
+          <p className="mut" style={{ font: "var(--type-body-sm)", margin: "0 0 12px" }}>
+            Saved. The worker checks for this and restarts itself within about fifteen seconds. If
+            you run it by hand rather than under Docker or Fly, start it again yourself.
+          </p>
+        )}
+
         <Ann>
-          The secret is write-only. This backend has no sign-in, so nothing that could be used as a
-          credential is ever sent back to the browser.
+          The worker takes its LiveKit project from here, not from its own environment, so a change
+          reaches the process placing calls instead of silently disagreeing with it. The secret is
+          write-only: this backend has no sign-in, so nothing usable as a credential is ever sent
+          back to the browser.
         </Ann>
       </div>
     </>

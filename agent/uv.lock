@@ -2775,6 +2775,7 @@ name = "voice-agent"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "livekit-agents", extra = ["openai", "turn-detector"] },
     { name = "livekit-plugins-cartesia" },
     { name = "livekit-plugins-deepgram" },
@@ -2797,6 +2798,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "livekit-agents", extras = ["openai", "turn-detector"], specifier = "==1.5.6" },
     { name = "livekit-plugins-cartesia", specifier = ">=1.5.1" },
     { name = "livekit-plugins-deepgram", specifier = ">=1.5.1" },

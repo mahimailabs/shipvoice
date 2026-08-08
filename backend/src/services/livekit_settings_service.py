@@ -85,6 +85,16 @@ class LiveKitSettingsService:
         )
         return (url, key, secret) if (url and key and secret) else None
 
+    async def revision(self) -> str:
+        """Changes whenever the stored project changes.
+
+        Derived from updated_at rather than a counter so it needs no extra
+        column and cannot drift from the row it describes.
+        """
+        async with self._session_factory() as session:
+            row = await self._row(session)
+        return row.updated_at.isoformat() if row else "environment"
+
     async def read(self) -> LiveKitRead:
         async with self._session_factory() as session:
             row = await self._row(session)

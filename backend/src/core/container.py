@@ -15,6 +15,7 @@ class Container(containers.DeclarativeContainer):
         modules=[
             "src.api.endpoints.agents",
             "src.api.endpoints.livekit",
+            "src.api.endpoints.internal_livekit",
             "src.api.endpoints.deployment",
             "src.api.endpoints.token",
         ],

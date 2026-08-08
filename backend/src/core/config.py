@@ -83,6 +83,11 @@ class Config(BaseSettings):
     AGENT_NAME: str = "assistant"
     BUSINESS_NAME: str | None = None
 
+    # Shared with the voice worker. It guards the one endpoint that serves the
+    # LiveKit secret, so an empty value disables that endpoint rather than
+    # opening it.
+    AGENT_SERVICE_TOKEN: str = ""
+
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""
 

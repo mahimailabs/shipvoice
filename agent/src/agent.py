@@ -17,6 +17,8 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from src.agents.assistant import Assistant
 from src.core.config import config
 from src.core.events import register_event_handlers
+from src.core.livekit_sync import bootstrap as bootstrap_livekit
+from src.core.livekit_sync import watch as watch_livekit
 from src.utils.room import identify
 
 logger = logging.getLogger("agent")
@@ -32,6 +34,18 @@ if config.SENTRY_DSN:
         dsn=config.SENTRY_DSN,
         traces_sample_rate=0.2,
         environment=os.getenv("FLY_APP_NAME", "development"),
+    )
+
+# Adopt the backend's LiveKit project before the LiveKit CLI reads the
+# environment, then watch for it changing. Console mode talks to no backend and
+# needs no LiveKit at all, so it is skipped there.
+if not CONSOLE_MODE:
+    _revision = bootstrap_livekit(config.BACKEND_API_URL, config.BACKEND_API_TOKEN)
+    watch_livekit(
+        config.BACKEND_API_URL,
+        config.BACKEND_API_TOKEN,
+        _revision,
+        config.LIVEKIT_SYNC_INTERVAL_SECONDS,
     )
 
 server = AgentServer(drain_timeout=300, shutdown_process_timeout=30)
