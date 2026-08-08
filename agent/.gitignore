@@ -1,5 +1,8 @@
 .env
 .env.*
+# '.env.*' matches '.env.example' too, which silently kept the file out of the
+# repo and broke the README's 'cp .env.example .env' on a fresh clone.
+!.env.example
 .venv/
 __pycache__/
 *.pyc

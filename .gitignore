@@ -4,3 +4,7 @@ docs/superpowers
 # Root env (copy .env.example -> .env)
 .env
 .env.local
+
+# Written by '/setup': holds the non-secret setup answers. The command deletes
+# it on a successful run; this is the backstop.
+setup.json

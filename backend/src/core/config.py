@@ -83,7 +83,7 @@ class Config(BaseSettings):
     MCP_STR: str = "/mcp"
     MCP_SERVER_URL: str = "http://127.0.0.1:8000/mcp"
 
-    PROJECT_NAME: str = "Mahimai's - - -"
+    PROJECT_NAME: str = "ShipVoice"
 
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""
