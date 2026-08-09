@@ -55,14 +55,11 @@ docker compose up -d --build
 A plain `docker compose restart` keeps the old value silently, which is one of
 the ways you end up with a mismatched agent name.
 
-## You edited the wrong `.env`
+## Compose works but the manual run does not, or the reverse
 
-`docker compose` reads the root `.env` and nothing else. The per-service files
-(`agent/.env`, `backend/.env`, `frontend/.env`) are for running that service by
-hand.
-
-The symptom is a stack that works one way and not the other: the manual run
-talks, compose does not, or the reverse.
+You edited the wrong `.env`. `docker compose` reads the root one and nothing
+else. The per-service files (`agent/.env`, `backend/.env`, `frontend/.env`) are
+for running that service by hand.
 
 ## The browser says "invalid API key"
 
