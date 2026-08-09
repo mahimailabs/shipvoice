@@ -168,7 +168,7 @@ a plugin for this repo and does not depend on it.
 
 <p align="center"><i>Console shown with sample data.</i></p>
 
-Lifetime updates. Launches September 2, 2026: [shipvoice.dev](https://shipvoice.dev)
+Lifetime updates: [shipvoice.dev](https://shipvoice.dev)
 
 ## Docs
 
