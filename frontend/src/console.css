@@ -1058,3 +1058,33 @@
 .sv-console .in::placeholder {
     color: var(--text-faint);
 }
+
+/* ---------- select styled as a control ---------- */
+/* A native select keeps its own chrome regardless of background, which made
+   the one filter that actually filters look like a stray form field next to
+   the buttons beside it. */
+
+.sv-console select.btn {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 26px;
+  background-color: var(--surface-raised);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% + 1px),
+    calc(100% - 9px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.sv-console select.btn:hover {
+  background-color: var(--surface-hover);
+}
+
+.sv-console select.btn option {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
