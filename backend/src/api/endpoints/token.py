@@ -14,7 +14,6 @@ async def create_room_token(
     payload: RoomTokenRequest,
     service: TokenService = Depends(Provide[Container.token_service]),
 ) -> RoomTokenResponse:
-    # Public by default. To require an authenticated user, add the dependency
-    # `current_user: CurrentUser` (see src/api/endpoints/users.py) to this
-    # signature; LiveKit room tokens are unrelated to the backend's own JWT.
-    return service.create_room_token(payload)
+    # Public. This backend has no authentication at all: do not put it on a
+    # public address without something in front of it.
+    return await service.create_room_token(payload)

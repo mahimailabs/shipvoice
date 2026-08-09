@@ -1,0 +1,1297 @@
+:root {
+    /* Neutral ramp (Tailwind neutral, from the source DS) */
+    --n-950: #0a0a0a;
+    --n-900: #171717;
+    --n-880: #1a1a1a;
+    --n-850: #202020;
+    --n-820: #232125;
+    --n-800: #262626;
+    --n-750: #303030;
+    --n-600: #525252;
+    --n-500: #737373;
+    --n-400: #a3a3a3;
+    --n-200: #e5e5e5;
+    --n-50: #fafafa;
+
+    /* ShipVoice red ramp, replacing the source violet ramp */
+    --brand-100: #fff2f2;
+    --brand-200: #ffcbcd;
+    --brand-300: #ff6f78;
+    --brand-400: #e5323f;
+    --brand-500: #b81f2b;
+    --brand-700: #8c1620;
+    --brand-900: #4c1016;
+
+    /* Muted status ramp (from the source DS) */
+    --sage-400: #9ab175;
+    --sand-300: #e7c994;
+    --clay-400: #b46a5f;
+    --red-800: #991b1b;
+
+    /* Surfaces */
+    --surface-sunken: var(--n-950);
+    --surface-base: var(--n-900);
+    --surface-raised: var(--n-850);
+    --surface-hover: var(--n-880);
+    --surface-row-hover: var(--n-820);
+    --surface-selected: var(--n-800);
+
+    /* Borders */
+    --border-subtle: #1f1f1f;
+    --border-default: var(--n-800);
+    --border-strong: var(--n-750);
+
+    /* Text */
+    --text-primary: var(--n-50);
+    --text-secondary: var(--n-400);
+    --text-muted: var(--n-500);
+    --text-faint: var(--n-600);
+    --text-on-accent: #ffffff;
+    --text-link: var(--brand-300);
+
+    /* Accent */
+    --sv-accent: var(--brand-400);
+    --accent-hover: var(--brand-300);
+    --accent-press: var(--brand-500);
+    --accent-solid: var(--brand-700);
+    --accent-quiet: var(--brand-900);
+    --accent-quiet-text: var(--brand-200);
+    --accent-ring: rgba(229, 50, 63, 0.35);
+
+    /* Status */
+    --success: var(--sage-400);
+    --warning: var(--sand-300);
+    --danger: var(--clay-400);
+    --danger-solid: var(--red-800);
+    --danger-solid-text: #fef2f2;
+
+    /* Data viz */
+    --sv-chart-1: var(--brand-400);
+    --sv-chart-2: var(--brand-300);
+    --sv-chart-3: var(--brand-500);
+    --sv-chart-4: var(--brand-200);
+    --chart-track: var(--n-750);
+    --chart-grid: var(--border-default);
+    --chart-dot: var(--brand-300);
+
+    /* Type */
+    --font-sans: "Space Grotesk", ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --fs-11: 11px;
+    --fs-12: 12px;
+    --fs-13: 13px;
+    --fs-14: 14px;
+    --fs-15: 15px;
+    --fs-16: 16px;
+    --fs-20: 20px;
+    --fs-24: 24px;
+    --fs-30: 30px;
+    --fs-40: 40px;
+    --fw-light: 300;
+    --fw-regular: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    --lh-tight: 1.1;
+    --lh-snug: 1.25;
+    --lh-normal: 1.45;
+    --lh-relaxed: 1.6;
+    --tracking-label: 0.08em;
+
+    --type-metric-xl: var(--fw-medium) var(--fs-30) / var(--lh-tight)
+        var(--font-sans);
+    --type-metric: var(--fw-bold) var(--fs-20) / var(--lh-tight)
+        var(--font-sans);
+    --type-panel-title: var(--fw-medium) var(--fs-16) / var(--lh-snug)
+        var(--font-sans);
+    --type-card-title: var(--fw-bold) var(--fs-15) / var(--lh-snug)
+        var(--font-sans);
+    --type-body: var(--fw-regular) var(--fs-14) / var(--lh-normal)
+        var(--font-sans);
+    --type-body-sm: var(--fw-regular) var(--fs-13) / var(--lh-normal)
+        var(--font-sans);
+    --type-nav: var(--fw-regular) var(--fs-14) / 1 var(--font-sans);
+    --type-table-cell: var(--fw-regular) var(--fs-13) / 1 var(--font-sans);
+    --type-caption: var(--fw-regular) var(--fs-12) / var(--lh-normal)
+        var(--font-sans);
+    --type-label: var(--fw-medium) var(--fs-11) / 1 var(--font-sans);
+
+    /* Spacing, 4px grid */
+    --space-2: 4px;
+    --space-4: 8px;
+    --space-6: 12px;
+    --space-8: 16px;
+    --space-12: 24px;
+    --space-16: 32px;
+
+    /* Frame metrics */
+    --sidebar-w: 240px;
+    --topbar-h: 56px;
+    --footer-h: 48px;
+    --nav-item-h: 40px;
+    --row-h: 40px;
+    --control-h: 32px;
+    --control-h-sm: 28px;
+    --badge-h: 20px;
+    --meter-h: 6px;
+    --pad-frame: 16px;
+    --pad-panel: 16px;
+    --pad-cell-x: 16px;
+    --pad-control-x: 12px;
+
+    /* Shape */
+    --radius-xs: 2px;
+    --sv-radius-sm: 4px;
+    --sv-radius-md: 6px;
+    --sv-radius-lg: 8px;
+    --radius-full: 999px;
+    --border-hairline: 1px solid var(--border-default);
+    --border-control: 1px solid var(--border-strong);
+
+    /* Effects */
+    --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.55);
+    --shadow-dialog: 0 24px 64px rgba(0, 0, 0, 0.65);
+    --focus-ring: 0 0 0 2px var(--accent-ring);
+    --scrim: rgba(10, 10, 10, 0.72);
+
+    color-scheme: dark;
+}
+
+.sv-console {
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font: var(--type-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.sv-console a {
+    color: var(--text-link);
+    text-decoration: none;
+}
+
+.sv-console a:hover {
+    color: var(--brand-200);
+}
+
+.sv-console :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.sv-console ::selection {
+    background: var(--accent-quiet);
+    color: var(--brand-100);
+}
+
+.sv-console ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.sv-console ::-webkit-scrollbar-thumb {
+    background: var(--n-800);
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.sv-console ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ---------- frame ---------- */
+
+.fr {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font: var(--type-body);
+}
+
+.rail {
+    width: var(--sidebar-w);
+    flex: none;
+    background: var(--surface-sunken);
+    border-right: 1px solid var(--border-default);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.rail .brand {
+    height: var(--topbar-h);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 var(--pad-frame);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.rail .mark {
+    width: 14px;
+    height: 14px;
+    background: var(--sv-accent);
+    transform: rotate(45deg);
+    border-radius: 1px;
+    flex: none;
+}
+
+.rail .brand span {
+    font: var(--fw-bold) var(--fs-15) / 1 var(--font-sans);
+}
+
+.rail .sec {
+    font: var(--type-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 16px var(--pad-frame) 6px;
+}
+
+.rail nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0 8px;
+}
+
+.rail nav a {
+    height: var(--nav-item-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border-radius: var(--sv-radius-md);
+    color: var(--text-secondary);
+    font: var(--type-nav);
+}
+
+.rail nav a:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.rail nav a.on {
+    background: var(--surface-selected);
+    color: var(--text-primary);
+}
+
+.rail nav a .ct {
+    margin-left: auto;
+    font: var(--type-label);
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.rail .scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.rail .foot {
+    margin-top: auto;
+    border-top: 1px solid var(--border-default);
+    padding: 12px;
+    flex: none;
+}
+
+.rail .who {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    border-radius: var(--sv-radius-md);
+    width: 100%;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.rail .who:hover {
+    background: var(--surface-hover);
+}
+
+.rail .av {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--sv-radius-sm);
+    background: var(--accent-quiet);
+    color: var(--accent-quiet-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: var(--fw-bold) var(--fs-12) / 1 var(--font-sans);
+    flex: none;
+}
+
+.cv {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.top {
+    height: var(--topbar-h);
+    flex: none;
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 var(--pad-frame);
+    position: sticky;
+    top: 0;
+    background: var(--surface-base);
+    z-index: 5;
+}
+
+.top h1 {
+    font: var(--type-panel-title);
+    margin: 0;
+}
+
+.top .sp {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bd {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* min-height:0 lets a flex child actually shrink, which is what makes the
+     overflow below take effect instead of the container growing. */
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.ftr {
+    height: var(--footer-h);
+    flex: none;
+    border-top: 1px solid var(--border-default);
+    background: var(--surface-sunken);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 var(--pad-frame);
+    font: var(--type-caption);
+    color: var(--text-faint);
+}
+
+/* ---------- primitives ---------- */
+
+.lb {
+    font: var(--type-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.num {
+    font-variant-numeric: tabular-nums;
+}
+
+.mut {
+    color: var(--text-secondary);
+}
+
+.fnt {
+    color: var(--text-faint);
+}
+
+.ok {
+    color: var(--success);
+}
+
+.pnl {
+    border: 1px solid var(--border-default);
+    background: var(--surface-base);
+}
+
+.ph {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 var(--pad-panel);
+    border-bottom: 1px solid var(--border-default);
+    font: var(--type-panel-title);
+}
+
+.ph .meta {
+    margin-left: auto;
+    font: var(--type-caption);
+    color: var(--text-muted);
+}
+
+.pb {
+    padding: var(--pad-panel);
+}
+
+.bg {
+    height: var(--badge-h);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 7px;
+    border-radius: var(--radius-xs);
+    font: var(--type-label);
+    white-space: nowrap;
+    background: var(--surface-selected);
+    color: var(--text-secondary);
+}
+
+.bg.ok {
+    background: rgba(154, 177, 117, 0.16);
+    color: var(--success);
+}
+
+.bg.wn {
+    background: rgba(231, 201, 148, 0.16);
+    color: var(--warning);
+}
+
+.bg.bad {
+    background: rgba(180, 106, 95, 0.16);
+    color: var(--danger);
+}
+
+.bg.vio {
+    background: var(--danger-solid);
+    color: var(--danger-solid-text);
+}
+
+.bg.acc {
+    background: var(--accent-quiet);
+    color: var(--accent-quiet-text);
+}
+
+.btn {
+    height: var(--control-h);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 var(--pad-control-x);
+    border: var(--border-control);
+    border-radius: var(--sv-radius-md);
+    background: transparent;
+    color: var(--text-primary);
+    font: var(--type-body-sm);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: var(--surface-hover);
+}
+
+.btn.p {
+    background: var(--accent-solid);
+    border-color: var(--accent-solid);
+    color: #fff;
+}
+
+.btn.p:hover {
+    background: var(--accent-press);
+    border-color: var(--accent-press);
+}
+
+.btn.g {
+    border-color: transparent;
+    color: var(--text-secondary);
+}
+
+.btn.d {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn.sm {
+    height: var(--control-h-sm);
+    font: var(--type-caption);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.inp {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 var(--pad-control-x);
+    border: var(--border-control);
+    border-radius: var(--sv-radius-md);
+    background: transparent;
+    color: var(--text-primary);
+    font: var(--type-body-sm);
+}
+
+.inp::placeholder {
+    color: var(--text-faint);
+}
+
+.tb {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tb th {
+    text-align: left;
+    font: var(--type-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 0 var(--pad-cell-x);
+    height: 36px;
+    border-bottom: 1px solid var(--border-default);
+    white-space: nowrap;
+}
+
+.tb td {
+    font: var(--type-table-cell);
+    color: var(--text-secondary);
+    padding: 0 var(--pad-cell-x);
+    height: var(--row-h);
+    border-bottom: 1px solid var(--border-default);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.tb tbody tr:hover td {
+    background: var(--surface-row-hover);
+}
+
+.tb tr.hl td {
+    background: var(--surface-row-hover);
+    color: var(--text-primary);
+}
+
+.tb td.pri {
+    color: var(--text-primary);
+}
+
+.tb td.kept {
+    color: var(--success);
+}
+
+.tb td.na {
+    color: var(--text-faint);
+}
+
+.tb tr.clickable {
+    cursor: pointer;
+}
+
+.scrollx {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.mtr {
+    height: var(--meter-h);
+    border-radius: var(--radius-full);
+    background: var(--chart-track);
+    overflow: hidden;
+    display: flex;
+}
+
+.mtr s {
+    display: block;
+    height: 100%;
+    text-decoration: none;
+}
+
+.stat {
+    flex: 1;
+    padding: 14px var(--pad-panel);
+    border-right: 1px solid var(--border-default);
+    min-width: 0;
+}
+
+.stat:last-child {
+    border-right: 0;
+}
+
+.stat b {
+    display: block;
+    font: var(--type-metric);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 3px;
+}
+
+.stat i {
+    display: block;
+    font: var(--type-body-sm);
+    font-style: normal;
+    color: var(--text-secondary);
+}
+
+.stat u {
+    display: block;
+    font: var(--type-caption);
+    text-decoration: none;
+    color: var(--text-faint);
+    margin-top: 2px;
+}
+
+.statrow {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.ghost {
+    border: 1px dotted var(--border-strong);
+    border-radius: var(--sv-radius-sm);
+}
+
+.ann {
+    font: var(--type-caption);
+    color: var(--brand-300);
+    line-height: var(--lh-normal);
+}
+
+.av2 {
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: var(--fw-bold) var(--fs-11) / 1 var(--font-sans);
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border-default);
+}
+
+.av2.s1 {
+    background: var(--brand-900);
+    color: var(--brand-200);
+}
+
+.av2.s2 {
+    background: rgba(154, 177, 117, 0.18);
+    color: var(--success);
+}
+
+.av2.s3 {
+    background: rgba(231, 201, 148, 0.18);
+    color: var(--warning);
+}
+
+/* ---------- money loop ---------- */
+
+.loop {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.loop .leg {
+    flex: 1;
+    padding: 18px var(--pad-panel);
+    min-width: 150px;
+}
+
+.loop .leg .lb {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.loop .leg b {
+    display: block;
+    font: var(--type-metric-xl);
+    font-variant-numeric: tabular-nums;
+}
+
+.loop .leg.kept b {
+    color: var(--success);
+}
+
+.loop .arrow {
+    flex: none;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--text-faint);
+    font-size: 18px;
+}
+
+.disclose {
+    padding: 10px var(--pad-panel);
+    border-top: 1px solid var(--border-default);
+    font: var(--type-caption);
+    color: var(--text-faint);
+}
+
+/* ---------- layout helpers ---------- */
+
+.pad {
+    padding: var(--pad-frame);
+    display: flex;
+    flex-direction: column;
+    gap: var(--pad-frame);
+}
+
+.grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--pad-frame);
+}
+
+.grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--pad-frame);
+}
+
+.split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: var(--pad-frame);
+    align-items: start;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kv {
+    display: flex;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font: var(--type-body-sm);
+    align-items: baseline;
+}
+
+.kv:last-child {
+    border-bottom: 0;
+}
+
+.kv .k {
+    width: 150px;
+    flex: none;
+    color: var(--text-faint);
+}
+
+.kv .v {
+    color: var(--text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.kv .v.mono {
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+}
+
+@media (max-width: 1000px) {
+    .split,
+    .grid2,
+    .grid3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- transcript ---------- */
+
+.turns {
+    display: flex;
+    flex-direction: column;
+}
+
+.turn {
+    display: flex;
+    gap: 12px;
+    padding: 12px var(--pad-panel);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.turn .who {
+    width: 70px;
+    flex: none;
+    font: var(--type-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding-top: 2px;
+}
+
+.turn .txt {
+    font: var(--type-body-sm);
+    color: var(--text-primary);
+    min-width: 0;
+}
+
+.turn .tm {
+    margin-left: auto;
+    flex: none;
+    font: var(--type-caption);
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- receipt ---------- */
+
+.rc {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    font: var(--type-body-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.rc .k {
+    color: var(--text-secondary);
+}
+
+.rc.tot {
+    border-top: 1px solid var(--border-default);
+    margin-top: 6px;
+    padding-top: 10px;
+    font: var(--type-card-title);
+}
+
+.rc.kept {
+    color: var(--success);
+}
+
+/* ---------- states ---------- */
+
+.empty {
+    padding: 40px var(--pad-panel);
+    text-align: center;
+    color: var(--text-muted);
+    font: var(--type-body-sm);
+}
+
+.empty h2 {
+    font: var(--type-card-title);
+    color: var(--text-primary);
+    margin: 0 0 6px;
+}
+
+.cmd {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border: 1px dotted var(--border-strong);
+    border-radius: var(--sv-radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    color: var(--text-primary);
+    text-align: left;
+}
+
+.banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px var(--pad-panel);
+    border: 1px solid var(--border-default);
+    border-left: 2px solid var(--warning);
+    background: var(--surface-raised);
+    font: var(--type-body-sm);
+    color: var(--text-secondary);
+}
+
+.banner.bad {
+    border-left-color: var(--danger);
+}
+
+.banner.planned {
+    border-left-color: var(--sv-accent);
+}
+
+.banner.good {
+    border-left-color: var(--success);
+}
+
+/* ---------- modal dialog ---------- */
+/* The console had no modal before the prompt editor: the call log's drawer is
+   an expanding row, not an overlay. --scrim and --shadow-dialog were already in
+   the token set with nothing using them, so this is what they were for. */
+
+.dlg-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--scrim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad-frame);
+}
+
+.dlg {
+    width: min(1040px, 94vw);
+    height: 86vh;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-default);
+    border-radius: var(--sv-radius-lg);
+    box-shadow: var(--shadow-dialog);
+    overflow: hidden;
+}
+
+.dlg .ph {
+    flex: none;
+}
+
+.dlg-bd {
+    flex: 1;
+    /* min-height:0 is what lets the textarea below shrink to the dialog rather
+       than push the footer off the bottom. */
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--pad-panel);
+}
+
+.dlg-ta {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    resize: none;
+    padding: var(--space-6) var(--space-8);
+    border: var(--border-hairline);
+    border-radius: var(--sv-radius-sm);
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-13);
+    line-height: var(--lh-relaxed);
+}
+
+/* The console's standard ring, not the accent border '.in' uses. That border is
+   right on a 32px field and reads as an error when it wraps a box this tall. */
+.dlg-ta:focus {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.dlg-ta:read-only {
+    color: var(--text-secondary);
+}
+
+.dlg-ta::placeholder {
+    color: var(--text-faint);
+}
+
+.dlg-ft {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--pad-panel);
+    border-top: 1px solid var(--border-default);
+    background: var(--surface-base);
+    /* A long refusal from the backend must not grow the footer over the
+       textarea it belongs to. */
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+/* ---------- login ---------- */
+
+.login-form {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: var(--surface-sunken);
+}
+
+.login-form h1 {
+    font: var(--type-card-title);
+    margin: 0 0 8px;
+}
+
+.login-form input {
+    width: 280px;
+    height: 36px;
+    padding: 0 var(--pad-control-x);
+    border: var(--border-control);
+    border-radius: var(--sv-radius-md);
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font: var(--type-body-sm);
+}
+
+.login-form button {
+    width: 280px;
+    height: var(--control-h);
+    border: 1px solid var(--accent-solid);
+    border-radius: var(--sv-radius-md);
+    background: var(--accent-solid);
+    color: #fff;
+    font: var(--type-body-sm);
+    cursor: pointer;
+}
+
+.login-error {
+    color: var(--danger);
+    font: var(--type-caption);
+    margin: 0;
+}
+
+/* Classes used by the ported console screens. */
+.stack {
+    display: flex;
+    gap: 4px;
+}
+
+.av2.s4 {
+    background: rgba(180, 106, 95, 0.18);
+    color: var(--danger);
+}
+
+.chartbox {
+    width: 100%;
+}
+
+/* ---------- ShipVoice Pro rail item ---------- */
+/* Inert on purpose. There is nothing behind these in this repo, so they show
+   the shape of the full product without pretending to be a door. */
+
+.sv-console .rail nav .pro-item {
+    height: var(--nav-item-h);
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: 0 var(--space-12);
+    border-radius: var(--sv-radius-sm);
+    color: var(--text-faint);
+    font: var(--type-body-sm);
+    cursor: default;
+    user-select: none;
+}
+
+.sv-console .nav-pro {
+    margin-left: auto;
+    flex: none;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 6px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--sv-radius-sm);
+    color: var(--text-faint);
+    font: var(--type-caption);
+    letter-spacing: var(--tracking-label);
+}
+
+/* The Upgrade button is an anchor, so it needs the flex centring .btn gets
+   from being a button element, and it must not inherit the rail link colour. */
+.sv-console .top .upgrade,
+.sv-console .top .upgrade:hover {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: #fff;
+}
+
+/* ---------- form fields ---------- */
+/* The console is read-only apart from the LiveKit project, so this is the only
+   input styling in it. */
+
+.sv-console .kvs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+}
+
+.sv-console .fld {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sv-console .in {
+    height: var(--control-h);
+    padding: 0 var(--pad-control-x);
+    border: var(--border-control);
+    border-radius: var(--sv-radius-sm);
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+    font: var(--type-body-sm);
+    font-family: var(--font-mono);
+    width: 100%;
+    max-width: 420px;
+}
+
+.sv-console .in:focus {
+    outline: none;
+    border-color: var(--sv-accent);
+}
+
+.sv-console .in::placeholder {
+    color: var(--text-faint);
+}
+
+/* ---------- select styled as a control ---------- */
+/* A native select keeps its own chrome regardless of background, which made
+   the one filter that actually filters look like a stray form field next to
+   the buttons beside it. */
+
+.sv-console select.btn {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 26px;
+  background-color: var(--surface-raised);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% + 1px),
+    calc(100% - 9px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.sv-console select.btn:hover {
+  background-color: var(--surface-hover);
+}
+
+.sv-console select.btn option {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+/* React Flow ships a light-themed attribution badge, which reads as a broken
+   white box on this console. Its terms allow styling it; they do not allow
+   removing it without a Pro licence, so it stays and just gets toned down. */
+.sv-console .react-flow__attribution {
+  background: transparent;
+  padding: 0 6px 2px 0;
+}
+
+.sv-console .react-flow__attribution a {
+  color: var(--text-faint);
+  font: var(--type-caption);
+  text-decoration: none;
+}
+
+.sv-console .react-flow__attribution a:hover {
+  color: var(--text-muted);
+}
+
+/* The one "what does a dash mean" explainer, in the top bar on every page.
+   Hover and keyboard focus both open it: a tooltip only a mouse can reach is
+   not an explanation, it is decoration. */
+.sv-console .help {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+}
+
+.sv-console .help-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-muted);
+    font: var(--type-caption);
+    line-height: 1;
+    cursor: help;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.sv-console .help-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.sv-console .help-tip {
+    position: absolute;
+    top: calc(100% + 8px);
+    /* Anchored right: this sits beside the Upgrade button, so it opens
+       leftwards and never runs off the edge of the window. */
+    right: 0;
+    width: 320px;
+    padding: var(--space-6) var(--space-8);
+    border: 1px solid var(--border-default);
+    border-radius: var(--sv-radius-sm);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-popover);
+    color: var(--text-secondary);
+    font: var(--type-body-sm);
+    line-height: var(--lh-relaxed);
+    text-align: left;
+    white-space: normal;
+    /* Not 'display: none': the tooltip stays in the accessibility tree so
+       aria-describedby still resolves it when it is not on screen. */
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 90ms ease,
+        visibility 90ms;
+    z-index: 20;
+}
+
+.sv-console .help:hover .help-tip,
+.sv-console .help-btn:focus-visible + .help-tip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* The reference draws the date range as a bordered field beside the Export
+   button, not as a second button. Nothing here filters by date, so it is inert:
+   it carries the shape and a title saying why, and takes no focus. */
+.sv-console .inert-field {
+    display: inline-flex;
+    align-items: center;
+    height: var(--control-h-sm);
+    padding: 0 var(--pad-control-x);
+    border: var(--border-hairline);
+    border-radius: var(--sv-radius-sm);
+    color: var(--text-faint);
+    font: var(--type-body-sm);
+    white-space: nowrap;
+    cursor: default;
+}
+
+/* Marks a figure as the reference console's rather than this deployment's.
+   A dot, not a worded chip: nine of these share the Overview, and nine
+   repetitions of the same word read as clutter instead of as a caveat. It says
+   the same thing on hover. */
+.sv-console .dot-sample {
+    display: inline-block;
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--sv-accent);
+    /* Lifted to sit with the cap height of the label beside it rather than on
+       the baseline, where a 6px circle reads as a stray full stop. */
+    vertical-align: middle;
+    cursor: help;
+}

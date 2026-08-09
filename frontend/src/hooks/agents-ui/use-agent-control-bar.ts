@@ -1,12 +1,12 @@
-import { useCallback } from 'react';
-import { Track } from 'livekit-client';
+import { useCallback } from "react";
+import { Track } from "livekit-client";
 import {
   type TrackReference,
   useTrackToggle,
   usePersistentUserChoices,
   useLocalParticipantPermissions,
   useSessionContext,
-} from '@livekit/components-react';
+} from "@livekit/components-react";
 
 const trackSourceToProtocol = (source: Track.Source) => {
   // NOTE: this mapping avoids importing the protocol package as that leads to a significant bundle size increase
@@ -36,7 +36,9 @@ export function usePublishPermissions(): PublishPermissions {
     return (
       !!localPermissions?.canPublish &&
       (localPermissions.canPublishSources.length === 0 ||
-        localPermissions.canPublishSources.includes(trackSourceToProtocol(source)))
+        localPermissions.canPublishSources.includes(
+          trackSourceToProtocol(source),
+        ))
     );
   };
 
@@ -58,7 +60,9 @@ export interface UseInputControlsReturn {
   microphoneTrack?: TrackReference;
   microphoneToggle: ReturnType<typeof useTrackToggle<Track.Source.Microphone>>;
   cameraToggle: ReturnType<typeof useTrackToggle<Track.Source.Camera>>;
-  screenShareToggle: ReturnType<typeof useTrackToggle<Track.Source.ScreenShare>>;
+  screenShareToggle: ReturnType<
+    typeof useTrackToggle<Track.Source.ScreenShare>
+  >;
   handleAudioDeviceChange: (deviceId: string) => void;
   handleVideoDeviceChange: (deviceId: string) => void;
   handleMicrophoneDeviceSelectError: (error: Error) => void;
@@ -75,17 +79,20 @@ export function useInputControls({
 
   const microphoneToggle = useTrackToggle({
     source: Track.Source.Microphone,
-    onDeviceError: (error) => onDeviceError?.({ source: Track.Source.Microphone, error }),
+    onDeviceError: (error) =>
+      onDeviceError?.({ source: Track.Source.Microphone, error }),
   });
 
   const cameraToggle = useTrackToggle({
     source: Track.Source.Camera,
-    onDeviceError: (error) => onDeviceError?.({ source: Track.Source.Camera, error }),
+    onDeviceError: (error) =>
+      onDeviceError?.({ source: Track.Source.Camera, error }),
   });
 
   const screenShareToggle = useTrackToggle({
     source: Track.Source.ScreenShare,
-    onDeviceError: (error) => onDeviceError?.({ source: Track.Source.ScreenShare, error }),
+    onDeviceError: (error) =>
+      onDeviceError?.({ source: Track.Source.ScreenShare, error }),
   });
 
   const {
@@ -97,14 +104,14 @@ export function useInputControls({
 
   const handleAudioDeviceChange = useCallback(
     (deviceId: string) => {
-      saveAudioInputDeviceId(deviceId ?? 'default');
+      saveAudioInputDeviceId(deviceId ?? "default");
     },
     [saveAudioInputDeviceId],
   );
 
   const handleVideoDeviceChange = useCallback(
     (deviceId: string) => {
-      saveVideoInputDeviceId(deviceId ?? 'default');
+      saveVideoInputDeviceId(deviceId ?? "default");
     },
     [saveVideoInputDeviceId],
   );
@@ -140,7 +147,8 @@ export function useInputControls({
     [cameraToggle, screenShareToggle],
   );
   const handleMicrophoneDeviceSelectError = useCallback(
-    (error: Error) => onDeviceError?.({ source: Track.Source.Microphone, error }),
+    (error: Error) =>
+      onDeviceError?.({ source: Track.Source.Microphone, error }),
     [onDeviceError],
   );
 

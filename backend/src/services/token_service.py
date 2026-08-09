@@ -3,9 +3,9 @@ import uuid
 from google.protobuf.json_format import ParseDict
 from livekit import api
 
-from src.core.config import Config
 from src.core.exceptions import create_service_unavailable_exception
 from src.schemas.token_schemas import RoomTokenRequest, RoomTokenResponse
+from src.services.livekit_settings_service import LiveKitSettingsService
 
 
 def _to_room_config(data: dict) -> "api.RoomConfiguration":
@@ -18,24 +18,24 @@ def _to_room_config(data: dict) -> "api.RoomConfiguration":
 
 
 class TokenService:
-    """Mints LiveKit room access tokens. Stateless: no DB, no repository."""
+    """Mints LiveKit room access tokens.
 
-    def __init__(self, config: Config) -> None:
-        self._config = config
+    Reads the credentials through the settings service on every call rather than
+    capturing them at construction, so a change made in the console takes effect
+    on the next token without restarting the process.
+    """
 
-    def create_room_token(self, payload: RoomTokenRequest) -> RoomTokenResponse:
-        url = self._config.LIVEKIT_URL
-        key = self._config.LIVEKIT_API_KEY
-        secret = (
-            self._config.LIVEKIT_API_SECRET.get_secret_value()
-            if self._config.LIVEKIT_API_SECRET
-            else None
-        )
-        if not (url and key and secret):
+    def __init__(self, settings: LiveKitSettingsService) -> None:
+        self._settings = settings
+
+    async def create_room_token(self, payload: RoomTokenRequest) -> RoomTokenResponse:
+        credentials = await self._settings.credentials()
+        if credentials is None:
             raise create_service_unavailable_exception(
                 "LiveKit is not configured: set LIVEKIT_URL, LIVEKIT_API_KEY, "
-                "and LIVEKIT_API_SECRET"
+                "and LIVEKIT_API_SECRET, or set them from the console"
             )
+        url, key, secret = credentials
 
         room_name = payload.room_name or f"room-{uuid.uuid4().hex[:12]}"
         identity = payload.participant_identity or f"user-{uuid.uuid4().hex[:12]}"

@@ -1,12 +1,19 @@
-# One-command local stack: Postgres + backend (token server) + agent + frontend.
-# Uses an EXTERNAL LiveKit project via LIVEKIT_URL (a LiveKit Cloud free project works).
+# One-command local stack: Postgres, the token server, the voice worker and the
+# console. Uses an EXTERNAL LiveKit project via LIVEKIT_URL (a free LiveKit
+# Cloud project works).
 #
-#   cp .env.example .env        # fill in LIVEKIT_* + OPENAI/DEEPGRAM/CARTESIA
+#   cp .env.example .env        # fill in the six values it asks for
 #   docker compose up --build
 #
-# Then open http://localhost:5173 and click "Start conversation".
-# The voice demo needs no database. For the auth/User endpoints, create the
-# tables once: docker compose exec backend alembic upgrade head
+# Then open http://localhost:5173, go to Agents, and hit "Start test call".
+#
+# The backend brings the schema up to head on startup, so there is no migration
+# step. Everything not in .env has a default here or in code.
+#
+# NOTE: this is the only env file compose reads. The per-service .env files are
+# for running those services by hand. And the VITE_ values below are baked into
+# the frontend at BUILD time, so changing them needs 'up -d --build', never
+# 'restart'.
 
 services:
   db:
@@ -28,8 +35,37 @@ services:
     env_file: .env
     environment:
       PORT: 8080
+      # Defaults so .env only has to carry the six values that need an account.
+      ENV: ${ENV:-dev}
+      # Local only. This publishes on 127.0.0.1, so "anyone who can reach it"
+      # is you. Do not carry this into a deployment.
+      CONSOLE_WRITES_ENABLED: ${CONSOLE_WRITES_ENABLED:-true}
+      # Literal, not overridable: it has to name the mount immediately below,
+      # and pointing it anywhere else writes a persona the worker never reads.
+      AGENT_PROMPT_FILE: /app/prompts/instructions.md
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-app}
+      DB_SSL: ${DB_SSL:-disable}
+      CORS_ORIGINS_STR: ${CORS_ORIGINS_STR:-http://localhost:5173}
+    volumes:
+      # The backend writes the persona the agent reads, which is why both mount
+      # the SAME host directory. This one is read-write because the console's
+      # editor saves through it. The agent's stays ':ro': the worker only ever
+      # reads the file, and one writer is the whole reason a save can be atomic.
+      # Without this mount the editor still loads, and every save answers 409
+      # naming the path it could not write.
+      - ./agent/prompts:/app/prompts
     ports:
-      - "8000:8080" # http://localhost:8000  (docs at /docs)
+      - "127.0.0.1:8000:8080" # http://localhost:8000  (docs at /docs)
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health', timeout=3).status==200 else 1)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     depends_on:
       db:
         condition: service_healthy
@@ -38,6 +74,30 @@ services:
   agent:
     build: ./agent
     env_file: .env
+    environment:
+      # Where the worker asks for the LiveKit project. Inside the compose
+      # network the backend answers on its container port, not the published one.
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8080}
+      AGENT_NAME: ${AGENT_NAME:-assistant}
+      # The worker posts each call's start, its turns and its end to the
+      # backend, which is what fills the console's Calls page. On by default so
+      # the documented path produces data. It still needs BACKEND_API_TOKEN to
+      # equal the backend's AGENT_SERVICE_TOKEN: without them nothing is sent.
+      BACKEND_REPORTING_ENABLED: ${BACKEND_REPORTING_ENABLED:-true}
+    volumes:
+      # The persona is data, not code. Mounting it means editing the prompt is
+      # not an image rebuild, and because the worker re-reads the file for every
+      # job it is not a restart either. Read-only: the backend owns the write.
+      - ./agent/prompts:/app/prompts:ro
+    # The worker asks the backend for the LiveKit project at startup and
+    # restarts itself when it changes there. 'restart: unless-stopped' is what
+    # turns that restart into a running worker again, so keep it.
+    depends_on:
+      # service_healthy, not just started: the worker asks the backend for its
+      # LiveKit project at boot, and a bare depends_on made that fetch race the
+      # backend coming up.
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -45,9 +105,12 @@ services:
       context: ./frontend
       args:
         VITE_TOKEN_ENDPOINT: ${VITE_TOKEN_ENDPOINT:-http://localhost:8000/api/v1/token}
-        VITE_AGENT_NAME: ${VITE_AGENT_NAME:-assistant}
+        # Must equal AGENT_NAME above. If they differ, LiveKit never dispatches
+        # the worker: the room opens, the token is valid, and nothing speaks.
+        VITE_AGENT_NAME: ${VITE_AGENT_NAME:-${AGENT_NAME:-assistant}}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
     ports:
-      - "5173:80" # http://localhost:5173
+      - "127.0.0.1:5173:80" # http://localhost:5173
     depends_on:
       - backend
 

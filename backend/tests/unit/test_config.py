@@ -1,13 +1,10 @@
-import pytest
-from pydantic import ValidationError
+import logging
 
 from src.core.config import (
-    _PLACEHOLDER_JWT_SECRET,
     Config,
     _to_async_url,
     _url_requires_ssl,
 )
-from src.schemas.users_schemas import UserUpdate
 
 
 def test_neon_url_coerced_to_asyncpg_and_libpq_params_stripped():
@@ -41,31 +38,39 @@ def test_ssl_requirement_inference():
     assert _url_requires_ssl("postgresql://u:p@h/db") is None
 
 
-def test_user_update_omits_privileged_fields():
-    # Mass-assignment guard: clients must not be able to set role/status.
-    fields = set(UserUpdate.model_fields)
-    assert "is_superuser" not in fields
-    assert "is_active" not in fields
-
-
-def test_prod_rejects_placeholder_jwt_secret():
-    with pytest.raises(ValidationError):
-        Config(ENV="prod", JWT_SECRET_KEY=_PLACEHOLDER_JWT_SECRET)
-
-
-def test_prod_rejects_short_jwt_secret():
-    with pytest.raises(ValidationError):
-        Config(ENV="prod", JWT_SECRET_KEY="too-short")
-
-
 def test_prod_accepts_strong_jwt_secret():
     cfg = Config(ENV="prod", JWT_SECRET_KEY="x" * 40)
     assert cfg.ENV.value == "prod"
 
 
-def test_dev_allows_placeholder_secret():
-    cfg = Config(ENV="dev", JWT_SECRET_KEY=_PLACEHOLDER_JWT_SECRET)
-    assert cfg.DEBUG is True
+def test_the_declared_pattern_defaults_to_the_one_this_repo_runs():
+    assert Config(ENV="dev", _env_file=None).AGENT_PATTERN == "sequential"
+
+
+def test_a_pattern_this_repo_supports_is_kept():
+    assert (
+        Config(ENV="dev", _env_file=None, AGENT_PATTERN="supervisor").AGENT_PATTERN
+        == "supervisor"
+    )
+    # Case and a stray space are the same answer, not a third pattern.
+    assert (
+        Config(ENV="dev", _env_file=None, AGENT_PATTERN=" Supervisor ").AGENT_PATTERN
+        == "supervisor"
+    )
+
+
+def test_an_unknown_pattern_falls_back_instead_of_reaching_the_console(caplog):
+    """Two values are legal here because two are implemented.
+
+    Echoing a third through would print a pattern on the Agents page that
+    nothing in this repo runs, so a misspelt env var would read as a feature.
+    It falls back, and it says so rather than falling back in silence.
+    """
+    with caplog.at_level(logging.WARNING, logger="src.core.config"):
+        cfg = Config(ENV="dev", _env_file=None, AGENT_PATTERN="swarm")
+
+    assert cfg.AGENT_PATTERN == "sequential"
+    assert "swarm" in caplog.text
 
 
 def test_cors_origins_default_to_wildcard():

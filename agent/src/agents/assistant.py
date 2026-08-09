@@ -3,7 +3,7 @@ import logging
 from livekit.agents import Agent
 
 from src.core.config import config
-from src.prompts.instructions import INSTRUCTIONS
+from src.prompts.instructions import load_instructions
 
 logger = logging.getLogger("agent")
 
@@ -17,7 +17,7 @@ class Assistant(Agent):
 
     def __init__(self, agent_name: str | None = None) -> None:
         super().__init__(
-            instructions=INSTRUCTIONS.format(agent_name=agent_name or config.AGENT_NAME)
+            instructions=load_instructions(agent_name or config.AGENT_NAME)
         )
 
     async def on_enter(self) -> None:

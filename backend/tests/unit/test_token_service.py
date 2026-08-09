@@ -2,7 +2,6 @@ import pytest
 from fastapi import HTTPException
 from livekit.api import TokenVerifier
 
-from src.core.config import Config
 from src.schemas.token_schemas import RoomTokenRequest
 from src.services.token_service import TokenService
 
@@ -11,23 +10,26 @@ SECRET = "devsecret-devsecret-devsecret-1234"
 URL = "wss://example.livekit.cloud"
 
 
+class _FixedSettings:
+    """Stands in for the settings service: no database, fixed credentials."""
+
+    def __init__(self, credentials: tuple[str, str, str] | None) -> None:
+        self._credentials = credentials
+
+    async def credentials(self) -> tuple[str, str, str] | None:
+        return self._credentials
+
+
 def _service() -> TokenService:
-    cfg = Config(
-        ENV="dev",
-        _env_file=None,
-        LIVEKIT_URL=URL,
-        LIVEKIT_API_KEY=KEY,
-        LIVEKIT_API_SECRET=SECRET,
-    )
-    return TokenService(cfg)
+    return TokenService(_FixedSettings((URL, KEY, SECRET)))
 
 
 def _claims(token: str):
     return TokenVerifier(KEY, SECRET).verify(token)
 
 
-def test_mints_token_with_requested_room_and_identity():
-    resp = _service().create_room_token(
+async def test_mints_token_with_requested_room_and_identity():
+    resp = await _service().create_room_token(
         RoomTokenRequest(
             room_name="r1", participant_identity="alice", participant_name="Alice"
         )
@@ -42,14 +44,16 @@ def test_mints_token_with_requested_room_and_identity():
     assert claims.video.can_subscribe is True
 
 
-def test_generates_defaults_when_fields_missing():
-    claims = _claims(_service().create_room_token(RoomTokenRequest()).participant_token)
+async def test_generates_defaults_when_fields_missing():
+    claims = _claims(
+        (await _service().create_room_token(RoomTokenRequest())).participant_token
+    )
     assert claims.identity.startswith("user-")
     assert claims.video.room.startswith("room-")
 
 
-def test_metadata_and_attributes_are_encoded():
-    resp = _service().create_room_token(
+async def test_metadata_and_attributes_are_encoded():
+    resp = await _service().create_room_token(
         RoomTokenRequest(
             participant_metadata="hello", participant_attributes={"tier": "pro"}
         )
@@ -59,8 +63,8 @@ def test_metadata_and_attributes_are_encoded():
     assert claims.attributes["tier"] == "pro"
 
 
-def test_room_config_enables_agent_dispatch():
-    resp = _service().create_room_token(
+async def test_room_config_enables_agent_dispatch():
+    resp = await _service().create_room_token(
         RoomTokenRequest(
             room_name="r", room_config={"agents": [{"agentName": "assistant"}]}
         )
@@ -70,14 +74,8 @@ def test_room_config_enables_agent_dispatch():
     assert claims.room_config.agents[0].agent_name == "assistant"
 
 
-def test_unconfigured_livekit_raises_503():
-    cfg = Config(
-        ENV="dev",
-        _env_file=None,
-        LIVEKIT_URL=None,
-        LIVEKIT_API_KEY=None,
-        LIVEKIT_API_SECRET=None,
-    )
+async def test_unconfigured_livekit_raises_503():
+    """No credentials anywhere: refuse, rather than mint a token nobody can use."""
     with pytest.raises(HTTPException) as exc:
-        TokenService(cfg).create_room_token(RoomTokenRequest())
+        await TokenService(_FixedSettings(None)).create_room_token(RoomTokenRequest())
     assert exc.value.status_code == 503

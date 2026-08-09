@@ -1,9 +1,10 @@
 import logging
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
 
 from dotenv import load_dotenv
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.core.enums import EnvironmentOption
@@ -13,25 +14,32 @@ load_dotenv(override=False)
 
 logger = logging.getLogger(__name__)
 
+# The two shapes a call can run in here, and the whole set. "sequential" is one
+# agent that owns the call start to finish. "supervisor" is one router that
+# holds the caller and hands a single turn to a specialist. A third value is a
+# typo, not a pattern.
+AGENT_PATTERNS = ("sequential", "supervisor")
+DEFAULT_AGENT_PATTERN = "sequential"
+
+# src/core/config.py -> backend/ -> the repo root -> the worker's prompt file.
+# Derived from this file's own location rather than the working directory, so
+# 'uv run uvicorn src.main:app' from backend/ finds the persona with nothing set
+# in the environment. Compose overrides it with the container's mount path.
+DEFAULT_AGENT_PROMPT_FILE = (
+    Path(__file__).resolve().parents[3] / "agent" / "prompts" / "instructions.md"
+)
+
 # libpq query params that asyncpg.connect() does not accept as kwargs.
 # TLS is instead enabled via connect_args (see Config.SQLALCHEMY_CONNECT_ARGS).
 _LIBPQ_ONLY_PARAMS = {"sslmode", "channel_binding"}
 _SSL_DISABLED = {"disable", "false", "0", "no", "off"}
 _SSL_OPTIONAL = {"allow", "prefer"}
 
-# Dev placeholder for JWT_SECRET_KEY. Production startup fails fast (see the
-# Config validator) if this is left unchanged or the secret is too short.
-_PLACEHOLDER_JWT_SECRET = "change-me-in-prod-change-me-in-prod-32chars-min"
-_MIN_JWT_SECRET_LEN = 32
-
 
 def _to_async_url(url: str) -> str:
-    """Coerce a Postgres URL to the asyncpg driver and drop libpq-only query
+    """
+    Coerce a Postgres URL to the asyncpg driver and drop libpq-only query
     params (sslmode, channel_binding) that asyncpg rejects.
-
-    Lets you paste a managed-Postgres URL (Neon/Supabase) verbatim, e.g.
-    ``postgresql://u:p@host/db?sslmode=require`` ->
-    ``postgresql+asyncpg://u:p@host/db``.
     """
     parts = urlsplit(url)
     base_scheme = parts.scheme.split("+", 1)[0]
@@ -46,6 +54,26 @@ def _to_async_url(url: str) -> str:
     return urlunsplit(
         (scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
     )
+
+
+def _resolve_agent_pattern(value: str) -> str:
+    """A legal pattern in, the same pattern out. Anything else falls back.
+
+    Echoing an unrecognised value straight through would print a pattern on the
+    Agents page that nothing in this repo runs, and a misspelt env var would
+    read as a capability. Case and stray whitespace are forgiven, because
+    "Supervisor" is the same answer as "supervisor".
+    """
+    pattern = value.strip().lower()
+    if pattern in AGENT_PATTERNS:
+        return pattern
+    logger.warning(
+        "AGENT_PATTERN=%r is not one of %s. Running as %r.",
+        value,
+        ", ".join(AGENT_PATTERNS),
+        DEFAULT_AGENT_PATTERN,
+    )
+    return DEFAULT_AGENT_PATTERN
 
 
 def _url_requires_ssl(url: str) -> bool | None:
@@ -73,47 +101,72 @@ class Config(BaseSettings):
         case_sensitive=True,
     )
 
-    ENV: EnvironmentOption = EnvironmentOption.PROD
+    # Dev by default. It used to be PROD, which meant trimming .env silently
+    # promoted the backend to production and 403'd the console's own LiveKit
+    # editor with no hint that ENV was the cause.
+    ENV: EnvironmentOption = EnvironmentOption.DEV
     DEBUG: bool | None = None
 
     API: str = "/api"
     API_V1_STR: str = "/api/v1"
     API_STR: str = "/api"
 
-    MCP_STR: str = "/mcp"
-    MCP_SERVER_URL: str = "http://127.0.0.1:8000/mcp"
+    PROJECT_NAME: str = "ShipVoice"
 
-    PROJECT_NAME: str = "Mahimai's - - -"
+    # The agent's dispatch identity. Must equal the worker's AGENT_NAME and the
+    # frontend's VITE_AGENT_NAME exactly, or LiveKit never dispatches the
+    # worker into the room and the call sits in "connecting" with no error.
+    AGENT_NAME: str = "assistant"
+    BUSINESS_NAME: str | None = None
+
+    # The agent's persona, which is a file and not a row. The worker builds its
+    # Agent once per job and re-reads this file every time it does, so a write
+    # here is picked up by the next call with no restart. Both services must
+    # point at the SAME file: in compose that is one host directory mounted into
+    # both, read-write here and read-only there.
+    AGENT_PROMPT_FILE: Path = DEFAULT_AGENT_PROMPT_FILE
+
+    # How this deployment says it runs a call. Declared, not measured: nothing
+    # here inspects the worker, so this is the deployment's own claim, the same
+    # way the provider names on /api/v1/agents are.
+    AGENT_PATTERN: str = DEFAULT_AGENT_PATTERN
+
+    @field_validator("AGENT_PATTERN")
+    @classmethod
+    def keep_the_pattern_legal(cls, value: str) -> str:
+        return _resolve_agent_pattern(value)
+
+    # Shared with the voice worker. It guards the one endpoint that serves the
+    # LiveKit secret, so an empty value disables that endpoint rather than
+    # opening it.
+    AGENT_SERVICE_TOKEN: str = ""
+
+    # Whether the console may rewrite the LiveKit project over HTTP. This is an
+    # authorization decision and it used to be inferred from ENV, which meant
+    # flipping ENV's default for console ergonomics silently opened an
+    # unauthenticated write on every deployment. Off unless someone says
+    # otherwise; compose turns it on for local use.
+    CONSOLE_WRITES_ENABLED: bool = False
 
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""
 
     # Database
     DATABASE_URL: str | None = None
-    DB_USER: str | None = None
-    DB_HOST: str | None = None
-    DB_PORT: int | None = None
-    DB_NAME: str | None = None
-    DB_PASSWORD: SecretStr | None = None
-    DB_SSL: str | None = None
+    # Defaults match the compose 'db' service, so a fresh clone needs none of
+    # these in its .env. Override them for anything that is not compose.
+    DB_USER: str | None = "postgres"
+    DB_HOST: str | None = "db"
+    DB_PORT: int | None = 5432
+    DB_NAME: str | None = "app"
+    DB_PASSWORD: SecretStr | None = SecretStr("postgres")
+    DB_SSL: str | None = "disable"
     DB_FORCE_ROLL_BACK: bool = False
 
     @model_validator(mode="after")
     def set_debug_default(self):
         if self.DEBUG is None:
             self.DEBUG = self.ENV == EnvironmentOption.DEV
-        return self
-
-    @model_validator(mode="after")
-    def enforce_prod_secret(self):
-        """Fail fast in production if the JWT secret is the placeholder or weak."""
-        if self.ENV == EnvironmentOption.PROD:
-            secret = self.JWT_SECRET_KEY.get_secret_value()
-            if secret == _PLACEHOLDER_JWT_SECRET or len(secret) < _MIN_JWT_SECRET_LEN:
-                raise ValueError(
-                    "JWT_SECRET_KEY must be set to a strong, unique value "
-                    f"(>= {_MIN_JWT_SECRET_LEN} chars) when ENV=prod"
-                )
         return self
 
     @property
@@ -161,10 +214,6 @@ class Config(BaseSettings):
             o.strip() for o in (self.CORS_ORIGINS_STR or "").split(",") if o.strip()
         ]
         return origins or ["*"]
-
-    JWT_SECRET_KEY: SecretStr = SecretStr(_PLACEHOLDER_JWT_SECRET)
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # ---- LiveKit (room token minting) -------------------------------------
     # Required by POST /api/v1/token. The backend signs room tokens with the

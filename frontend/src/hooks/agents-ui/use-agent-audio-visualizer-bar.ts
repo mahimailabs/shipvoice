@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { type AgentState } from '@livekit/components-react';
+import { useEffect, useRef, useState } from "react";
+import { type AgentState } from "@livekit/components-react";
 
 function generateConnectingSequenceBar(columns: number): number[][] {
   const seq = [];
@@ -27,14 +27,14 @@ export function useAgentAudioVisualizerBarAnimator(
   const [sequence, setSequence] = useState<number[][]>([[]]);
 
   useEffect(() => {
-    if (state === 'thinking') {
+    if (state === "thinking") {
       setSequence(generateListeningSequenceBar(columns));
-    } else if (state === 'connecting' || state === 'initializing') {
+    } else if (state === "connecting" || state === "initializing") {
       const sequence = [...generateConnectingSequenceBar(columns)];
       setSequence(sequence);
-    } else if (state === 'listening') {
+    } else if (state === "listening") {
       setSequence(generateListeningSequenceBar(columns));
-    } else if (state === undefined || state === 'speaking') {
+    } else if (state === undefined || state === "speaking") {
       setSequence([new Array(columns).fill(0).map((_, idx) => idx)]);
     } else {
       setSequence([[]]);

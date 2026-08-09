@@ -6,12 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-# Bring in the uv binary (pinned image)
 COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /usr/local/bin/uv
-
 WORKDIR /app
 
-# Install dependencies first (cached layer), without the project source
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev
 

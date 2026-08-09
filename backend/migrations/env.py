@@ -21,7 +21,7 @@ alembic_config = context.config
 
 # Interpret the config file for Python logging.
 if alembic_config.config_file_name is not None:
-    fileConfig(alembic_config.config_file_name)
+    fileConfig(alembic_config.config_file_name, disable_existing_loggers=False)
 
 # Inject the database URL from app config
 app_config = get_config()

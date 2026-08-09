@@ -15,7 +15,9 @@ dist-ssr
 # Test coverage (vitest)
 coverage
 
-# Env (copy .env.example -> .env)
+# Env (copy .env
+.env.*
+!.env.example.example -> .env)
 .env
 .env.local
 

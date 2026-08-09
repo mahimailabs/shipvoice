@@ -1,13 +1,13 @@
-# Agent (LiveKit voice worker)
+# ShipVoice Agent
 
 A minimal LiveKit voice agent: joins a room (web or SIP), greets, and converses.
-Deepgram `nova-3` → OpenAI `gpt-4.1-mini` → Cartesia, with Silero VAD and the
+Deepgram `nova-3` → Cerebras `gemma-4-31b` → Inworld `inworld-tts-2`, with Silero VAD and the
 multilingual turn detector. Explicit dispatch via `agent_name`.
 
 ## Quickstart
 
 ```bash
-cp .env.example .env     # LIVEKIT_*, OPENAI/DEEPGRAM/CARTESIA keys
+cp .env.example .env     # LIVEKIT_* + DEEPGRAM/CEREBRAS/INWORLD keys
 uv sync
 uv run python main.py download-files   # prefetch VAD + turn-detector models
 uv run python main.py console          # talk via local mic, no frontend needed
