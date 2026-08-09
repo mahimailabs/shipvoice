@@ -22,13 +22,13 @@ const STATUS_CHIPS = [
   { key: "all", label: "All", tone: "neutral" },
   { key: "completed", label: "Completed", tone: "success" },
   { key: "failed", label: "Failed", tone: "violation" },
-  { key: "active", label: "Active", tone: "neutral" },
+  { key: "active", label: "In progress", tone: "neutral" },
 ] as const;
 
 function statusBadge(status: CallStatus) {
   if (status === "completed") return <Badge tone="success">Completed</Badge>;
   if (status === "failed") return <Badge tone="violation">Failed</Badge>;
-  return <Badge tone="neutral">Active</Badge>;
+  return <Badge tone="neutral">In progress</Badge>;
 }
 
 /** A cell this deployment has no reading for. Never a zero, never a guess. */

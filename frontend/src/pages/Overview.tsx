@@ -14,7 +14,7 @@ type Load = "loading" | "ok" | "unwired" | "refused";
 function statusBadge(c: CallRead) {
   if (c.status === "completed") return <Badge tone="success">Completed</Badge>;
   if (c.status === "failed") return <Badge tone="violation">Failed</Badge>;
-  return <Badge tone="neutral">Active</Badge>;
+  return <Badge tone="neutral">In progress</Badge>;
 }
 
 export function Overview() {

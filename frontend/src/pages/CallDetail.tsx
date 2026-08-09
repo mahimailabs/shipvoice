@@ -208,7 +208,7 @@ export function CallDetail() {
           ) : call.status === "failed" ? (
             <Badge tone="violation">Failed</Badge>
           ) : (
-            <Badge tone="neutral">Active</Badge>
+            <Badge tone="neutral">In progress</Badge>
           )
         }
         meta={meta}
