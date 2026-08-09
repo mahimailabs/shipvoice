@@ -1,0 +1,137 @@
+---
+title: Customize
+description: "Change what the agent says, change the models, and the env vars that matter."
+---
+
+## The persona
+
+`agent/prompts/instructions.md`, one Markdown file with one placeholder.
+Editing it is the whole process: no restart, no rebuild. LiveKit runs
+`entrypoint()` per job, `Assistant.__init__` calls `load_instructions()`, and
+that reads the file every time, so a save lands on the next call. A call already
+in progress keeps the prompt it started with.
+
+`{agent_name}` is the only placeholder, replaced with the value of `AGENT_NAME`.
+Substitution is `str.replace`, not `str.format`, so a prompt containing a JSON
+example or any other brace is safe. Everything else in the file is literal text
+sent to the model.
+
+Two ways to edit it, same file:
+
+- **Your editor.** Compose mounts the directory into both containers, so there
+  is nothing to rebuild.
+- **The console.** Go to **Agents**, open the agent, then **Edit** on the
+  **Prompt** row. It reads and writes over `GET` and
+  `PUT /api/v1/agents/{slug}/prompt`, where `{slug}` is `AGENT_NAME` and any
+  other slug is a 404. The write is atomic, a temp file in the same directory
+  renamed over the target, so a save never leaves the worker reading half a
+  persona.
+
+The console write needs `CONSOLE_WRITES_ENABLED=true` (compose sets it, code
+defaults to `false`) and the backend's read-write mount of `./agent/prompts`
+(compose sets that too). The agent's mount of the same directory is `:ro`,
+because one writer is the reason a save can be atomic. Without the mount the
+editor still loads and every save answers 409 naming the path.
+
+<Warning>
+  Do not edit `agent/src/prompts/instructions.py`. That holds the packaged
+  fallback used when the file is missing, so a fresh clone still talks. When the
+  file is absent the console shows an empty editor and says the worker is
+  running that fallback.
+</Warning>
+
+## Swapping a provider
+
+Every provider choice is one constructor in `agent/src/agent.py`.
+
+```python agent/src/agent.py
+session: AgentSession = AgentSession(
+    stt=deepgram.STT(model="nova-3"),
+    llm=cerebras.LLM(model="gemma-4-31b"),
+    tts=inworld.TTS(model="inworld-tts-2", voice="Ashley"),
+    vad=ctx.proc.userdata["vad"],
+    turn_handling=TurnHandlingOptions(
+        turn_detection=MultilingualModel(),
+        interruption={"mode": "vad"},
+    ),
+)
+```
+
+Model names and `voice` are strings on the constructor, so changing a voice or a
+model version is a one-word edit. Changing a provider is three edits, all in
+`agent/`:
+
+```bash
+cd agent
+uv add livekit-plugins-openai
+```
+
+Add it to the `from livekit.plugins import ...` line in `src/agent.py`, then
+swap the one argument (`llm=openai.LLM(model="gpt-4o-mini")`) and leave the
+other two alone. Put the new provider's key in the root `.env`, and in
+`agent/.env` too if you run the worker by hand. Then rebuild the worker image:
+
+```bash
+docker compose up -d --build agent
+```
+
+`vad` and `turn_handling` are not provider slots. Silero VAD is loaded once in
+`prewarm()` and shared; turn detection is
+`livekit.plugins.turn_detector.multilingual.MultilingualModel`. Changing speech
+to text or the model touches neither.
+
+<Note>
+  `scripts/doctor.py` probes Deepgram, Cerebras and Inworld by name from a
+  hardcoded list, so after a swap it checks a key the session no longer uses.
+  Its agent-name, LiveKit and stack checks stay correct.
+</Note>
+
+Noise cancellation is opt-in, noted in a comment in `src/agent.py`. Run
+`uv add livekit-plugins-noise-cancellation`, import `RoomInputOptions` from
+`livekit.agents` and `noise_cancellation` from `livekit.plugins`, then pass
+`room_input_options=RoomInputOptions(noise_cancellation=noise_cancellation.BVC())`
+to `session.start`.
+
+## Environment
+
+`docker compose` reads the root `.env` and nothing else. It passes that file to
+the backend and agent containers, and the `VITE_` values to the frontend as
+**build** arguments. The per-service files are for running one service by hand:
+`agent/.env` for `main.py dev` and console mode, `backend/.env` for uvicorn,
+`frontend/.env` for `pnpm dev` and `pnpm build`. A value in the wrong file gives
+you a stack that works one way and not the other.
+
+Six values are required and nothing runs without them: `LIVEKIT_URL`,
+`LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` from your LiveKit project, plus
+`DEEPGRAM_API_KEY` ([console.deepgram.com](https://console.deepgram.com)),
+`CEREBRAS_API_KEY` ([cloud.cerebras.ai](https://cloud.cerebras.ai)) and
+`INWORLD_API_KEY` ([platform.inworld.ai](https://platform.inworld.ai)). Console
+mode needs the last three only.
+
+| Variable | Default | Notes |
+| -------- | ------- | ----- |
+| `AGENT_NAME` | `assistant` | The dispatch name, and the agent's slug in the console and its API routes. |
+| `VITE_AGENT_NAME` | `AGENT_NAME` | Must be byte-identical to `AGENT_NAME`. Baked at frontend build time. |
+| `BUSINESS_NAME` | unset | Reported with each call and shown in the console. It is metadata, never given to the model. |
+| `AGENT_SERVICE_TOKEN` | empty | Backend side of the service token. Empty disables the endpoint rather than opening it. |
+| `BACKEND_API_TOKEN` | empty | Agent side. One secret with two names, so it must equal the value above. Generate it with `openssl rand -hex 32`. |
+| `CONSOLE_WRITES_ENABLED` | `true` in compose, `false` in code | Gates the prompt and LiveKit writes. Off anywhere that is not your own machine. |
+
+Without the service token pair the worker keeps its own LiveKit credentials and
+the Calls page stays empty.
+
+Everything else has a working default. `.env.example` is the full list, one
+comment per value, and it is already in your clone.
+
+<Warning>
+  The three `VITE_` values are baked into the frontend bundle at image build
+  time. Changing one needs `docker compose up -d --build`, never `restart`.
+</Warning>
+
+`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL` and `ENV`
+default in compose to `db`, `5432`, `postgres`, `postgres`, `app`, `disable` and
+`dev`, so the root `.env` needs them only when you point at a Postgres that is
+not the bundled one. `AGENT_PROMPT_FILE` is set literally in
+`docker-compose.yml` and is not overridable there: it has to name the mounted
+prompts directory, and pointing it elsewhere writes a persona the worker never
+reads.

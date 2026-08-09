@@ -18,21 +18,13 @@
             "pages": [
               "index",
               "quickstart",
-              "console-mode",
               "troubleshooting"
             ]
           },
           {
-            "group": "Customize",
+            "group": "Build on it",
             "pages": [
-              "persona",
-              "providers",
-              "configuration"
-            ]
-          },
-          {
-            "group": "Ship it",
-            "pages": [
+              "customize",
               "deploy"
             ]
           }
@@ -49,6 +41,10 @@
   "navbar": {
     "links": [
       {
+        "label": "Discord",
+        "href": "https://discord.gg/ysFaF4uSB"
+      },
+      {
         "type": "github",
         "href": "https://github.com/mahimailabs/shipvoice"
       }
@@ -57,6 +53,12 @@
       "type": "button",
       "label": "Get ShipVoice Pro",
       "href": "https://shipvoice.dev"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/mahimailabs/shipvoice",
+      "discord": "https://discord.gg/ysFaF4uSB"
     }
   }
 }
