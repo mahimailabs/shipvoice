@@ -231,16 +231,28 @@ describe("Overview, the paid controls", () => {
 });
 
 describe("Overview, sample versus real", () => {
-  it("marks each sample panel with a sample chip", async () => {
+  it("marks each sample panel with a sample dot", async () => {
     await mounted();
 
     // The money strip's three legs, the three sample stat cells, the flagged
     // health row, Running now, and Spend per day.
-    const chips = screen.getAllByText("sample");
-    expect(chips).toHaveLength(9);
+    const dots = screen.getAllByRole("img", { name: /sample data/i });
+    expect(dots).toHaveLength(9);
   });
 
-  it("puts a chip in the cell of every sample figure", async () => {
+  it("says what the dot means on hover and to a screen reader", async () => {
+    await mounted();
+
+    // The dot carries no text, so the title and the label are the only things
+    // that explain it. Losing either leaves a red mark nobody can read.
+    const dot = screen.getAllByRole("img", { name: /sample data/i })[0];
+    expect(dot).toHaveAttribute(
+      "title",
+      "This is sample data, not a reading from this deployment.",
+    );
+  });
+
+  it("puts a dot in the cell of every sample figure", async () => {
     await mounted();
 
     // In the strip the chip rides the label, in the stat row it rides the
@@ -257,23 +269,27 @@ describe("Overview, sample versus real", () => {
       const cell = screen.getByText(value).closest(selector);
       expect(cell).not.toBeNull();
       expect(
-        within(cell as HTMLElement).getByText("sample"),
+        within(cell as HTMLElement).getByRole("img", { name: /sample data/i }),
       ).toBeInTheDocument();
     }
   });
 
-  it("takes the real figures from the endpoint, with no chip on them", async () => {
+  it("takes the real figures from the endpoint, with no dot on them", async () => {
     await mounted();
 
     const minutes = await screen.findByText("1,842");
     const minutesCell = minutes.closest(".stat");
     expect(minutesCell).not.toBeNull();
     expect(
-      within(minutesCell as HTMLElement).queryByText("sample"),
+      within(minutesCell as HTMLElement).queryByRole("img", {
+        name: /sample data/i,
+      }),
     ).toBeNull();
 
     const today = screen.getByText("37").closest(".stat");
-    expect(within(today as HTMLElement).queryByText("sample")).toBeNull();
+    expect(
+      within(today as HTMLElement).queryByRole("img", { name: /sample data/i }),
+    ).toBeNull();
   });
 
   it("reads the health seam and the failure count off the endpoint", async () => {

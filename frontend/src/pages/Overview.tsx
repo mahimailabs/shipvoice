@@ -13,7 +13,7 @@ import type { CallOverviewResponse, CallRead } from "../types";
 //   real    this deployment's own reading, from the backend. Minutes, calls
 //           today, the recent calls table, the metering seam, failed calls.
 //   sample  the reference console's own figure, kept verbatim so the shape of
-//           the full product is legible, and marked with a 'sample' chip.
+//           the full product is legible, and marked with a red sample dot.
 //           Cost, billing, campaigns, connect rate, flagged calls.
 //   dash    genuinely unmeasured for a real row. The cost, kept and config
 //           columns of the recent calls table are dashes, never samples: those
@@ -72,8 +72,7 @@ const WHY = {
     "Not built here: nothing in this repo bills a caller, so there is no Stripe account behind this button.",
   pause: "Not built here: this repo has no campaigns, so there is nothing to pause.",
   open: "Not built here: this repo has no campaigns, so there is nothing to open.",
-  sample:
-    "A figure from the reference console, not a reading. Nothing in this repo meters a minute, bills a caller or runs a campaign, so these panels show the shape of what is measured rather than a number taken from your deployment.",
+  sample: "This is sample data, not a reading from this deployment.",
   warnMode:
     "Not built here: nothing in this repo gates a call on consent, a suppression list or a calling window, so this is the shape of the control and not a setting.",
   dir: "This starter answers calls and has no outbound dialer, so every call it records is inbound.",
@@ -83,15 +82,22 @@ const WHY = {
   room: "No caller id on a web call, showing the room that was recorded.",
 };
 
-/** The chip that marks a figure as the reference's, not this deployment's. */
-function SampleChip() {
-  // The explanation rides the chip rather than a paragraph under each panel.
-  // Three panels each carrying their own footnote is the pattern that was just
-  // deleted from every page in favour of one explainer in the top bar.
+/**
+ * Marks a figure as the reference's, not this deployment's.
+ *
+ * A dot, not a worded chip. Nine of these are on screen at once, and nine
+ * repetitions of the same word read as clutter rather than as a caveat, which
+ * is the point at which people stop seeing it. The dot is quiet enough to sit
+ * beside a figure and still says the same thing on hover.
+ */
+function SampleDot() {
   return (
-    <span title={WHY.sample}>
-      <Badge tone="accent">sample</Badge>
-    </span>
+    <span
+      className="dot-sample"
+      role="img"
+      aria-label={WHY.sample}
+      title={WHY.sample}
+    />
   );
 }
 
@@ -172,7 +178,7 @@ function Leg({
         <span className="lb" style={{ marginBottom: 0 }}>
           {label}
         </span>
-        <SampleChip />
+        <SampleDot />
       </span>
       <b>{value}</b>
       <span
@@ -260,7 +266,7 @@ function StatCell({
         }}
       >
         {value}
-        {sample && <SampleChip />}
+        {sample && <SampleDot />}
       </b>
       <i>{label}</i>
       <u>{hint}</u>
@@ -373,7 +379,7 @@ function RunningNow() {
     <section className="pnl">
       <header className="ph">
         Running now
-        <SampleChip />
+        <SampleDot />
         <span className="meta">{SAMPLE.campaign.of}</span>
       </header>
       <div className="pb">
@@ -433,7 +439,7 @@ function HealthRow({
       >
         {label}
       </span>
-      {sample && <SampleChip />}
+      {sample && <SampleDot />}
       <span
         className="num fnt"
         style={{
@@ -519,7 +525,7 @@ function SpendPerDay() {
     <section className="pnl">
       <header className="ph">
         Spend per day
-        <SampleChip />
+        <SampleDot />
         <span className="meta">provider cost, $</span>
       </header>
       <div className="pb">

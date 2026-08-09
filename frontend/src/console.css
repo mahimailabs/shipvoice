@@ -1278,3 +1278,20 @@
     white-space: nowrap;
     cursor: default;
 }
+
+/* Marks a figure as the reference console's rather than this deployment's.
+   A dot, not a worded chip: nine of these share the Overview, and nine
+   repetitions of the same word read as clutter instead of as a caveat. It says
+   the same thing on hover. */
+.sv-console .dot-sample {
+    display: inline-block;
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--sv-accent);
+    /* Lifted to sit with the cap height of the label beside it rather than on
+       the baseline, where a 6px circle reads as a stray full stop. */
+    vertical-align: middle;
+    cursor: help;
+}
