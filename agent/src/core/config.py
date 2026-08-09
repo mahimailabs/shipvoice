@@ -14,7 +14,7 @@ class Config(BaseSettings):
 
     # Identity. AGENT_NAME is also the dispatch name the frontend must request.
     AGENT_NAME: str = "assistant"
-    ENV: str = "prod"
+    ENV: str = "dev"
     PROJECT_NAME: str = "Voice Agent"
 
     BACKEND_API_URL: str | None = None

@@ -1,9 +1,6 @@
 // The only module that knows the backend's base URL.
 import type {
   AgentListResponse,
-  CallDetailResponse,
-  CallListResponse,
-  CallSummaryResponse,
   DeploymentRead,
   LiveKitRead,
   LiveKitWrite,
@@ -49,52 +46,6 @@ async function get<T>(path: string, what: string): Promise<T> {
   }
   await guard(res, what);
   return (await res.json()) as T;
-}
-
-export interface CallListParams {
-  limit?: number;
-  offset?: number;
-  channel?: string;
-  status?: string;
-}
-
-export async function listCalls(
-  params: CallListParams = {},
-): Promise<CallListResponse> {
-  const q = new URLSearchParams();
-  q.set("limit", String(params.limit ?? 50));
-  q.set("offset", String(params.offset ?? 0));
-  if (params.channel && params.channel !== "all")
-    q.set("channel", params.channel);
-  if (params.status && params.status !== "all") q.set("status", params.status);
-
-  return get<CallListResponse>(
-    `/api/v1/calls/?${q.toString()}`,
-    "Loading calls",
-  );
-}
-
-export async function getSummary(): Promise<CallSummaryResponse> {
-  return get<CallSummaryResponse>(
-    "/api/v1/calls/summary",
-    "Loading the summary",
-  );
-}
-
-export async function getCall(
-  id: number | string,
-): Promise<CallDetailResponse> {
-  return get<CallDetailResponse>(`/api/v1/calls/${id}`, "Loading the call");
-}
-
-export async function deleteCall(id: number | string): Promise<void> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}/api/v1/calls/${id}`, { method: "DELETE" });
-  } catch {
-    throw new ApiError(0, "Could not reach the backend");
-  }
-  await guard(res, "Deleting the call");
 }
 
 export async function listAgents(): Promise<AgentListResponse> {

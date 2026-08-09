@@ -15,26 +15,23 @@ export function Rail({
   counts?: Record<string, number | null>;
   deployment?: string;
 }) {
+  // Two sections: what this starter does, and what ShipVoice Pro adds.
+  //
+  // Calls sits under Pro because the call log genuinely is Pro. This repo
+  // records nothing about a call once it ends, so a Calls page here could only
+  // ever be an empty table pretending to be a feature.
   const groups: Group[] = [
     {
-      title: "Watch",
-      items: [
-        { label: "Overview", to: "/" },
-        { label: "Calls", to: "/calls", count: counts.calls ?? null },
-      ],
+      title: "Build",
+      items: [{ label: "Agents", to: "/", count: counts.agents ?? null }],
     },
     {
-      title: "Run",
+      title: "ShipVoice Pro",
       items: [
+        { label: "Calls", pro: true },
         { label: "Campaigns", pro: true },
         { label: "Channels", pro: true },
         { label: "Customers", pro: true },
-      ],
-    },
-    {
-      title: "Build",
-      items: [
-        { label: "Agents", to: "/agents", count: counts.agents ?? null },
         { label: "Evaluations", pro: true },
       ],
     },

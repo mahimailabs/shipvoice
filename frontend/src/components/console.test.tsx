@@ -9,16 +9,19 @@ function withRouter(ui: React.ReactNode) {
 }
 
 describe("Rail", () => {
-  it("renders the three groups", () => {
+  it("separates what this starter does from what Pro adds", () => {
     withRouter(<Rail />);
-    ["Watch", "Run", "Build"].forEach((g) =>
+    ["Build", "ShipVoice Pro"].forEach((g) =>
       expect(screen.getByText(g)).toBeInTheDocument(),
     );
   });
 
-  it("marks exactly four items as ShipVoice Pro", () => {
+  it("marks every Pro surface, Calls included", () => {
+    // Calls is Pro here. This repo records nothing about a call once it ends,
+    // so a Calls page could only be an empty table pretending to be a feature.
     withRouter(<Rail />);
-    expect(screen.getAllByTestId("nav-pro")).toHaveLength(4);
+    expect(screen.getAllByTestId("nav-pro")).toHaveLength(5);
+    expect(screen.getByText("Calls")).toBeInTheDocument();
   });
 
   it("does not make the Pro items clickable", () => {
@@ -29,7 +32,7 @@ describe("Rail", () => {
     const links = Array.from(container.querySelectorAll("a")).map(
       (a) => a.textContent ?? "",
     );
-    ["Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) => {
+    ["Calls", "Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) => {
       expect(links.some((text) => text.includes(label))).toBe(false);
     });
   });
@@ -39,9 +42,17 @@ describe("Rail", () => {
     const hrefs = Array.from(container.querySelectorAll("a")).map((a) =>
       a.getAttribute("href"),
     );
-    expect(hrefs).toEqual(
-      expect.arrayContaining(["/", "/calls", "/agents", "/deployment"]),
+    expect(hrefs).toEqual(expect.arrayContaining(["/", "/deployment"]));
+  });
+
+  it("links to nothing this backend cannot serve", () => {
+    // The console used to land on an Overview that called /api/v1/calls and
+    // took three 404s on the first screen. Nothing may link there again.
+    const { container } = withRouter(<Rail />);
+    const hrefs = Array.from(container.querySelectorAll("a")).map(
+      (a) => a.getAttribute("href") ?? "",
     );
+    expect(hrefs.some((h) => h.startsWith("/calls"))).toBe(false);
   });
 
   it("uses the real ShipVoice mark", () => {
@@ -52,14 +63,14 @@ describe("Rail", () => {
 
 describe("TopBar", () => {
   it("puts one Upgrade button on the page, pointing at the booking link", () => {
-    withRouter(<TopBar title="Overview" />);
+    withRouter(<TopBar title="Agents" />);
     const upgrade = screen.getByRole("link", { name: /upgrade/i });
     expect(upgrade).toHaveAttribute("href", UPGRADE_URL);
     expect(UPGRADE_URL).toBe("https://cal.com/mahimairaja/shipvoice");
   });
 
   it("opens the booking link safely in a new tab", () => {
-    withRouter(<TopBar title="Overview" />);
+    withRouter(<TopBar title="Agents" />);
     const upgrade = screen.getByRole("link", { name: /upgrade/i });
     expect(upgrade).toHaveAttribute("target", "_blank");
     expect(upgrade.getAttribute("rel") ?? "").toContain("noopener");

@@ -1,8 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Outlet } from "react-router";
-import { listAgents, listCalls } from "../api";
+import { getLiveKit, listAgents } from "../api";
 import { Rail } from "./Rail";
-import { LiveEventsBar } from "./ds";
 
 // The console frame. The rail carries per-section counts, each page owns its own
 // topbar, and the footer is a live pulse rather than a static byline.
@@ -10,23 +9,21 @@ import { LiveEventsBar } from "./ds";
 // Everything is wrapped in .sv-console so the ported stylesheet's element rules
 // cannot reach the vendored LiveKit and shadcn components used by the test call.
 export function AppShell() {
-  const [callCount, setCallCount] = useState<number | null>(null);
   const [agentCount, setAgentCount] = useState<number | null>(null);
-  const [ticks, setTicks] = useState<number[]>([]);
+  const [project, setProject] = useState<string | null>(null);
+  const [reachable, setReachable] = useState<boolean | null>(null);
 
   useEffect(() => {
     let live = true;
-    listCalls({ limit: 24 })
+    listAgents()
       .then((r) => {
         if (!live) return;
-        setCallCount(r.total);
-        setTicks(r.calls.map((c) => c.turn_count).reverse());
+        setAgentCount(r.agents.length);
+        setReachable(true);
       })
-      .catch(() => undefined);
-    // The rail renders an agents count. Fetch it, rather than leaving the
-    // prop permanently undefined and the chip permanently invisible.
-    listAgents()
-      .then((r) => live && setAgentCount(r.agents.length))
+      .catch(() => live && setReachable(false));
+    getLiveKit()
+      .then((v) => live && setProject(v.url))
       .catch(() => undefined);
     return () => {
       live = false;
@@ -35,39 +32,28 @@ export function AppShell() {
 
   return (
     <div className="sv-console fr">
-      <Rail counts={{ calls: callCount, agents: agentCount }} />
+      <Rail counts={{ agents: agentCount }} />
       <div className="cv">
         <div className="bd">
           <Outlet />
         </div>
         <footer className="ftr">
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {ticks.length > 0 ? (
-              <LiveEventsBar ticks={ticks} label="Live events" compact />
-            ) : (
-              // No ticks yet: either the backend has not answered or there are
-              // no recent calls to count turns from. Eight zero bars would draw
-              // a flat line that reads as measured silence, so say "no data".
-              <div className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
-                <span className="lb" style={{ flex: "none" }}>
-                  Live events
-                </span>
-                <span className="fnt" style={{ font: "var(--type-body-sm)" }}>
-                  no data
-                </span>
-              </div>
-            )}
-          </div>
-          <Link to="/calls" className="btn sm" style={{ flex: "none" }}>
-            View all →
+          <span className="lb" style={{ flex: "none" }}>
+            LiveKit
+          </span>
+          <span className="fnt num" style={{ font: "var(--type-caption)", minWidth: 0 }}>
+            {project ?? "not set"}
+          </span>
+          <div style={{ flex: 1 }} />
+          <Link to="/deployment" className="btn sm" style={{ flex: "none" }}>
+            Deployment
           </Link>
-          <span
-            className="num fnt"
-            style={{ font: "var(--type-caption)", flex: "none" }}
-          >
-            {callCount == null
-              ? "no calls recorded yet"
-              : `${callCount.toLocaleString()} calls recorded`}
+          <span className="num fnt" style={{ font: "var(--type-caption)", flex: "none" }}>
+            {reachable == null
+              ? "checking the backend"
+              : reachable
+                ? "backend reachable"
+                : "backend not reachable"}
           </span>
         </footer>
       </div>

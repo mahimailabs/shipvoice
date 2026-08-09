@@ -65,7 +65,10 @@ class Config(BaseSettings):
         case_sensitive=True,
     )
 
-    ENV: EnvironmentOption = EnvironmentOption.PROD
+    # Dev by default. It used to be PROD, which meant trimming .env silently
+    # promoted the backend to production and 403'd the console's own LiveKit
+    # editor with no hint that ENV was the cause.
+    ENV: EnvironmentOption = EnvironmentOption.DEV
     DEBUG: bool | None = None
 
     API: str = "/api"
@@ -90,12 +93,14 @@ class Config(BaseSettings):
 
     # Database
     DATABASE_URL: str | None = None
-    DB_USER: str | None = None
-    DB_HOST: str | None = None
-    DB_PORT: int | None = None
-    DB_NAME: str | None = None
-    DB_PASSWORD: SecretStr | None = None
-    DB_SSL: str | None = None
+    # Defaults match the compose 'db' service, so a fresh clone needs none of
+    # these in its .env. Override them for anything that is not compose.
+    DB_USER: str | None = "postgres"
+    DB_HOST: str | None = "db"
+    DB_PORT: int | None = 5432
+    DB_NAME: str | None = "app"
+    DB_PASSWORD: SecretStr | None = SecretStr("postgres")
+    DB_SSL: str | None = "disable"
     DB_FORCE_ROLL_BACK: bool = False
 
     @model_validator(mode="after")
