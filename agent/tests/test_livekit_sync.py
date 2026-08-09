@@ -108,3 +108,28 @@ def test_complete_credentials_start_normally(monkeypatch):
     monkeypatch.setenv("LIVEKIT_API_SECRET", "s")
     livekit_sync.require_livekit_or_exit()
     assert livekit_sync.env_is_complete() is True
+
+
+def test_download_files_must_not_require_credentials():
+    """Regression guard for a broken Docker build.
+
+    The agent Dockerfile runs 'main.py download-files' to prefetch the VAD and
+    turn-detector models. That step has no LiveKit credentials and needs none,
+    so gating the fail-fast on the wrong condition breaks the image build with
+    an error about a missing LIVEKIT_URL.
+    """
+    import pathlib
+    import re
+
+    src = pathlib.Path(__file__).resolve().parents[1] / "src" / "agent.py"
+    text = src.read_text()
+
+    match = re.search(r"NEEDS_LIVEKIT = (.+)", text)
+    assert match, "the subcommand gate is gone"
+    gate = match.group(1)
+    for cmd in ("start", "dev", "connect"):
+        assert f'"{cmd}"' in gate, f"{cmd} connects to LiveKit and must be gated in"
+    assert "download-files" not in gate
+    assert "console" not in gate
+
+    assert "if NEEDS_LIVEKIT:" in text, "the gate must guard the startup block"

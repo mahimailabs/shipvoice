@@ -11,7 +11,7 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 DECLARED_IN = "agent/src/agent.py"
 DECLARED_STT = "deepgram nova-3"
 DECLARED_LLM = "cerebras gemma-4-31b"
-DECLARED_TTS = "cartesia (plugin default)"
+DECLARED_TTS = "inworld inworld-tts-2 (Ashley)"
 
 PROMPT_PATH = "agent/prompts/instructions.md"
 

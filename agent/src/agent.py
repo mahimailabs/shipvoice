@@ -26,6 +26,12 @@ logger = logging.getLogger("agent")
 
 CONSOLE_MODE = "console" in sys.argv
 
+# Which subcommands actually connect to LiveKit. 'download-files' prefetches
+# the VAD and turn-detector models and runs during the Docker build, where no
+# credentials exist and none are needed; 'console' runs the whole loop locally
+# against the provider APIs only.
+NEEDS_LIVEKIT = any(cmd in sys.argv for cmd in ("start", "dev", "connect"))
+
 # Quiet noisy third-party loggers.
 for _noisy in ("livekit.plugins", "livekit.turn_detector", "asyncio"):
     logging.getLogger(_noisy).setLevel(logging.WARNING)
@@ -38,7 +44,7 @@ if config.SENTRY_DSN:
     )
 
 
-if not CONSOLE_MODE:
+if NEEDS_LIVEKIT:
     _revision = bootstrap_livekit(config.BACKEND_API_URL, config.BACKEND_API_TOKEN)
     # After the sync, because the backend may be where the credentials come
     # from. Before the CLI, so the failure is one sentence instead of an

@@ -104,6 +104,25 @@ def test_declared_providers_still_match_the_worker():
     )
 
 
+def test_the_declared_strings_name_the_providers_actually_used():
+    """The other half of the guard, and it was missing.
+
+    Asserting that agent.py contains the right constructor says nothing about
+    what the console reports. DECLARED_TTS sat on 'cartesia' through a whole
+    provider swap while the drift test passed, because the test only ever read
+    agent.py. Each declared string must name its own provider.
+    """
+    for declared, provider in (
+        (DECLARED_STT, "deepgram"),
+        (DECLARED_LLM, "cerebras"),
+        (DECLARED_TTS, "inworld"),
+    ):
+        assert provider in declared.lower(), (
+            f"{declared!r} does not name {provider}, so the console is "
+            f"reporting a provider this agent does not use"
+        )
+
+
 @pytest.mark.skipif(
     not (REPO_ROOT / "agent").exists(),
     reason="agent source not present (backend deployed on its own)",
