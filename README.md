@@ -44,7 +44,7 @@ swap independently.
 
 | Package         | What it is                                                                                                                                                                  |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`agent/`**    | A LiveKit voice worker: Deepgram `nova-3` STT, OpenAI `gpt-4.1-mini`, Cartesia TTS, Silero VAD, and the LiveKit multilingual turn detector. Web and SIP, explicit dispatch. |
+| **`agent/`**    | A LiveKit voice worker: Deepgram `nova-3` STT, Cerebras `gemma-4-31b`, Inworld TTS, Silero VAD, and the LiveKit multilingual turn detector. Web and SIP, explicit dispatch. |
 | **`backend/`**  | A FastAPI service that mints LiveKit room tokens (`POST /api/v1/token`), with a clean API → service → repository layout you copy to add resources.                          |
 | **`frontend/`** | React + Vite + Tailwind using LiveKit's Agents UI components: audio visualizer, live transcript, and text chat.                                                             |
 
@@ -72,18 +72,28 @@ The fastest path. One command brings up Postgres, the backend, the agent, and th
 frontend together:
 
 ```bash
-cp .env.example .env     # fill in LIVEKIT_* + OPENAI/DEEPGRAM/CARTESIA
+cp .env.example .env     # six values, each needing an account somewhere
 docker compose up --build
 ```
 
-Open `http://localhost:5173`, go to **Agents**, pick your agent and hit **Start test call**. Uses an external
-LiveKit project (a free LiveKit Cloud project works). The console needs the database; create the tables once with
-`docker compose exec backend alembic upgrade head`.
+Open `http://localhost:5173`, go to **Agents**, and hit **Start test call**. Uses
+an external LiveKit project (a free LiveKit Cloud project works). The backend
+brings the schema up to head on startup, so there is no migration step.
+
+Something not working? Do not guess, ask:
+
+```bash
+cd agent && uv run python ../scripts/doctor.py --live
+```
+
+It names the cause and the fix. Every failure in this stack is quiet: a
+mismatched agent name mints a valid token, opens a real room, and produces no
+error anywhere.
 
 ## Run manually
 
 You'll need a LiveKit project (URL + API key/secret) and provider keys
-(OpenAI, Deepgram, Cartesia). Run each in its own terminal:
+(Deepgram, Cerebras, Inworld). Run each in its own terminal:
 
 ```bash
 # 1. Backend: token server (http://localhost:8000)
@@ -91,7 +101,7 @@ cd backend && cp .env.example .env   # add LIVEKIT_* + the database
 uv sync && uv run uvicorn src.main:app --reload
 
 # 2. Agent: voice worker
-cd agent && cp .env.example .env      # add LIVEKIT_*, OPENAI/DEEPGRAM/CARTESIA keys
+cd agent && cp .env.example .env      # add LIVEKIT_* + the three provider keys
 uv sync && uv run python main.py dev
 
 # 3. Frontend: web client (http://localhost:5173)
@@ -101,14 +111,16 @@ pnpm install && pnpm dev
 
 Open `http://localhost:5173`, go to **Agents**, start a test call, allow the mic, and talk.
 
-> No frontend yet? Talk to the agent from your terminal with
-> `cd agent && uv run python main.py console`.
+> **The fastest proof it works**, before any of the above: `cd agent && uv run
+> python main.py console` runs the whole speech to model to speech loop in your
+> terminal with just the three provider keys. No LiveKit, no backend, no
+> database.
 
 ## Stack
 
 | Layer           | Default                                                                       |
 | --------------- | ----------------------------------------------------------------------------- |
-| STT / LLM / TTS | Deepgram `nova-3` · OpenAI `gpt-4.1-mini` · Cartesia (all swappable)          |
+| STT / LLM / TTS | Deepgram `nova-3` · Cerebras `gemma-4-31b` · Inworld `inworld-tts-2`         |
 | Realtime        | LiveKit Agents (`livekit-agents`), WebRTC, Silero VAD, turn detector          |
 | Backend         | FastAPI, async SQLModel/Postgres, dependency-injector, `livekit-api`          |
 | Frontend        | React 19, Vite, TypeScript, Tailwind v4, shadcn + LiveKit Agents UI           |
