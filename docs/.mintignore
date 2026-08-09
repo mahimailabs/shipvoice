@@ -1,0 +1,4 @@
+# The founder's /loop plans and specs. They live under docs/ by convention and
+# are gitignored, so a Git-based build never sees them, but the local Mintlify
+# CLI walks the whole content root and fails to parse them as MDX.
+superpowers/

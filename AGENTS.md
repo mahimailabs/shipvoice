@@ -54,7 +54,7 @@ cp .env.example .env         # LiveKit and three provider keys
 docker compose up --build    # postgres, backend, agent, console
 ```
 
-Then http://localhost:5173, Agents, **Start test call**.
+Then http://localhost:5173, Agents, open the agent, **Test call**, **Start test call**.
 
 The backend brings the schema to head on startup, so there is no migration
 step. If something does not work, do not guess:

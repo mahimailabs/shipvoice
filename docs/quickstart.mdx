@@ -1,0 +1,91 @@
+---
+title: Quickstart
+description: Fill in one env file, bring up the stack with one command, and start a test call.
+---
+
+You need a LiveKit project (URL, API key, API secret) and three provider keys:
+Deepgram, Cerebras, Inworld. A free LiveKit Cloud project works.
+
+<Steps>
+  <Step title="Copy the env file">
+    ```bash
+    cp .env.example .env
+    ```
+
+    Fill in `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`,
+    `DEEPGRAM_API_KEY`, `CEREBRAS_API_KEY` and `INWORLD_API_KEY`. Everything
+    else has a working default in compose or in code.
+  </Step>
+
+  <Step title="Bring up the stack">
+    ```bash
+    docker compose up --build
+    ```
+
+    That is Postgres, the backend, the voice worker and the console. LiveKit
+    itself is external: the worker connects out to `LIVEKIT_URL`.
+
+    The backend runs `alembic upgrade head` on startup, so there is no
+    migration step.
+  </Step>
+
+  <Step title="Start a test call">
+    Open [http://localhost:5173](http://localhost:5173), go to **Agents**, open
+    the agent, choose **Test call**, then **Start test call**. Allow the
+    microphone, then talk.
+  </Step>
+</Steps>
+
+<Warning>
+  `docker compose` reads the root `.env` and nothing else. The `agent/.env`,
+  `backend/.env` and `frontend/.env` files exist for running a service by hand.
+  A value written into the wrong one produces a config that works one way and
+  not the other.
+</Warning>
+
+## What is published where
+
+| URL                                              | Service                        |
+| ------------------------------------------------ | ------------------------------ |
+| [http://localhost:5173](http://localhost:5173)   | the console                    |
+| [http://localhost:8000](http://localhost:8000)   | the backend, OpenAPI at `/docs` |
+
+Both are bound to `127.0.0.1`, so nothing is reachable from the network.
+
+## If nothing speaks
+
+Do not guess. Every failure in this stack is quiet: a mismatched agent name
+mints a valid token, opens a real room, and logs no error anywhere.
+
+```bash
+cd agent
+uv run python ../scripts/doctor.py --live
+```
+
+It names the cause and the fix. See [Troubleshooting](/troubleshooting) for
+what it is checking and why.
+
+## Running the services by hand
+
+Three terminals, one per service. Each has its own `.env.example`.
+
+```bash
+cd backend
+cp .env.example .env
+uv sync
+uv run uvicorn src.main:app --reload
+```
+
+```bash
+cd agent
+cp .env.example .env
+uv sync
+uv run python main.py dev
+```
+
+```bash
+cd frontend
+cp .env.example .env
+pnpm install
+pnpm dev
+```

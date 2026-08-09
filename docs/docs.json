@@ -1,0 +1,62 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "sequoia",
+  "name": "ShipVoice",
+  "colors": {
+    "primary": "#e5323f",
+    "light": "#ff6f78",
+    "dark": "#b81f2b"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Lite",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "quickstart",
+              "console-mode",
+              "troubleshooting"
+            ]
+          },
+          {
+            "group": "Customize",
+            "pages": [
+              "persona",
+              "providers",
+              "configuration"
+            ]
+          },
+          {
+            "group": "Ship it",
+            "pages": [
+              "deploy"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Pro",
+        "pages": [
+          "pro"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "type": "github",
+        "href": "https://github.com/mahimailabs/shipvoice"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get ShipVoice Pro",
+      "href": "https://shipvoice.dev"
+    }
+  }
+}

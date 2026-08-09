@@ -1,16 +1,21 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.webp">
   <source media="(prefers-color-scheme: light)" srcset="assets/banner-light.webp">
-  <img src="assets/banner-light.webp" alt="ShipVoice" width="100%" />
+  <img src="assets/banner-light.webp" alt="ShipVoice Lite" width="100%" />
 </picture>
 
-<h1 align="center">ShipVoice</h1>
+<h1 align="center">ShipVoice Lite</h1>
 
 <p align="center">
   <b>Talk to an AI agent in your browser, in minutes.</b><br/>
-  A full-stack, production-minded starter for real-time voice agents: a LiveKit
-  voice worker, a FastAPI token server, and a React frontend built on LiveKit's
-  Agents UI, wired together and ready to extend.
+  The free MIT starter for real-time voice agents: a LiveKit voice worker, a
+  FastAPI token server, and a React frontend built on LiveKit's Agents UI, wired
+  together and ready to extend.
+  <a href="https://shipvoice.dev">ShipVoice Pro</a> is the paid one.
+</p>
+
+<p align="center">
+  Docs: <a href="https://docs.shipvoice.dev">docs.shipvoice.dev</a>
 </p>
 
 <p align="center">
@@ -76,7 +81,8 @@ cp .env.example .env     # the values it asks for, each needing an account
 docker compose up --build
 ```
 
-Open `http://localhost:5173`, go to **Agents**, and hit **Start test call**. Uses
+Open `http://localhost:5173`, go to **Agents**, open the agent, then **Test call**
+and **Start test call**. Uses
 an external LiveKit project (a free LiveKit Cloud project works). The backend
 brings the schema up to head on startup, so there is no migration step.
 
@@ -109,7 +115,8 @@ cd frontend && cp .env.example .env   # point VITE_TOKEN_ENDPOINT at the backend
 pnpm install && pnpm dev
 ```
 
-Open `http://localhost:5173`, go to **Agents**, start a test call, allow the mic, and talk.
+Open `http://localhost:5173`, go to **Agents**, open the agent, start a test call,
+allow the mic, and talk.
 
 > **The fastest proof it works**, before any of the above: `cd agent && uv run
 > python main.py console` runs the whole speech to model to speech loop in your
@@ -128,13 +135,11 @@ Open `http://localhost:5173`, go to **Agents**, start a test call, allow the mic
 
 ## Highlights
 
-- **One command per service** to run locally; one `.env.example` each.
 - **Web and telephony** (SIP) on the same agent, via a single participant branch.
 - **Swappable providers** and self-hosted ↔ LiveKit Cloud with a one-line change.
 - **Zero-downtime deploys**: the worker drains in-flight calls on SIGTERM (blue/green on Fly), so a deploy mid-call finishes the call instead of dropping it.
 - **Edit the persona in the console**: the prompt is a file the worker re-reads on every call, so a save from the Agents page is live on the next one with nothing restarted.
 - **Standard token endpoint** so LiveKit client SDKs connect with zero glue.
-- **Copy-to-extend** patterns: an API to service to repository slice in the backend, a bare `Assistant` in the agent.
 
 ## Charge for it: ShipVoice Pro
 
@@ -142,7 +147,7 @@ Open `http://localhost:5173`, go to **Agents**, start a test call, allow the mic
   <img src="assets/shipvoice-banner.png" alt="ShipVoice Pro" width="100%" />
 </a>
 
-This starter gets you a voice agent. It does not get you a business. The part
+ShipVoice Lite gets you a voice agent. It does not get you a business. The part
 that does not one-shot is metering, billing, auth, telephony registration, and
 compliance, and that is what **[ShipVoice Pro](https://shipvoice.dev)** ships.
 
@@ -163,7 +168,7 @@ a plugin for this repo and does not depend on it.
 
 <p align="center"><i>Console shown with sample data.</i></p>
 
-Lifetime updates. Launches September 2, 2026: [shipvoice.dev](https://shipvoice.dev)
+Lifetime updates: [shipvoice.dev](https://shipvoice.dev)
 
 ## Docs
 
