@@ -6,10 +6,15 @@ from src.schemas.calls_schemas import (
     CallChannel,
     CallDetailResponse,
     CallListResponse,
+    CallRollupResponse,
     CallStatus,
     CallSummaryResponse,
 )
-from src.services.calls_service import MAX_PAGE_SIZE, CallsService
+from src.services.calls_service import (
+    MAX_PAGE_SIZE,
+    MAX_ROLLUP_DAYS,
+    CallsService,
+)
 
 router = APIRouter(prefix="/calls", tags=["calls"])
 
@@ -44,6 +49,19 @@ async def read_summary(
 ) -> CallSummaryResponse:
     """The rollup behind the Overview page. Counts and minutes, no money."""
     return await service.summary()
+
+
+# Declared before /{call_id} for the same reason /summary is: this route's
+# path is a word, and the route below it takes an int. Swap them and /rollup
+# answers 422 and the Agents page loses its counts.
+@router.get("/rollup", response_model=CallRollupResponse)
+@inject
+async def read_rollup(
+    days: int = Query(7, ge=1, le=MAX_ROLLUP_DAYS),
+    service: CallsService = Depends(Provide[Container.calls_service]),
+) -> CallRollupResponse:
+    """Calls in the last `days`, by agent and by channel. Counts, no money."""
+    return await service.rollup(days=days)
 
 
 @router.get("/{call_id}", response_model=CallDetailResponse)

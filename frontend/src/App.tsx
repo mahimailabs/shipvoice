@@ -6,6 +6,7 @@ import { CallDetail } from "./pages/CallDetail";
 import { Agents } from "./pages/Agents";
 import { AgentDetail } from "./pages/AgentDetail";
 import { Deployment } from "./pages/Deployment";
+import { TestCall } from "./components/TestCall";
 
 export default function App() {
   return (
@@ -16,6 +17,9 @@ export default function App() {
         <Route path="calls/:id" element={<CallDetail />} />
         <Route path="agents" element={<Agents />} />
         <Route path="agents/:slug" element={<AgentDetail />} />
+        {/* The test call is a screen of its own, not a panel inside the
+            detail page: there is one test call surface, and this is it. */}
+        <Route path="agents/:slug/test" element={<TestCall />} />
         <Route path="deployment" element={<Deployment />} />
         {/* The page was called Settings before it was honest about being read-only. */}
         <Route

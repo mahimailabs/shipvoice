@@ -125,6 +125,55 @@ async def test_summary_is_not_swallowed_by_the_call_id_route(calls_service):
         container.unwire()
 
 
+async def test_rollup_is_not_swallowed_by_the_call_id_route(calls_service):
+    """The same trap /summary is in, and the same order fixes it. Declared
+    after /{call_id}, this answers 422 and the Agents page loses its counts."""
+    app, container = _build_app(calls_service)
+    try:
+        async with _client(app) as c:
+            resp = await c.get("/api/v1/calls/rollup")
+        assert resp.status_code == 200
+        # An empty log is empty lists, never a missing key: three pages read
+        # this and none of them should have to guard the shape.
+        assert resp.json() == {
+            "days": 7,
+            "total": 0,
+            "by_agent": [],
+            "by_channel": [],
+        }
+    finally:
+        container.unwire()
+
+
+async def test_the_rollup_answers_in_the_window_the_console_asked_for(calls_service):
+    app, container = _build_app(calls_service)
+    try:
+        async with _client(app) as c:
+            await c.post(
+                "/api/v1/internal/agent/calls/start",
+                json={
+                    "room_name": "room-1",
+                    "channel": "sip",
+                    "agent_name": "assistant",
+                },
+                headers=_auth(),
+            )
+
+            body = (await c.get("/api/v1/calls/rollup?days=30")).json()
+            assert body == {
+                "days": 30,
+                "total": 1,
+                "by_agent": [{"agent_name": "assistant", "calls": 1}],
+                "by_channel": [{"channel": "sip", "calls": 1}],
+            }
+
+            # A window nobody can mean is refused rather than quietly widened
+            # into one the caller did not ask for.
+            assert (await c.get("/api/v1/calls/rollup?days=0")).status_code == 422
+    finally:
+        container.unwire()
+
+
 async def test_a_call_that_is_not_in_the_log_is_a_404(calls_service):
     """The console tells these two apart: 404 means this call is not in the
     log, anything else means the log itself did not answer."""

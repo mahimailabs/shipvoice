@@ -38,6 +38,13 @@ export interface CallSummaryResponse {
   total_turns: number;
 }
 
+/**
+ * How the worker is wired. Two shapes only: one agent handling the call, or a
+ * supervisor routing to specialists. Anything else is not something this
+ * backend can report.
+ */
+export type AgentPattern = "sequential" | "supervisor";
+
 export interface AgentSummary {
   slug: string;
   agent_name: string;
@@ -47,10 +54,35 @@ export interface AgentSummary {
   stt: string | null;
   llm: string | null;
   tts: string | null;
+  /** Where the agent was declared on disk, for example agent/src/agent.py. */
+  declared_in: string;
+  pattern: AgentPattern;
 }
 
 export interface AgentListResponse {
   agents: AgentSummary[];
+}
+
+export interface RollupByAgent {
+  agent_name: string;
+  calls: number;
+}
+
+export interface RollupByChannel {
+  /**
+   * A plain string, not CallChannel. The rollup counts what is already in the
+   * log, and one old row with an unexpected value must not take the count down.
+   */
+  channel: string;
+  calls: number;
+}
+
+/** Counts over a trailing window. A missing agent here is a measured zero. */
+export interface CallRollupResponse {
+  days: number;
+  total: number;
+  by_agent: RollupByAgent[];
+  by_channel: RollupByChannel[];
 }
 
 /** Matches the backend's standardized LiveKit token shape exactly. */

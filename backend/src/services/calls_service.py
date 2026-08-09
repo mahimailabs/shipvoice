@@ -6,18 +6,22 @@ console reports what happened on a call, never what it cost.
 """
 
 import logging
-from datetime import UTC, datetime
+from collections.abc import Iterable
+from datetime import UTC, datetime, timedelta
 
 from src.core.exceptions import DuplicatedError, NotFoundError
 from src.models.calls_model import Call
 from src.repository.calls_repository import CallsRepository
 from src.schemas.calls_schemas import (
+    AgentCallCount,
     CallDetailResponse,
     CallFinish,
     CallListResponse,
     CallRead,
+    CallRollupResponse,
     CallStart,
     CallSummaryResponse,
+    ChannelCallCount,
     TurnAppend,
     TurnRead,
 )
@@ -26,6 +30,30 @@ logger = logging.getLogger(__name__)
 
 # The console asks for 50. The cap stops one request asking for the whole log.
 MAX_PAGE_SIZE = 200
+
+# The console asks for 7. A year is the far end of what a rollup means.
+MAX_ROLLUP_DAYS = 365
+
+# What a call groups under when nobody recorded which agent took it. A call
+# that happened is not a call that did not, so it is counted under a name
+# rather than dropped.
+UNKNOWN_GROUP = "unknown"
+
+
+def _tally(rows: Iterable[tuple[str | None, int]]) -> list[tuple[str, int]]:
+    """Fold (name, count) rows into a stable, biggest-first list.
+
+    Folded rather than mapped one to one, because the missing name resolves to
+    a real string: a log holding both nulls and an agent literally called
+    "unknown" must answer with one row, not two rows the console prints twice.
+    """
+    totals: dict[str, int] = {}
+    for name, count in rows:
+        key = (name or "").strip() or UNKNOWN_GROUP
+        totals[key] = totals.get(key, 0) + count
+    # The name breaks the tie. Two agents on the same count would otherwise
+    # swap places between requests and reorder the chart under the reader.
+    return sorted(totals.items(), key=lambda item: (-item[1], item[0]))
 
 
 def _aware(value: datetime) -> datetime:
@@ -146,6 +174,36 @@ class CallsService:
     async def delete_call(self, call_id: int) -> None:
         if not await self._repository.delete(call_id):
             raise NotFoundError(detail=f"No call {call_id} in the log.")
+
+    async def rollup(self, days: int = 7) -> CallRollupResponse:
+        """Calls in the last `days`, split by agent and by channel.
+
+        The window is measured back from now, so seven days means the last
+        seven times twenty four hours and not the last seven dates on a
+        calendar. A call that started before it is out, however recently it
+        ended: the log's own clock is when a call began.
+        """
+        days = min(max(days, 1), MAX_ROLLUP_DAYS)
+        since = datetime.now(UTC) - timedelta(days=days)
+        agent_rows, channel_rows = await self._repository.counts_since(since)
+
+        by_agent = _tally(agent_rows)
+        by_channel = _tally(channel_rows)
+        return CallRollupResponse(
+            days=days,
+            # Added up from the rows rather than counted in its own query. Two
+            # queries can straddle a call that lands between them, and a total
+            # the breakdowns do not sum to is worse than a total one second
+            # stale: the console draws all three together.
+            total=sum(count for _, count in by_agent),
+            by_agent=[
+                AgentCallCount(agent_name=name, calls=count) for name, count in by_agent
+            ],
+            by_channel=[
+                ChannelCallCount(channel=name, calls=count)
+                for name, count in by_channel
+            ],
+        )
 
     async def summary(self) -> CallSummaryResponse:
         calls, seconds, turns = await self._repository.totals()

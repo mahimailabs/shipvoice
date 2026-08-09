@@ -1,3 +1,5 @@
+import logging
+
 from src.core.config import (
     Config,
     _to_async_url,
@@ -39,6 +41,36 @@ def test_ssl_requirement_inference():
 def test_prod_accepts_strong_jwt_secret():
     cfg = Config(ENV="prod", JWT_SECRET_KEY="x" * 40)
     assert cfg.ENV.value == "prod"
+
+
+def test_the_declared_pattern_defaults_to_the_one_this_repo_runs():
+    assert Config(ENV="dev", _env_file=None).AGENT_PATTERN == "sequential"
+
+
+def test_a_pattern_this_repo_supports_is_kept():
+    assert (
+        Config(ENV="dev", _env_file=None, AGENT_PATTERN="supervisor").AGENT_PATTERN
+        == "supervisor"
+    )
+    # Case and a stray space are the same answer, not a third pattern.
+    assert (
+        Config(ENV="dev", _env_file=None, AGENT_PATTERN=" Supervisor ").AGENT_PATTERN
+        == "supervisor"
+    )
+
+
+def test_an_unknown_pattern_falls_back_instead_of_reaching_the_console(caplog):
+    """Two values are legal here because two are implemented.
+
+    Echoing a third through would print a pattern on the Agents page that
+    nothing in this repo runs, so a misspelt env var would read as a feature.
+    It falls back, and it says so rather than falling back in silence.
+    """
+    with caplog.at_level(logging.WARNING, logger="src.core.config"):
+        cfg = Config(ENV="dev", _env_file=None, AGENT_PATTERN="swarm")
+
+    assert cfg.AGENT_PATTERN == "sequential"
+    assert "swarm" in caplog.text
 
 
 def test_cors_origins_default_to_wildcard():

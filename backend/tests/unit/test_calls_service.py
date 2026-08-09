@@ -243,6 +243,136 @@ async def test_an_empty_log_reports_zeroes_rather_than_failing(
     )
 
 
+# ---- the rollup behind the Agents page ------------------------------------
+
+# Measured from now, not from START, because the window is measured from now.
+# Pinning these to a literal date would pass this week and fail next week.
+NOW = datetime.now(UTC)
+
+
+async def test_the_rollup_counts_only_calls_that_started_inside_the_window(
+    calls_service: CallsService,
+):
+    """The window is the filter, and it is the call's start that it filters on.
+
+    A call still running counts: it started inside the window, and the Agents
+    page is showing what this agent has been doing, not what it has finished.
+    """
+    await calls_service.start_call(
+        CallStart(
+            room_name="recent",
+            agent_name="assistant",
+            started_at=NOW - timedelta(days=2),
+        )
+    )
+    await calls_service.start_call(
+        CallStart(
+            room_name="ancient",
+            agent_name="assistant",
+            started_at=NOW - timedelta(days=30),
+        )
+    )
+
+    week = await calls_service.rollup(days=7)
+
+    assert week.days == 7
+    assert week.total == 1
+    assert [(r.agent_name, r.calls) for r in week.by_agent] == [("assistant", 1)]
+
+    # Widen the window and the older call comes back, which says what was
+    # excluded was the window and not the row.
+    assert (await calls_service.rollup(days=60)).total == 2
+
+
+async def test_a_call_whose_agent_nobody_recorded_is_counted_under_unknown(
+    calls_service: CallsService,
+):
+    """A call that happened is not a call that did not.
+
+    Dropping the unnamed ones makes the breakdown disagree with the Calls page
+    for no reason the reader can see.
+    """
+    await calls_service.start_call(
+        CallStart(room_name="named", agent_name="assistant", started_at=NOW)
+    )
+    await calls_service.start_call(CallStart(room_name="anonymous", started_at=NOW))
+    # An empty name is not a name either, and it would otherwise print a row
+    # with no label on it.
+    await calls_service.start_call(
+        CallStart(room_name="blank", agent_name="   ", started_at=NOW)
+    )
+
+    rollup = await calls_service.rollup()
+
+    assert rollup.total == 3
+    assert [(r.agent_name, r.calls) for r in rollup.by_agent] == [
+        ("unknown", 2),
+        ("assistant", 1),
+    ]
+
+
+async def test_an_agent_actually_called_unknown_merges_with_the_unnamed(
+    calls_service: CallsService,
+):
+    """Otherwise the console prints two rows under one label and neither is
+    wrong, which is the worst kind of wrong."""
+    await calls_service.start_call(
+        CallStart(room_name="a", agent_name="unknown", started_at=NOW)
+    )
+    await calls_service.start_call(CallStart(room_name="b", started_at=NOW))
+
+    rollup = await calls_service.rollup()
+
+    assert [(r.agent_name, r.calls) for r in rollup.by_agent] == [("unknown", 2)]
+    assert rollup.total == 2
+
+
+async def test_the_rollup_is_biggest_first_and_breaks_a_tie_on_the_name(
+    calls_service: CallsService,
+):
+    for i in range(3):
+        await calls_service.start_call(
+            CallStart(room_name=f"busy-{i}", agent_name="busy", started_at=NOW)
+        )
+    await calls_service.start_call(
+        CallStart(room_name="zulu-1", agent_name="zulu", started_at=NOW)
+    )
+    await calls_service.start_call(
+        CallStart(room_name="alpha-1", agent_name="alpha", started_at=NOW)
+    )
+
+    rollup = await calls_service.rollup()
+
+    assert [(r.agent_name, r.calls) for r in rollup.by_agent] == [
+        ("busy", 3),
+        # Equal counts settle on the name. Left to the database's own order
+        # these two would swap between requests and the legend would reshuffle
+        # itself under someone reading it.
+        ("alpha", 1),
+        ("zulu", 1),
+    ]
+
+
+async def test_the_rollup_splits_the_same_calls_by_channel(
+    calls_service: CallsService,
+):
+    for room in ("web-1", "web-2"):
+        await calls_service.start_call(
+            CallStart(room_name=room, channel="web", started_at=NOW)
+        )
+    await calls_service.start_call(
+        CallStart(room_name="sip-1", channel="sip", started_at=NOW)
+    )
+
+    rollup = await calls_service.rollup()
+
+    assert [(r.channel, r.calls) for r in rollup.by_channel] == [("web", 2), ("sip", 1)]
+    # Both breakdowns describe the same calls, so both add up to the total. The
+    # console draws all three together and they have to agree.
+    assert sum(r.calls for r in rollup.by_channel) == rollup.total == 3
+    assert sum(r.calls for r in rollup.by_agent) == rollup.total
+
+
 # ---- the line free does not cross ----------------------------------------
 
 # Substrings, not exact names. The field that would appear here is not called

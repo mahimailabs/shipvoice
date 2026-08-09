@@ -22,12 +22,13 @@ from src.core.container import Container
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 
 
-def _build_app():
+def _build_app(pattern: str = "sequential"):
     cfg = Config(
         ENV="dev",
         _env_file=None,
         AGENT_NAME="assistant",
         BUSINESS_NAME="Test Business",
+        AGENT_PATTERN=pattern,
     )
     container = Container()
     container.config.override(cfg)
@@ -56,9 +57,47 @@ async def test_lists_the_single_configured_agent():
         assert len(agents) == 1
         assert agents[0]["agent_name"] == "assistant"
         assert agents[0]["active"] is True
+        assert agents[0]["pattern"] == "sequential"
         assert agents[0]["declared_in"] == DECLARED_IN
     finally:
         container.unwire()
+
+
+@pytest.mark.asyncio
+async def test_the_declared_pattern_is_reported():
+    app, container = _build_app(pattern="supervisor")
+    try:
+        resp = await _get_agents(app)
+        assert resp.json()["agents"][0]["pattern"] == "supervisor"
+    finally:
+        container.unwire()
+
+
+@pytest.mark.asyncio
+async def test_a_pattern_this_repo_cannot_run_never_reaches_the_console():
+    """The fallback is only worth having if it survives the whole way out."""
+    app, container = _build_app(pattern="swarm")
+    try:
+        resp = await _get_agents(app)
+        assert resp.status_code == 200
+        assert resp.json()["agents"][0]["pattern"] == "sequential"
+    finally:
+        container.unwire()
+
+
+def test_the_pattern_union_and_the_config_that_feeds_it_agree():
+    """Two files state the same closed set, and only this notices a drift.
+
+    Grow AGENT_PATTERNS without growing the Literal and the endpoint raises on
+    a value config just swore was legal, which reads as a 500 on the Agents
+    page rather than as the config change it is.
+    """
+    from typing import get_args
+
+    from src.core.config import AGENT_PATTERNS
+    from src.schemas.agents_schemas import AgentPattern
+
+    assert set(get_args(AgentPattern)) == set(AGENT_PATTERNS)
 
 
 @pytest.mark.asyncio

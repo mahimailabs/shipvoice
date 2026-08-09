@@ -3,6 +3,7 @@ import type {
   AgentListResponse,
   CallDetailResponse,
   CallListResponse,
+  CallRollupResponse,
   CallSummaryResponse,
   DeploymentRead,
   LiveKitRead,
@@ -99,6 +100,14 @@ export async function deleteCall(id: number | string): Promise<void> {
 
 export async function listAgents(): Promise<AgentListResponse> {
   return get<AgentListResponse>("/api/v1/agents", "Loading agents");
+}
+
+/** Per-agent and per-channel call counts over a trailing window. */
+export async function getCallRollup(days = 7): Promise<CallRollupResponse> {
+  return get<CallRollupResponse>(
+    `/api/v1/calls/rollup?days=${days}`,
+    "Loading the call rollup",
+  );
 }
 
 export async function getTestCallToken(

@@ -235,8 +235,10 @@ export function DottedLineChart({
     <div>
       <div style={{ display: "flex", gap: 8 }}>
         <div className="num fnt" style={axisStyle}>
+          {/* One decision for the whole axis, from its top value. Deciding per
+              tick prints a percent axis as 91 / 46 / 0.00. */}
           {tickValues.map((v, i) => (
-            <span key={i}>{v >= 10 ? Math.round(v) : v.toFixed(2)}</span>
+            <span key={i}>{max >= 10 ? Math.round(v) : v.toFixed(2)}</span>
           ))}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>{svg}</div>

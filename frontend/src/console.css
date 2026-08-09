@@ -1088,3 +1088,21 @@
   background: var(--surface-raised);
   color: var(--text-primary);
 }
+
+/* React Flow ships a light-themed attribution badge, which reads as a broken
+   white box on this console. Its terms allow styling it; they do not allow
+   removing it without a Pro licence, so it stays and just gets toned down. */
+.sv-console .react-flow__attribution {
+  background: transparent;
+  padding: 0 6px 2px 0;
+}
+
+.sv-console .react-flow__attribution a {
+  color: var(--text-faint);
+  font: var(--type-caption);
+  text-decoration: none;
+}
+
+.sv-console .react-flow__attribution a:hover {
+  color: var(--text-muted);
+}

@@ -3,7 +3,7 @@ from functools import lru_cache
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
 
 from dotenv import load_dotenv
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.core.enums import EnvironmentOption
@@ -12,6 +12,13 @@ load_dotenv(override=False)
 
 
 logger = logging.getLogger(__name__)
+
+# The two shapes a call can run in here, and the whole set. "sequential" is one
+# agent that owns the call start to finish. "supervisor" is one router that
+# holds the caller and hands a single turn to a specialist. A third value is a
+# typo, not a pattern.
+AGENT_PATTERNS = ("sequential", "supervisor")
+DEFAULT_AGENT_PATTERN = "sequential"
 
 # libpq query params that asyncpg.connect() does not accept as kwargs.
 # TLS is instead enabled via connect_args (see Config.SQLALCHEMY_CONNECT_ARGS).
@@ -38,6 +45,26 @@ def _to_async_url(url: str) -> str:
     return urlunsplit(
         (scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
     )
+
+
+def _resolve_agent_pattern(value: str) -> str:
+    """A legal pattern in, the same pattern out. Anything else falls back.
+
+    Echoing an unrecognised value straight through would print a pattern on the
+    Agents page that nothing in this repo runs, and a misspelt env var would
+    read as a capability. Case and stray whitespace are forgiven, because
+    "Supervisor" is the same answer as "supervisor".
+    """
+    pattern = value.strip().lower()
+    if pattern in AGENT_PATTERNS:
+        return pattern
+    logger.warning(
+        "AGENT_PATTERN=%r is not one of %s. Running as %r.",
+        value,
+        ", ".join(AGENT_PATTERNS),
+        DEFAULT_AGENT_PATTERN,
+    )
+    return DEFAULT_AGENT_PATTERN
 
 
 def _url_requires_ssl(url: str) -> bool | None:
@@ -82,6 +109,16 @@ class Config(BaseSettings):
     # worker into the room and the call sits in "connecting" with no error.
     AGENT_NAME: str = "assistant"
     BUSINESS_NAME: str | None = None
+
+    # How this deployment says it runs a call. Declared, not measured: nothing
+    # here inspects the worker, so this is the deployment's own claim, the same
+    # way the provider names on /api/v1/agents are.
+    AGENT_PATTERN: str = DEFAULT_AGENT_PATTERN
+
+    @field_validator("AGENT_PATTERN")
+    @classmethod
+    def keep_the_pattern_legal(cls, value: str) -> str:
+        return _resolve_agent_pattern(value)
 
     # Shared with the voice worker. It guards the one endpoint that serves the
     # LiveKit secret, so an empty value disables that endpoint rather than

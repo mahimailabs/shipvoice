@@ -148,6 +148,32 @@ class CallsRepository:
             await session.commit()
             return True
 
+    async def counts_since(
+        self, since: datetime
+    ) -> tuple[list[tuple[str | None, int]], list[tuple[str | None, int]]]:
+        """(by agent, by channel) over calls that started at or after `since`.
+
+        Grouped in SQL rather than by reading the window into memory and
+        counting there. The console asks for this on every page load, and the
+        counts are the whole answer: the rows themselves are never wanted.
+        """
+        async with self._session_factory() as session:
+            window = col(Call.started_at) >= since
+            agents = await session.execute(
+                select(col(Call.agent_name), func.count())
+                .where(window)
+                .group_by(col(Call.agent_name))
+            )
+            channels = await session.execute(
+                select(col(Call.channel), func.count())
+                .where(window)
+                .group_by(col(Call.channel))
+            )
+            return (
+                [(row[0], int(row[1])) for row in agents.all()],
+                [(row[0], int(row[1])) for row in channels.all()],
+            )
+
     async def totals(self) -> tuple[int, int, int]:
         """(calls, seconds, turns) across the whole log."""
         async with self._session_factory() as session:

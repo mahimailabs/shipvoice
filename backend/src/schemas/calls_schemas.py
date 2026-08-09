@@ -89,6 +89,43 @@ class CallSummaryResponse(BaseModel):
     total_turns: int
 
 
+class AgentCallCount(BaseModel):
+    """How many calls one agent took inside the window."""
+
+    # A plain string, not the agent's slug and not an enum. A call whose agent
+    # nobody recorded is grouped under the literal "unknown" rather than being
+    # dropped, because a call that happened is not a call that did not.
+    agent_name: str
+    calls: int
+
+
+class ChannelCallCount(BaseModel):
+    """How many calls arrived on one channel inside the window."""
+
+    # str rather than CallChannel. The list route validates what it serves and
+    # a value it does not know is a 422 the caller can fix. A rollup is a count
+    # of what is already in the log, and refusing to serve the count because
+    # one old row says something unexpected takes the whole page down.
+    channel: str
+    calls: int
+
+
+class CallRollupResponse(BaseModel):
+    """Calls in a recent window, split by agent and by channel.
+
+    Counts only. Which agent took the calls, and where they came from. What
+    those minutes cost is the paid product, same as everywhere else here.
+    """
+
+    # Echoed back so the console can label its own chart without assuming the
+    # window it asked for is the window it got.
+    days: int
+    # Every call in the window. by_agent and by_channel each add up to it.
+    total: int
+    by_agent: list[AgentCallCount]
+    by_channel: list[ChannelCallCount]
+
+
 class CallStart(BaseModel):
     """The worker reporting that a call began."""
 
