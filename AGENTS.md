@@ -69,9 +69,25 @@ reading its output is faster than reading logs.
 ## Changing the agent
 
 The persona is `agent/prompts/instructions.md`, a plain file with one
-`{agent_name}` placeholder. Editing it and restarting the worker is the whole
-process. Do not edit `agent/src/prompts/instructions.py`: that holds the
-packaged fallback for a clone that has no prompt file.
+`{agent_name}` placeholder. Editing it is the whole process, and there is no
+restart: LiveKit runs `entrypoint()` per job, `Assistant.__init__` calls
+`load_instructions()`, and that reads the file every time. So a save lands on
+the next call. A call already in progress keeps the prompt it started with.
+
+Two ways to edit it, same file:
+
+- The file itself, in your editor.
+- The console, on the Agents page, over `GET` and
+  `PUT /api/v1/agents/{slug}/prompt`. `{slug}` is `AGENT_NAME`; anything else
+  is a 404. The write needs `CONSOLE_WRITES_ENABLED` (compose sets it) and the
+  backend's read-write mount of `./agent/prompts` (compose sets that too). It
+  is atomic, a temp file in the same directory renamed over the target, so a
+  save never leaves the worker reading half a persona. Without the mount the
+  editor still loads and every save answers 409 naming the path.
+
+Do not edit `agent/src/prompts/instructions.py`: that holds the packaged
+fallback for a clone that has no prompt file. When the file is missing the
+console shows an empty editor and says the worker is running that fallback.
 
 ## Conventions
 

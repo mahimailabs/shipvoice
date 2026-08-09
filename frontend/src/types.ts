@@ -113,3 +113,29 @@ export interface LiveKitWrite {
   /** Blank means keep the stored secret: the console cannot read it back. */
   api_secret?: string;
 }
+
+/**
+ * The agent's system prompt, as the file on disk.
+ *
+ * There is no database behind this and no revision history: the file is the
+ * single source of truth, and every field here describes that one file.
+ */
+export interface AgentPromptRead {
+  slug: string;
+  /** Display path, always agent/prompts/instructions.md. */
+  path: string;
+  /** Empty string when exists is false. */
+  content: string;
+  /** False when the file is not on disk yet. The agent then uses its default. */
+  exists: boolean;
+  /** CONSOLE_WRITES_ENABLED, and the target is writable. */
+  editable: boolean;
+  /** Why editable is false. Null when it is true. */
+  read_only_reason: string | null;
+  /** utf-8 byte length of content. */
+  byte_size: number;
+  /** The cap a save enforces. */
+  max_bytes: number;
+  /** Non-blocking notes about the prompt. Never an error, never a refusal. */
+  warnings: string[];
+}

@@ -132,6 +132,7 @@ Open `http://localhost:5173`, go to **Agents**, start a test call, allow the mic
 - **Web and telephony** (SIP) on the same agent, via a single participant branch.
 - **Swappable providers** and self-hosted ↔ LiveKit Cloud with a one-line change.
 - **Zero-downtime deploys**: the worker drains in-flight calls on SIGTERM (blue/green on Fly), so a deploy mid-call finishes the call instead of dropping it.
+- **Edit the persona in the console**: the prompt is a file the worker re-reads on every call, so a save from the Agents page is live on the next one with nothing restarted.
 - **Standard token endpoint** so LiveKit client SDKs connect with zero glue.
 - **Copy-to-extend** patterns: an API to service to repository slice in the backend, a bare `Assistant` in the agent.
 

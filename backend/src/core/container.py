@@ -5,6 +5,7 @@ from dependency_injector import containers, providers
 from src.core.config import get_config
 from src.core.database import Database
 from src.repository.calls_repository import CallsRepository
+from src.services.agent_prompt_service import AgentPromptService
 from src.services.calls_service import CallsService
 from src.services.livekit_settings_service import LiveKitSettingsService
 from src.services.token_service import TokenService
@@ -39,6 +40,13 @@ class Container(containers.DeclarativeContainer):
     token_service = providers.Factory(
         TokenService,
         settings=livekit_settings_service,
+    )
+
+    # No database. The persona is a file, and the worker reads that file rather
+    # than anything this service could store.
+    agent_prompt_service = providers.Factory(
+        AgentPromptService,
+        config=config,
     )
 
     calls_repository = providers.Factory(

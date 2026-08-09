@@ -1,6 +1,7 @@
 // The only module that knows the backend's base URL.
 import type {
   AgentListResponse,
+  AgentPromptRead,
   CallDetailResponse,
   CallListResponse,
   CallRollupResponse,
@@ -36,9 +37,29 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Turn a non-2xx into an ApiError.
+ *
+ * FastAPI puts the sentence worth reading in `detail`, and for some refusals
+ * that sentence is the whole message: a refused write names the flag that would
+ * allow it, and a failed write names the path and the mount it needs. Prefer it,
+ * and keep the generic line for a response that carries no detail at all.
+ * A validation error's detail is a list rather than a string, so only a string
+ * is taken.
+ */
 async function guard(res: Response, what: string): Promise<void> {
   if (res.ok) return;
-  throw new ApiError(res.status, `${what} failed (${res.status})`);
+  let detail: string | null = null;
+  try {
+    const body: unknown = await res.json();
+    if (body != null && typeof body === "object" && "detail" in body) {
+      const value = (body as { detail: unknown }).detail;
+      if (typeof value === "string" && value.trim().length > 0) detail = value;
+    }
+  } catch {
+    // No body, or not JSON. The generic line below stands.
+  }
+  throw new ApiError(res.status, detail ?? `${what} failed (${res.status})`);
 }
 
 async function get<T>(path: string, what: string): Promise<T> {
@@ -130,6 +151,39 @@ export async function getTestCallToken(
   }
   await guard(res, "Starting the test call");
   return (await res.json()) as RoomTokenResponse;
+}
+
+/**
+ * The agent's system prompt file. A file that is not on disk yet is a 200 with
+ * exists false, never a 404, so the console can offer to write the first one.
+ */
+export async function getAgentPrompt(slug: string): Promise<AgentPromptRead> {
+  return get<AgentPromptRead>(
+    `/api/v1/agents/${encodeURIComponent(slug)}/prompt`,
+    "Loading the prompt",
+  );
+}
+
+/** Replace the prompt file. The backend writes it atomically. */
+export async function putAgentPrompt(
+  slug: string,
+  content: string,
+): Promise<AgentPromptRead> {
+  let res: Response;
+  try {
+    res = await fetch(
+      `${API_BASE}/api/v1/agents/${encodeURIComponent(slug)}/prompt`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      },
+    );
+  } catch {
+    throw new ApiError(0, "Could not reach the backend");
+  }
+  await guard(res, "Saving the prompt");
+  return (await res.json()) as AgentPromptRead;
 }
 
 export async function getDeployment(): Promise<DeploymentRead> {

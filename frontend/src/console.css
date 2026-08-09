@@ -919,6 +919,98 @@
     border-left-color: var(--sv-accent);
 }
 
+.banner.good {
+    border-left-color: var(--success);
+}
+
+/* ---------- modal dialog ---------- */
+/* The console had no modal before the prompt editor: the call log's drawer is
+   an expanding row, not an overlay. --scrim and --shadow-dialog were already in
+   the token set with nothing using them, so this is what they were for. */
+
+.dlg-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--scrim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad-frame);
+}
+
+.dlg {
+    width: min(1040px, 94vw);
+    height: 86vh;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-default);
+    border-radius: var(--sv-radius-lg);
+    box-shadow: var(--shadow-dialog);
+    overflow: hidden;
+}
+
+.dlg .ph {
+    flex: none;
+}
+
+.dlg-bd {
+    flex: 1;
+    /* min-height:0 is what lets the textarea below shrink to the dialog rather
+       than push the footer off the bottom. */
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--pad-panel);
+}
+
+.dlg-ta {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    resize: none;
+    padding: var(--space-6) var(--space-8);
+    border: var(--border-hairline);
+    border-radius: var(--sv-radius-sm);
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-13);
+    line-height: var(--lh-relaxed);
+}
+
+/* The console's standard ring, not the accent border '.in' uses. That border is
+   right on a 32px field and reads as an error when it wraps a box this tall. */
+.dlg-ta:focus {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.dlg-ta:read-only {
+    color: var(--text-secondary);
+}
+
+.dlg-ta::placeholder {
+    color: var(--text-faint);
+}
+
+.dlg-ft {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--pad-panel);
+    border-top: 1px solid var(--border-default);
+    background: var(--surface-base);
+    /* A long refusal from the backend must not grow the footer over the
+       textarea it belongs to. */
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
 /* ---------- login ---------- */
 
 .login-form {

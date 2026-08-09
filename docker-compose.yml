@@ -40,6 +40,9 @@ services:
       # Local only. This publishes on 127.0.0.1, so "anyone who can reach it"
       # is you. Do not carry this into a deployment.
       CONSOLE_WRITES_ENABLED: ${CONSOLE_WRITES_ENABLED:-true}
+      # Literal, not overridable: it has to name the mount immediately below,
+      # and pointing it anywhere else writes a persona the worker never reads.
+      AGENT_PROMPT_FILE: /app/prompts/instructions.md
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
@@ -47,6 +50,14 @@ services:
       DB_NAME: ${DB_NAME:-app}
       DB_SSL: ${DB_SSL:-disable}
       CORS_ORIGINS_STR: ${CORS_ORIGINS_STR:-http://localhost:5173}
+    volumes:
+      # The backend writes the persona the agent reads, which is why both mount
+      # the SAME host directory. This one is read-write because the console's
+      # editor saves through it. The agent's stays ':ro': the worker only ever
+      # reads the file, and one writer is the whole reason a save can be atomic.
+      # Without this mount the editor still loads, and every save answers 409
+      # naming the path it could not write.
+      - ./agent/prompts:/app/prompts
     ports:
       - "127.0.0.1:8000:8080" # http://localhost:8000  (docs at /docs)
     healthcheck:
@@ -74,8 +85,9 @@ services:
       # equal the backend's AGENT_SERVICE_TOKEN: without them nothing is sent.
       BACKEND_REPORTING_ENABLED: ${BACKEND_REPORTING_ENABLED:-true}
     volumes:
-      # The persona is data. Mounting it means editing the prompt is a restart,
-      # not an image rebuild.
+      # The persona is data, not code. Mounting it means editing the prompt is
+      # not an image rebuild, and because the worker re-reads the file for every
+      # job it is not a restart either. Read-only: the backend owns the write.
       - ./agent/prompts:/app/prompts:ro
     # The worker asks the backend for the LiveKit project at startup and
     # restarts itself when it changes there. 'restart: unless-stopped' is what

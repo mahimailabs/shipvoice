@@ -1,5 +1,6 @@
 import logging
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
 
 from dotenv import load_dotenv
@@ -19,6 +20,14 @@ logger = logging.getLogger(__name__)
 # typo, not a pattern.
 AGENT_PATTERNS = ("sequential", "supervisor")
 DEFAULT_AGENT_PATTERN = "sequential"
+
+# src/core/config.py -> backend/ -> the repo root -> the worker's prompt file.
+# Derived from this file's own location rather than the working directory, so
+# 'uv run uvicorn src.main:app' from backend/ finds the persona with nothing set
+# in the environment. Compose overrides it with the container's mount path.
+DEFAULT_AGENT_PROMPT_FILE = (
+    Path(__file__).resolve().parents[3] / "agent" / "prompts" / "instructions.md"
+)
 
 # libpq query params that asyncpg.connect() does not accept as kwargs.
 # TLS is instead enabled via connect_args (see Config.SQLALCHEMY_CONNECT_ARGS).
@@ -109,6 +118,13 @@ class Config(BaseSettings):
     # worker into the room and the call sits in "connecting" with no error.
     AGENT_NAME: str = "assistant"
     BUSINESS_NAME: str | None = None
+
+    # The agent's persona, which is a file and not a row. The worker builds its
+    # Agent once per job and re-reads this file every time it does, so a write
+    # here is picked up by the next call with no restart. Both services must
+    # point at the SAME file: in compose that is one host directory mounted into
+    # both, read-write here and read-only there.
+    AGENT_PROMPT_FILE: Path = DEFAULT_AGENT_PROMPT_FILE
 
     # How this deployment says it runs a call. Declared, not measured: nothing
     # here inspects the worker, so this is the deployment's own claim, the same
