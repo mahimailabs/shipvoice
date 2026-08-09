@@ -1,11 +1,4 @@
-"""The worker following the backend's LiveKit project.
-
-The failure this exists to prevent is the quietest one in the stack: tokens
-signed for one project while the worker waits on another, every call connecting
-to silence, and nothing logging an error. So the tests are mostly about the
-paths where the backend is unhelpful, because those must never take the worker
-down or leave it half-configured.
-"""
+"""The worker following the backend's LiveKit project."""
 
 import os
 

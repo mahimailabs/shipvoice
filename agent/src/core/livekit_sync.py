@@ -1,25 +1,4 @@
-"""Take the LiveKit project from the backend instead of this process's env.
-
-The console can change the LiveKit project. The worker connects with its own
-credentials, so without this the two silently diverge: tokens get signed for one
-project while the worker waits on another, every call connects to silence, and
-nothing logs an error anywhere. That failure is close to undiagnosable, which is
-why the worker follows the backend rather than being warned about it in a UI.
-
-Two parts:
-
-  bootstrap()  before the LiveKit CLI reads the environment, fetch the project
-               and write it into os.environ. The env is still the fallback, so a
-               worker whose backend is down keeps running on what it has.
-
-  watch()      poll for a revision change and, when it happens, raise SIGTERM on
-               ourselves. LiveKit's own signal handling drains in-flight calls
-               first, and the supervisor (compose 'restart: unless-stopped', or
-               Fly) starts us again on the new project.
-
-Restarting is the honest move: the worker registers with LiveKit once, at
-startup, so there is no way to swap credentials underneath a live connection.
-"""
+"""Take the LiveKit project from the backend instead of this process's env."""
 
 import logging
 import os
@@ -51,8 +30,7 @@ def _fetch(base_url: str, token: str, timeout: float = 5.0) -> dict | None:
 
     if response.status_code == 403:
         logger.error(
-            "backend refused the service token: BACKEND_API_TOKEN must equal "
-            "the backend's AGENT_SERVICE_TOKEN"
+            "backend refused the service token: BACKEND_API_TOKEN must equal the backend's AGENT_SERVICE_TOKEN"
         )
         return None
     if response.status_code != 200:
@@ -66,12 +44,7 @@ def _fetch(base_url: str, token: str, timeout: float = 5.0) -> dict | None:
 
 
 def bootstrap(base_url: str | None, token: str | None) -> str | None:
-    """Adopt the backend's LiveKit project. Returns the revision, or None.
-
-    Never raises. A worker that cannot reach its backend must still start on the
-    credentials it already has, because refusing to run would turn a console
-    being down into every call failing.
-    """
+    """Adopt the backend's LiveKit project. Returns the revision, or None."""
     if not base_url or not token:
         logger.info("LiveKit sync is off, using the environment")
         return None
@@ -109,8 +82,7 @@ def watch(
             if str(payload["revision"]) == revision:
                 continue
             logger.warning(
-                "LiveKit project changed in the console, draining and restarting "
-                "so calls are placed on the new project"
+                "LiveKit project changed in the console, draining and restarting so calls are placed on the new project"
             )
             # SIGTERM rather than exit(): it is what LiveKit's own draining is
             # wired to, so in-flight calls finish instead of being cut.

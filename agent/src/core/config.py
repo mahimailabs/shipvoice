@@ -17,10 +17,6 @@ class Config(BaseSettings):
     ENV: str = "prod"
     PROJECT_NAME: str = "Voice Agent"
 
-    # Where this worker gets its LiveKit project. When both are set it takes
-    # the project from the backend and restarts itself when it changes there,
-    # so a change made in the console reaches the process placing calls. When
-    # either is unset it stays on the environment.
     BACKEND_API_URL: str | None = None
     BACKEND_API_TOKEN: str | None = None
     LIVEKIT_SYNC_INTERVAL_SECONDS: float = 15.0

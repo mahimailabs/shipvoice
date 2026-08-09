@@ -36,9 +36,7 @@ if config.SENTRY_DSN:
         environment=os.getenv("FLY_APP_NAME", "development"),
     )
 
-# Adopt the backend's LiveKit project before the LiveKit CLI reads the
-# environment, then watch for it changing. Console mode talks to no backend and
-# needs no LiveKit at all, so it is skipped there.
+
 if not CONSOLE_MODE:
     _revision = bootstrap_livekit(config.BACKEND_API_URL, config.BACKEND_API_TOKEN)
     watch_livekit(
