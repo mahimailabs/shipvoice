@@ -126,6 +126,7 @@ export function TopBar({
       )}
       <div style={{ flex: 1 }} />
       {actions}
+      <DashHelp />
       <a
         className="btn p sm upgrade"
         href={UPGRADE_URL}
@@ -135,6 +136,37 @@ export function TopBar({
         Upgrade
       </a>
     </header>
+  );
+}
+
+const DASH_HELP_ID = "dash-help";
+
+/**
+ * What a dash means, said once for the whole console.
+ *
+ * Every table here has columns this repo does not measure, and the rule is the
+ * same on all of them, so it was repeated as a footnote under each one. Several
+ * copies of one sentence stop being read. It lives in the top bar instead,
+ * which every page renders.
+ */
+function DashHelp() {
+  return (
+    <span className="help">
+      <button
+        type="button"
+        className="help-btn"
+        aria-label="What a dash means"
+        aria-describedby={DASH_HELP_ID}
+      >
+        ?
+      </button>
+      <span className="help-tip" role="tooltip" id={DASH_HELP_ID}>
+        A dash means unmeasured, never zero. This starter records what was said
+        on a call, not what a minute cost, so cost, billing, campaigns,
+        evaluations and config versions stay dashed rather than showing a zero
+        you could read as a measurement.
+      </span>
+    </span>
   );
 }
 

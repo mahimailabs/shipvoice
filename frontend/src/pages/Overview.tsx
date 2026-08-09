@@ -278,10 +278,6 @@ export function Overview() {
               </table>
             </div>
             <div className="pb">
-              <Ann>
-                A dash means unmeasured, never zero. A call still in flight has
-                no duration to show yet.
-              </Ann>
             </div>
           </section>
 

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Cell, Pie, PieChart } from "recharts";
 import { ApiError, getCallRollup, listAgents } from "../api";
 import type { AgentSummary, CallRollupResponse, RollupByAgent } from "../types";
-import { Ann, TopBar } from "../components/AppShell";
+import { TopBar } from "../components/AppShell";
 import { Badge, Button, DottedLineChart, LegendGrid } from "../components/ds";
 
 // The Agents page, matched cell for cell to the reference console.
@@ -491,13 +491,6 @@ export function Agents() {
     <>
       {topBar}
       <AgentTable agents={agents} rollup={rollup} />
-      <div className="disclose">
-        <Ann>
-          A dash means unmeasured, never zero. Config versions, EVA scores and
-          kept revenue are not recorded in this repo, so those columns stay
-          dashed rather than showing you a zero.
-        </Ann>
-      </div>
       {/* Sized to content, not 'flex: 1'. Growing to fill the viewport leaves a
           tall empty band under two short panels on any screen taller than the
           reference's. */}

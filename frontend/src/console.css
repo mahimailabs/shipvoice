@@ -1198,3 +1198,67 @@
 .sv-console .react-flow__attribution a:hover {
   color: var(--text-muted);
 }
+
+/* The one "what does a dash mean" explainer, in the top bar on every page.
+   Hover and keyboard focus both open it: a tooltip only a mouse can reach is
+   not an explanation, it is decoration. */
+.sv-console .help {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+}
+
+.sv-console .help-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-muted);
+    font: var(--type-caption);
+    line-height: 1;
+    cursor: help;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.sv-console .help-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.sv-console .help-tip {
+    position: absolute;
+    top: calc(100% + 8px);
+    /* Anchored right: this sits beside the Upgrade button, so it opens
+       leftwards and never runs off the edge of the window. */
+    right: 0;
+    width: 320px;
+    padding: var(--space-6) var(--space-8);
+    border: 1px solid var(--border-default);
+    border-radius: var(--sv-radius-sm);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-popover);
+    color: var(--text-secondary);
+    font: var(--type-body-sm);
+    line-height: var(--lh-relaxed);
+    text-align: left;
+    white-space: normal;
+    /* Not 'display: none': the tooltip stays in the accessibility tree so
+       aria-describedby still resolves it when it is not on screen. */
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 90ms ease,
+        visibility 90ms;
+    z-index: 20;
+}
+
+.sv-console .help:hover .help-tip,
+.sv-console .help-btn:focus-visible + .help-tip {
+    opacity: 1;
+    visibility: visible;
+}

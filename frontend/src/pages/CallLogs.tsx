@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { API_BASE, getCall, listCalls } from "../api";
-import { Ann, TopBar } from "../components/AppShell";
+import { TopBar } from "../components/AppShell";
 import { Badge, Button } from "../components/ds";
 import { duration } from "../lib/format";
 import type { CallDetailResponse, CallRead, CallStatus } from "../types";
@@ -426,11 +426,6 @@ export function CallLogs() {
               {total.toLocaleString()}
             </span>
             <span style={{ marginLeft: "auto" }}>
-              <Ann>
-                A dash means unmeasured, never zero. This repo records what was
-                said on a call, not what a minute cost, so cost, billing,
-                campaigns and config versions stay blank rather than guess.
-              </Ann>
             </span>
           </div>
         </>

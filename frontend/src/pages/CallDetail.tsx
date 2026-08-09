@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ApiError, deleteCall, getCall, listAgents } from "../api";
-import { Ann, TopBar } from "../components/AppShell";
+import { TopBar } from "../components/AppShell";
 import { Badge, Button, KV, Stat } from "../components/ds";
 import type {
   AgentSummary,
@@ -301,11 +301,6 @@ export function CallDetail() {
         <Stat value={<Dash />} label="Kept" hint="billed minus cost" />
       </div>
 
-      <div className="disclose">
-        This starter records what happened on a call. It does not meter what the
-        call cost, so the seven cells above are unmeasured rather than zero.
-      </div>
-
       <div style={{ display: "flex", flex: 1, minHeight: 0, flexWrap: "wrap" }}>
         <div
           style={{
@@ -435,7 +430,6 @@ export function CallDetail() {
               Latency is not measured here. The agent reports what was said and
               when, not how long each leg of the pipeline took.
             </p>
-            <Ann>A dash means unmeasured, never zero.</Ann>
           </div>
         </div>
       </div>
