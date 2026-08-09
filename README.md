@@ -197,3 +197,6 @@ licensed by their upstream authors, not by this repository. See
 ## License
 
 MIT for the code written here. See [`LICENSE`](LICENSE) and the note above.
+
+
+<!-- GitAds-Verify: HQIKWT12NJFIA6A8IJC1JJS9VDQSMAJD -->
