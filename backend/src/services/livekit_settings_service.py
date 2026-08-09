@@ -2,6 +2,7 @@ import logging
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, select
 
@@ -31,12 +32,27 @@ class LiveKitSettingsService:
         self._config = config
 
     async def _row(self, session: AsyncSession) -> LiveKitSettings | None:
-        # col() keeps mypy happy: SQLModel types the attribute as int | None,
-        # which order_by does not accept directly.
-        result = await session.execute(
-            select(LiveKitSettings).order_by(col(LiveKitSettings.id))
-        )
-        return result.scalars().first()
+        """The stored project, or None when there is not one to read.
+
+        None also covers "the table does not exist yet" and "the database is
+        not up". Every caller already treats None as "fall back to the
+        environment", and raising here made that fallback unreachable in
+        exactly the case it was written for: the first boot of a fresh clone,
+        where POST /api/v1/token answered 500 with a raw UndefinedTableError.
+        """
+        try:
+            # col() keeps mypy happy: SQLModel types the attribute as
+            # int | None, which order_by does not accept directly.
+            result = await session.execute(
+                select(LiveKitSettings).order_by(col(LiveKitSettings.id))
+            )
+            return result.scalars().first()
+        except SQLAlchemyError:
+            logger.warning(
+                "could not read livekit_settings, using the environment",
+                exc_info=True,
+            )
+            return None
 
     async def seed_from_env(self) -> None:
         """Insert the env values once, on a database that has never had a row.
@@ -64,8 +80,7 @@ class LiveKitSettingsService:
 
     async def credentials(self) -> tuple[str, str, str] | None:
         """(url, key, secret) for signing, or None when unconfigured."""
-        async with self._session_factory() as session:
-            row = await self._row(session)
+        row = await self._row_or_none()
         if row:
             return row.url, row.api_key, row.api_secret
 
@@ -86,13 +101,20 @@ class LiveKitSettingsService:
         Derived from updated_at rather than a counter so it needs no extra
         column and cannot drift from the row it describes.
         """
-        async with self._session_factory() as session:
-            row = await self._row(session)
+        row = await self._row_or_none()
         return row.updated_at.isoformat() if row else "environment"
 
+    async def _row_or_none(self) -> LiveKitSettings | None:
+        """_row, but tolerant of the database being unreachable entirely."""
+        try:
+            async with self._session_factory() as session:
+                return await self._row(session)
+        except SQLAlchemyError:
+            logger.warning("database unavailable, using the environment")
+            return None
+
     async def read(self) -> LiveKitRead:
-        async with self._session_factory() as session:
-            row = await self._row(session)
+        row = await self._row_or_none()
         if row:
             return LiveKitRead(
                 url=row.url,

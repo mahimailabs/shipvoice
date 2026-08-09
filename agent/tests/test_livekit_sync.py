@@ -75,3 +75,36 @@ def test_watch_does_nothing_without_a_starting_revision(monkeypatch):
     )
     livekit_sync.watch("http://backend:8000", "tok", None)
     assert called == []
+
+
+def test_missing_credentials_name_themselves(monkeypatch, capsys):
+    """The whole point: the message must name the variable and the file."""
+    monkeypatch.delenv("LIVEKIT_API_KEY", raising=False)
+    monkeypatch.setenv("LIVEKIT_URL", "wss://real.livekit.cloud")
+    monkeypatch.setenv("LIVEKIT_API_SECRET", "s")
+    with pytest.raises(SystemExit) as exc:
+        livekit_sync.require_livekit_or_exit()
+    assert exc.value.code == 1
+    err = capsys.readouterr().err
+    assert "LIVEKIT_API_KEY" in err
+    assert ".env" in err
+
+
+def test_the_unedited_example_url_is_refused_by_name(monkeypatch, capsys):
+    """This is the failure that reads as 'invalid API key' in the browser."""
+    monkeypatch.setenv("LIVEKIT_URL", livekit_sync.PLACEHOLDER_URL)
+    monkeypatch.setenv("LIVEKIT_API_KEY", "k")
+    monkeypatch.setenv("LIVEKIT_API_SECRET", "s")
+    with pytest.raises(SystemExit):
+        livekit_sync.require_livekit_or_exit()
+    err = capsys.readouterr().err
+    assert "LIVEKIT_URL" in err
+    assert livekit_sync.PLACEHOLDER_URL in err
+
+
+def test_complete_credentials_start_normally(monkeypatch):
+    monkeypatch.setenv("LIVEKIT_URL", "wss://real.livekit.cloud")
+    monkeypatch.setenv("LIVEKIT_API_KEY", "k")
+    monkeypatch.setenv("LIVEKIT_API_SECRET", "s")
+    livekit_sync.require_livekit_or_exit()
+    assert livekit_sync.env_is_complete() is True

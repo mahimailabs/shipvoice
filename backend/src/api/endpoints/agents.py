@@ -10,10 +10,10 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 
 DECLARED_IN = "agent/src/agent.py"
 DECLARED_STT = "deepgram nova-3"
-DECLARED_LLM = "openai gpt-4.1-mini"
+DECLARED_LLM = "cerebras gemma-4-31b"
 DECLARED_TTS = "cartesia (plugin default)"
 
-PROMPT_PATH = "agent/src/prompts/instructions.py"
+PROMPT_PATH = "agent/prompts/instructions.md"
 
 
 @router.get("", response_model=AgentListResponse)

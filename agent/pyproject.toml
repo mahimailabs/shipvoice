@@ -6,9 +6,10 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "httpx>=0.28.1",
-  "livekit-agents[openai,turn-detector]==1.5.6",
-  "livekit-plugins-cartesia>=1.5.1",
+  "livekit-agents[turn-detector]==1.5.9",
+  "livekit-plugins-cerebras>=1.5.9",
   "livekit-plugins-deepgram>=1.5.1",
+  "livekit-plugins-inworld>=1.5.9",
   "livekit-plugins-silero>=1.5.1",
   "pydantic-settings>=2.14.0",
   "python-dotenv>=1.2.2",

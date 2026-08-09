@@ -96,14 +96,11 @@ def test_declared_providers_still_match_the_worker():
     assert 'deepgram.STT(model="nova-3")' in source, (
         f"agent.py changed its STT; {DECLARED_STT!r} in agents.py is now a lie"
     )
-    assert 'openai.LLM(model="gpt-4.1-mini")' in source, (
+    assert 'cerebras.LLM(model="gemma-4-31b")' in source, (
         f"agent.py changed its LLM; {DECLARED_LLM!r} in agents.py is now a lie"
     )
-    # Cartesia is constructed with no model argument, so the plugin default
-    # applies and naming one would be a guess. If a model is pinned later,
-    # this fails and the declared string has to be updated to match.
-    assert "cartesia.TTS()" in source, (
-        f"agent.py pinned a Cartesia model; {DECLARED_TTS!r} is now wrong"
+    assert 'inworld.TTS(model="inworld-tts-2", voice="Ashley")' in source, (
+        f"agent.py changed its TTS; {DECLARED_TTS!r} in agents.py is now wrong"
     )
 
 

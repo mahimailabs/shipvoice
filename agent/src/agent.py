@@ -11,13 +11,14 @@ from livekit.agents import (
     TurnHandlingOptions,
     cli,
 )
-from livekit.plugins import cartesia, deepgram, openai, silero
+from livekit.plugins import cerebras, deepgram, inworld, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 from src.agents.assistant import Assistant
 from src.core.config import config
 from src.core.events import register_event_handlers
 from src.core.livekit_sync import bootstrap as bootstrap_livekit
+from src.core.livekit_sync import require_livekit_or_exit
 from src.core.livekit_sync import watch as watch_livekit
 from src.utils.room import identify
 
@@ -39,6 +40,10 @@ if config.SENTRY_DSN:
 
 if not CONSOLE_MODE:
     _revision = bootstrap_livekit(config.BACKEND_API_URL, config.BACKEND_API_TOKEN)
+    # After the sync, because the backend may be where the credentials come
+    # from. Before the CLI, so the failure is one sentence instead of an
+    # endless 401 loop.
+    require_livekit_or_exit()
     watch_livekit(
         config.BACKEND_API_URL,
         config.BACKEND_API_TOKEN,
@@ -71,8 +76,8 @@ async def entrypoint(ctx: JobContext) -> None:
 
     session: AgentSession = AgentSession(
         stt=deepgram.STT(model="nova-3"),
-        llm=openai.LLM(model="gpt-4.1-mini"),
-        tts=cartesia.TTS(),
+        llm=cerebras.LLM(model="gemma-4-31b"),
+        tts=inworld.TTS(model="inworld-tts-2", voice="Ashley"),
         vad=ctx.proc.userdata["vad"],
         turn_handling=TurnHandlingOptions(
             turn_detection=MultilingualModel(),
