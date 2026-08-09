@@ -200,3 +200,7 @@ MIT for the code written here. See [`LICENSE`](LICENSE) and the note above.
 
 
 <!-- GitAds-Verify: HQIKWT12NJFIA6A8IJC1JJS9VDQSMAJD -->
+
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=mahimailabs/shipvoice@github)](https://gitads.dev/v1/ad-track?source=mahimailabs/shipvoice@github)
+
