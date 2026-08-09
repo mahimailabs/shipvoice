@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from "react-router";
 import { AppShell } from "./components/AppShell";
+import { Overview } from "./pages/Overview";
+import { CallLogs } from "./pages/CallLogs";
+import { CallDetail } from "./pages/CallDetail";
 import { Agents } from "./pages/Agents";
 import { AgentDetail } from "./pages/AgentDetail";
 import { Deployment } from "./pages/Deployment";
@@ -8,9 +11,10 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<Agents />} />
-        {/* /agents kept so links and muscle memory still work. */}
-        <Route path="agents" element={<Navigate to="/" replace />} />
+        <Route index element={<Overview />} />
+        <Route path="calls" element={<CallLogs />} />
+        <Route path="calls/:id" element={<CallDetail />} />
+        <Route path="agents" element={<Agents />} />
         <Route path="agents/:slug" element={<AgentDetail />} />
         <Route path="deployment" element={<Deployment />} />
         {/* The page was called Settings before it was honest about being read-only. */}

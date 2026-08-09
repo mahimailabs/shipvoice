@@ -1,14 +1,22 @@
 import logging
 from collections.abc import Callable
+from datetime import UTC, datetime
 
 from livekit.agents import AgentSession
 from livekit.agents.llm import ChatMessage
 
+from src.services.call_reporter import CallReporter
+
 logger = logging.getLogger("agent")
 
 
-def register_event_handlers(session: AgentSession) -> Callable[[], None]:
+def register_event_handlers(
+    session: AgentSession, reporter: CallReporter | None = None
+) -> Callable[[], None]:
     """Attach generic logging + usage handlers to a session.
+
+    Pass a reporter to also send each spoken turn to the backend, which is what
+    gives the console's Call detail page a transcript.
 
     Returns a callable that logs the cumulative usage summary, suitable for use
     as a shutdown callback.
@@ -30,6 +38,14 @@ def register_event_handlers(session: AgentSession) -> Callable[[], None]:
         item = ev.item
         if isinstance(item, ChatMessage) and item.text_content:
             logger.info("%s: %s", item.role, item.text_content)
+            if reporter is not None:
+                # Queues and returns. The reporter owns the network call so
+                # this handler, which runs on the audio path, never waits.
+                reporter.note_turn(
+                    item.role,
+                    item.text_content,
+                    datetime.fromtimestamp(item.created_at, tz=UTC),
+                )
 
     @session.on("session_usage_updated")
     def _on_usage(ev) -> None:

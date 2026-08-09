@@ -4,6 +4,8 @@ from dependency_injector import containers, providers
 
 from src.core.config import get_config
 from src.core.database import Database
+from src.repository.calls_repository import CallsRepository
+from src.services.calls_service import CallsService
 from src.services.livekit_settings_service import LiveKitSettingsService
 from src.services.token_service import TokenService
 
@@ -14,7 +16,9 @@ class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         modules=[
             "src.api.endpoints.agents",
+            "src.api.endpoints.calls",
             "src.api.endpoints.livekit",
+            "src.api.endpoints.internal_calls",
             "src.api.endpoints.internal_livekit",
             "src.api.endpoints.deployment",
             "src.api.endpoints.token",
@@ -35,4 +39,14 @@ class Container(containers.DeclarativeContainer):
     token_service = providers.Factory(
         TokenService,
         settings=livekit_settings_service,
+    )
+
+    calls_repository = providers.Factory(
+        CallsRepository,
+        session_factory=database.provided.session,
+    )
+
+    calls_service = providers.Factory(
+        CallsService,
+        repository=calls_repository,
     )

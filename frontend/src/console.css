@@ -14,11 +14,11 @@
     --n-50: #fafafa;
 
     /* ShipVoice red ramp, replacing the source violet ramp */
-    --brand-100: #fff2f3;
-    --brand-200: #ffc9cd;
-    --brand-300: #ff6f79;
-    --brand-400: #ff3344;
-    --brand-500: #d11f2e;
+    --brand-100: #fff2f2;
+    --brand-200: #ffcbcd;
+    --brand-300: #ff6f78;
+    --brand-400: #e5323f;
+    --brand-500: #b81f2b;
     --brand-700: #8c1620;
     --brand-900: #4c1016;
 
@@ -56,7 +56,7 @@
     --accent-solid: var(--brand-700);
     --accent-quiet: var(--brand-900);
     --accent-quiet-text: var(--brand-200);
-    --accent-ring: rgba(255, 51, 68, 0.35);
+    --accent-ring: rgba(229, 50, 63, 0.35);
 
     /* Status */
     --success: var(--sage-400);
@@ -75,9 +75,8 @@
     --chart-dot: var(--brand-300);
 
     /* Type */
-    --font-sans:
-        "Geist", ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-sans: "Space Grotesk", ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, Menlo, monospace;
     --fs-11: 11px;
     --fs-12: 12px;
     --fs-13: 13px;

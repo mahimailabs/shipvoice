@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Outlet } from "react-router";
-import { getLiveKit, listAgents } from "../api";
+import { getLiveKit, listAgents, listCalls } from "../api";
 import { Rail } from "./Rail";
+import { LiveEventsBar } from "./ds";
 
 // The console frame. The rail carries per-section counts, each page owns its own
 // topbar, and the footer is a live pulse rather than a static byline.
@@ -10,6 +11,8 @@ import { Rail } from "./Rail";
 // cannot reach the vendored LiveKit and shadcn components used by the test call.
 export function AppShell() {
   const [agentCount, setAgentCount] = useState<number | null>(null);
+  const [callCount, setCallCount] = useState<number | null>(null);
+  const [ticks, setTicks] = useState<number[]>([]);
   const [project, setProject] = useState<string | null>(null);
   const [reachable, setReachable] = useState<boolean | null>(null);
 
@@ -22,6 +25,13 @@ export function AppShell() {
         setReachable(true);
       })
       .catch(() => live && setReachable(false));
+    listCalls({ limit: 24 })
+      .then((r) => {
+        if (!live) return;
+        setCallCount(r.total);
+        setTicks(r.calls.map((c) => c.turn_count).reverse());
+      })
+      .catch(() => undefined);
     getLiveKit()
       .then((v) => live && setProject(v.url))
       .catch(() => undefined);
@@ -32,28 +42,37 @@ export function AppShell() {
 
   return (
     <div className="sv-console fr">
-      <Rail counts={{ agents: agentCount }} />
+      <Rail counts={{ agents: agentCount, calls: callCount }} />
       <div className="cv">
         <div className="bd">
           <Outlet />
         </div>
         <footer className="ftr">
-          <span className="lb" style={{ flex: "none" }}>
-            LiveKit
-          </span>
-          <span className="fnt num" style={{ font: "var(--type-caption)", minWidth: 0 }}>
-            {project ?? "not set"}
-          </span>
-          <div style={{ flex: 1 }} />
-          <Link to="/deployment" className="btn sm" style={{ flex: "none" }}>
-            Deployment
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {ticks.length > 0 ? (
+              <LiveEventsBar ticks={ticks} label="Live events" compact />
+            ) : (
+              // Eight zero bars would draw a flat line that reads as measured
+              // silence. Say there is nothing instead.
+              <div className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
+                <span className="lb" style={{ flex: "none" }}>
+                  Live events
+                </span>
+                <span className="fnt" style={{ font: "var(--type-body-sm)" }}>
+                  {project ?? "no data"}
+                </span>
+              </div>
+            )}
+          </div>
+          <Link to="/calls" className="btn sm" style={{ flex: "none" }}>
+            View all →
           </Link>
           <span className="num fnt" style={{ font: "var(--type-caption)", flex: "none" }}>
-            {reachable == null
-              ? "checking the backend"
-              : reachable
-                ? "backend reachable"
-                : "backend not reachable"}
+            {callCount == null
+              ? reachable === false
+                ? "backend not reachable"
+                : "no calls recorded yet"
+              : `${callCount.toLocaleString()} calls recorded`}
           </span>
         </footer>
       </div>

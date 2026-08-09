@@ -14,12 +14,19 @@ class Config(BaseSettings):
 
     # Identity. AGENT_NAME is also the dispatch name the frontend must request.
     AGENT_NAME: str = "assistant"
+    BUSINESS_NAME: str | None = None
     ENV: str = "dev"
     PROJECT_NAME: str = "Voice Agent"
 
     BACKEND_API_URL: str | None = None
     BACKEND_API_TOKEN: str | None = None
     LIVEKIT_SYNC_INTERVAL_SECONDS: float = 15.0
+
+    # Whether the worker posts each call's start, its turns and its end to the
+    # backend, which is what fills the console's Calls page. Off unless someone
+    # says otherwise, off in console mode whatever this says, and off anyway
+    # without BACKEND_API_URL and BACKEND_API_TOKEN.
+    BACKEND_REPORTING_ENABLED: bool = False
 
     # Optional error tracking.
     SENTRY_DSN: str | None = None

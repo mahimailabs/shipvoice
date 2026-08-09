@@ -68,6 +68,11 @@ services:
       # network the backend answers on its container port, not the published one.
       BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8080}
       AGENT_NAME: ${AGENT_NAME:-assistant}
+      # The worker posts each call's start, its turns and its end to the
+      # backend, which is what fills the console's Calls page. On by default so
+      # the documented path produces data. It still needs BACKEND_API_TOKEN to
+      # equal the backend's AGENT_SERVICE_TOKEN: without them nothing is sent.
+      BACKEND_REPORTING_ENABLED: ${BACKEND_REPORTING_ENABLED:-true}
     volumes:
       # The persona is data. Mounting it means editing the prompt is a restart,
       # not an image rebuild.

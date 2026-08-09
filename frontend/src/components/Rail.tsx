@@ -4,7 +4,7 @@ type Item = {
   label: string;
   to?: string;
   count?: number | null;
-  pro?: boolean;
+  inactive?: boolean;
 };
 type Group = { title: string; items: Item[] };
 
@@ -15,24 +15,30 @@ export function Rail({
   counts?: Record<string, number | null>;
   deployment?: string;
 }) {
-  // Two sections: what this starter does, and what ShipVoice Pro adds.
-  //
-  // Calls sits under Pro because the call log genuinely is Pro. This repo
-  // records nothing about a call once it ends, so a Calls page here could only
-  // ever be an empty table pretending to be a feature.
   const groups: Group[] = [
     {
-      title: "Build",
-      items: [{ label: "Agents", to: "/", count: counts.agents ?? null }],
+      title: "Watch",
+      items: [
+        { label: "Overview", to: "/" },
+        { label: "Calls", to: "/calls", count: counts.calls ?? null },
+      ],
     },
     {
-      title: "ShipVoice Pro",
+      // Designed in the reference console, with no backend in this starter.
+      // Shown so the shape of the product is visible, inert because there is
+      // nothing behind them.
+      title: "Run",
       items: [
-        { label: "Calls", pro: true },
-        { label: "Campaigns", pro: true },
-        { label: "Channels", pro: true },
-        { label: "Customers", pro: true },
-        { label: "Evaluations", pro: true },
+        { label: "Campaigns", inactive: true },
+        { label: "Channels", inactive: true },
+        { label: "Customers", inactive: true },
+      ],
+    },
+    {
+      title: "Build",
+      items: [
+        { label: "Agents", to: "/agents", count: counts.agents ?? null },
+        { label: "Evaluations", inactive: true },
       ],
     },
   ];
@@ -50,16 +56,14 @@ export function Rail({
             <div className="sec">{group.title}</div>
             <nav aria-label={group.title}>
               {group.items.map((item) =>
-                item.pro ? (
+                item.inactive ? (
                   <span
                     key={item.label}
                     className="pro-item"
                     aria-disabled="true"
+                    data-testid="nav-inactive"
                   >
                     {item.label}
-                    <span className="nav-pro" data-testid="nav-pro">
-                      Pro
-                    </span>
                   </span>
                 ) : (
                   <NavLink

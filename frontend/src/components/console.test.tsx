@@ -9,30 +9,42 @@ function withRouter(ui: React.ReactNode) {
 }
 
 describe("Rail", () => {
-  it("separates what this starter does from what Pro adds", () => {
+  it("renders the reference console's three groups", () => {
     withRouter(<Rail />);
-    ["Build", "ShipVoice Pro"].forEach((g) =>
+    ["Watch", "Run", "Build"].forEach((g) =>
       expect(screen.getByText(g)).toBeInTheDocument(),
     );
   });
 
-  it("marks every Pro surface, Calls included", () => {
-    // Calls is Pro here. This repo records nothing about a call once it ends,
-    // so a Calls page could only be an empty table pretending to be a feature.
+  it("shows all seven items from the reference design", () => {
     withRouter(<Rail />);
-    expect(screen.getAllByTestId("nav-pro")).toHaveLength(5);
-    expect(screen.getByText("Calls")).toBeInTheDocument();
+    [
+      "Overview",
+      "Calls",
+      "Campaigns",
+      "Channels",
+      "Customers",
+      "Agents",
+      "Evaluations",
+    ].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument());
   });
 
-  it("does not make the Pro items clickable", () => {
-    // There is nothing behind them in this repo. A link would lead to a page
-    // whose only purpose is to sell, which is what the single Upgrade button
-    // in the topbar is for.
+  it("leaves the four unbacked surfaces inert and unlabelled", () => {
+    // Grey and not clickable. No badge: the reference has none there, and a
+    // label would be selling rather than describing.
+    withRouter(<Rail />);
+    expect(screen.getAllByTestId("nav-inactive")).toHaveLength(4);
+    expect(screen.queryByText("Pro")).toBeNull();
+  });
+
+  it("does not make the inactive items clickable", () => {
+    // There is nothing behind them in this repo, so a link would lead nowhere
+    // useful.
     const { container } = withRouter(<Rail />);
     const links = Array.from(container.querySelectorAll("a")).map(
       (a) => a.textContent ?? "",
     );
-    ["Calls", "Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) => {
+    ["Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) => {
       expect(links.some((text) => text.includes(label))).toBe(false);
     });
   });
@@ -42,18 +54,11 @@ describe("Rail", () => {
     const hrefs = Array.from(container.querySelectorAll("a")).map((a) =>
       a.getAttribute("href"),
     );
-    expect(hrefs).toEqual(expect.arrayContaining(["/", "/deployment"]));
+    expect(hrefs).toEqual(
+      expect.arrayContaining(["/", "/calls", "/agents", "/deployment"]),
+    );
   });
 
-  it("links to nothing this backend cannot serve", () => {
-    // The console used to land on an Overview that called /api/v1/calls and
-    // took three 404s on the first screen. Nothing may link there again.
-    const { container } = withRouter(<Rail />);
-    const hrefs = Array.from(container.querySelectorAll("a")).map(
-      (a) => a.getAttribute("href") ?? "",
-    );
-    expect(hrefs.some((h) => h.startsWith("/calls"))).toBe(false);
-  });
 
   it("uses the real ShipVoice mark", () => {
     const { container } = withRouter(<Rail />);

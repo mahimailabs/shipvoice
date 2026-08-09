@@ -1,7 +1,42 @@
-// Console domain types.
-//
-// There is no call domain here: this starter keeps no record of a call
-// once it ends. That is ShipVoice Pro.
+export type CallChannel = "web" | "sip";
+export type CallStatus = "active" | "completed" | "failed";
+
+export interface CallRead {
+  id: number;
+  room_name: string;
+  caller: string | null;
+  channel: CallChannel;
+  agent_name: string | null;
+  business_name: string | null;
+  status: CallStatus;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  turn_count: number;
+}
+
+export interface CallListResponse {
+  calls: CallRead[];
+  total: number;
+}
+
+export interface TurnRead {
+  id: number;
+  role: "user" | "agent";
+  text: string;
+  spoken_at: string;
+}
+
+export interface CallDetailResponse {
+  call: CallRead;
+  transcript: TurnRead[];
+}
+
+export interface CallSummaryResponse {
+  total_calls: number;
+  total_minutes: number;
+  total_turns: number;
+}
 
 export interface AgentSummary {
   slug: string;

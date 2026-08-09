@@ -10,3 +10,8 @@ docs/superpowers
 # Written by '/setup': holds the non-secret setup answers. The command deletes
 # it on a successful run; this is the backstop.
 setup.json
+.gstack/
+
+# Design source: the reference console export. Internal, and half a megabyte
+# of bundled markup nobody cloning this repo needs.
+reference/
