@@ -1,9 +1,3 @@
-// Console domain types.
-//
-// There is deliberately no cost field anywhere in here. Free records what
-// happened on a call; what it cost is ShipVoice Pro. A nullable cost_usd in a
-// public schema is an invitation to fill it in with a guess.
-
 export type CallChannel = "web" | "sip";
 export type CallStatus = "active" | "completed" | "failed";
 

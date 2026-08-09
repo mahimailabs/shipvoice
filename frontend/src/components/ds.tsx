@@ -1,16 +1,7 @@
-// Design-system primitives for the console, ported from ShipVoice Pro.
-// Presentational only: no data fetching, no routing.
-//
-// Two differences from the Pro original, both forced by this repo:
-//   1. No ': JSX.Element' return annotations. The global JSX namespace was
-//      removed in @types/react 19 and this app is on 19.2.x, so they do not
-//      compile here.
-//   2. Chart and radius tokens read '--sv-*'. Free's index.css already defines
-//      '--chart-1..4', '--radius-sm/md/lg' and '--accent' for the vendored
-//      shadcn components, so console.css namespaces its own.
 import type { CSSProperties, ReactNode } from "react";
 
-export type Tone = "neutral" | "success" | "warning" | "danger" | "violation" | "accent";
+export type Tone =
+  "neutral" | "success" | "warning" | "danger" | "violation" | "accent";
 
 const TONE_CLASS: Record<Tone, string> = {
   neutral: "",
@@ -21,7 +12,13 @@ const TONE_CLASS: Record<Tone, string> = {
   accent: "acc",
 };
 
-export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
+export function Badge({
+  tone = "neutral",
+  children,
+}: {
+  tone?: Tone;
+  children: ReactNode;
+}) {
   const cls = TONE_CLASS[tone];
   return <span className={cls ? `bg ${cls}` : "bg"}>{children}</span>;
 }
@@ -42,10 +39,24 @@ export function Button({
   children: ReactNode;
 }) {
   const v =
-    variant === "primary" ? "p" : variant === "ghost" ? "g" : variant === "danger" ? "d" : "";
-  const classes = ["btn", v, size === "sm" ? "sm" : ""].filter(Boolean).join(" ");
+    variant === "primary"
+      ? "p"
+      : variant === "ghost"
+        ? "g"
+        : variant === "danger"
+          ? "d"
+          : "";
+  const classes = ["btn", v, size === "sm" ? "sm" : ""]
+    .filter(Boolean)
+    .join(" ");
   return (
-    <button type="button" className={classes} onClick={onClick} disabled={disabled} title={title}>
+    <button
+      type="button"
+      className={classes}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+    >
       {children}
     </button>
   );
@@ -70,7 +81,9 @@ export function Panel({
         <header className="ph">
           {title}
           {meta && <span className="meta">{meta}</span>}
-          {actions && <span className={meta ? "row" : "meta row"}>{actions}</span>}
+          {actions && (
+            <span className={meta ? "row" : "meta row"}>{actions}</span>
+          )}
         </header>
       )}
       {flush ? children : <div className="pb">{children}</div>}
@@ -99,13 +112,20 @@ export function Stat({
 }
 
 /** Segmented progress meter. Segments render left to right in order. */
-export function Meter({ segments }: { segments: { pct: number; color: string; title?: string }[] }) {
+export function Meter({
+  segments,
+}: {
+  segments: { pct: number; color: string; title?: string }[];
+}) {
   return (
     <div className="mtr">
       {segments.map((s, i) => (
         <s
           key={i}
-          style={{ width: `${Math.max(0, Math.min(100, s.pct))}%`, background: s.color }}
+          style={{
+            width: `${Math.max(0, Math.min(100, s.pct))}%`,
+            background: s.color,
+          }}
           title={s.title}
         />
       ))}
@@ -141,12 +161,21 @@ export function DottedLineChart({
   const min = 0;
   const span = max - min || 1;
   const x = (i: number): number =>
-    points.length === 1 ? w / 2 : (i / (points.length - 1)) * (w - pad * 2) + pad;
-  const y = (v: number): number => height - pad - ((v - min) / span) * (height - pad * 2);
+    points.length === 1
+      ? w / 2
+      : (i / (points.length - 1)) * (w - pad * 2) + pad;
+  const y = (v: number): number =>
+    height - pad - ((v - min) / span) * (height - pad * 2);
   const path = points.map((p, i) => `${x(i)},${y(p)}`).join(" ");
-  const ticks = Array.from({ length: yTicks }, (_, i) => (i / (yTicks - 1)) * (height - pad * 2) + pad);
+  const ticks = Array.from(
+    { length: yTicks },
+    (_, i) => (i / (yTicks - 1)) * (height - pad * 2) + pad,
+  );
   // Axis values run top to bottom, so the first tick is the maximum.
-  const tickValues = Array.from({ length: yTicks }, (_, i) => max - (i / (yTicks - 1)) * span);
+  const tickValues = Array.from(
+    { length: yTicks },
+    (_, i) => max - (i / (yTicks - 1)) * span,
+  );
 
   const svg = (
     <svg
@@ -177,7 +206,14 @@ export function DottedLineChart({
         vectorEffect="non-scaling-stroke"
       />
       {points.map((p, i) => (
-        <rect key={i} x={x(i) - 0.8} y={y(p) - 0.8} width={1.6} height={1.6} fill="var(--chart-dot)" />
+        <rect
+          key={i}
+          x={x(i) - 0.8}
+          y={y(p) - 0.8}
+          width={1.6}
+          height={1.6}
+          fill="var(--chart-dot)"
+        />
       ))}
     </svg>
   );
@@ -237,7 +273,15 @@ export function LiveEventsBar({
 }) {
   const max = Math.max(...ticks, 1);
   const bars = (
-    <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: compact ? 18 : 34, flex: 1 }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 2,
+        alignItems: "flex-end",
+        height: compact ? 18 : 34,
+        flex: 1,
+      }}
+    >
       {ticks.map((t, i) => (
         <span
           key={i}
@@ -266,7 +310,10 @@ export function LiveEventsBar({
 
   return (
     <div>
-      <div className="row" style={{ justifyContent: "space-between", marginBottom: 6 }}>
+      <div
+        className="row"
+        style={{ justifyContent: "space-between", marginBottom: 6 }}
+      >
         <span className="lb">{label}</span>
         <span className="fnt num" style={{ font: "var(--type-caption)" }}>
           {ticks.reduce((a, b) => a + b, 0)} in window
@@ -285,9 +332,19 @@ export function LegendGrid({
   columns?: number;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`, gap: 8 }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`,
+        gap: 8,
+      }}
+    >
       {items.map((it) => (
-        <div key={it.label} className="row" style={{ justifyContent: "space-between", gap: 8 }}>
+        <div
+          key={it.label}
+          className="row"
+          style={{ justifyContent: "space-between", gap: 8 }}
+        >
           <span className="row" style={{ gap: 6, minWidth: 0 }}>
             <span
               style={{
@@ -312,7 +369,15 @@ export function LegendGrid({
 }
 
 /** Key/value row used across detail pages. */
-export function KV({ k, children, mono }: { k: string; children: ReactNode; mono?: boolean }) {
+export function KV({
+  k,
+  children,
+  mono,
+}: {
+  k: string;
+  children: ReactNode;
+  mono?: boolean;
+}) {
   return (
     <div className="kv">
       <span className="k">{k}</span>

@@ -11,7 +11,9 @@ function withRouter(ui: React.ReactNode) {
 describe("Rail", () => {
   it("renders the three groups", () => {
     withRouter(<Rail />);
-    ["Watch", "Run", "Build"].forEach((g) => expect(screen.getByText(g)).toBeInTheDocument());
+    ["Watch", "Run", "Build"].forEach((g) =>
+      expect(screen.getByText(g)).toBeInTheDocument(),
+    );
   });
 
   it("marks exactly four items as ShipVoice Pro", () => {
@@ -24,7 +26,9 @@ describe("Rail", () => {
     // whose only purpose is to sell, which is what the single Upgrade button
     // in the topbar is for.
     const { container } = withRouter(<Rail />);
-    const links = Array.from(container.querySelectorAll("a")).map((a) => a.textContent ?? "");
+    const links = Array.from(container.querySelectorAll("a")).map(
+      (a) => a.textContent ?? "",
+    );
     ["Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) => {
       expect(links.some((text) => text.includes(label))).toBe(false);
     });
@@ -32,8 +36,12 @@ describe("Rail", () => {
 
   it("keeps the free surfaces navigable", () => {
     const { container } = withRouter(<Rail />);
-    const hrefs = Array.from(container.querySelectorAll("a")).map((a) => a.getAttribute("href"));
-    expect(hrefs).toEqual(expect.arrayContaining(["/", "/calls", "/agents", "/deployment"]));
+    const hrefs = Array.from(container.querySelectorAll("a")).map((a) =>
+      a.getAttribute("href"),
+    );
+    expect(hrefs).toEqual(
+      expect.arrayContaining(["/", "/calls", "/agents", "/deployment"]),
+    );
   });
 
   it("uses the real ShipVoice mark", () => {
@@ -58,7 +66,9 @@ describe("TopBar", () => {
   });
 
   it("still renders the page's own actions beside it", () => {
-    withRouter(<TopBar title="Calls" actions={<button type="button">Export</button>} />);
+    withRouter(
+      <TopBar title="Calls" actions={<button type="button">Export</button>} />,
+    );
     expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /upgrade/i })).toBeInTheDocument();
   });

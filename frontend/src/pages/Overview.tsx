@@ -87,10 +87,12 @@ export function Overview() {
             <div className="empty">
               <h2>The backend refused this account</h2>
               <p>
-                It is reachable and it answered. This sign-in is not allowed to read calls, so the fix is the
-                account, not the stack.
+                It is reachable and it answered. This sign-in is not allowed to
+                read calls, so the fix is the account, not the stack.
               </p>
-              <span className="cmd">GET {API_BASE}/api/v1/calls/ responded 403</span>
+              <span className="cmd">
+                GET {API_BASE}/api/v1/calls/ responded 403
+              </span>
             </div>
           </section>
         </div>
@@ -116,15 +118,16 @@ export function Overview() {
             <div className="empty">
               <h2>The call log is not wired up in this checkout yet</h2>
               <p>
-                The console asked the backend for calls and got no list back. Nothing is broken in the voice path:
-                your agent still answers, speaks, and hangs up without this page.
+                The console asked the backend for calls and got no list back.
+                Nothing is broken in the voice path: your agent still answers,
+                speaks, and hangs up without this page.
               </p>
               <span className="cmd">GET {API_BASE}/api/v1/calls/</span>
             </div>
           </section>
           <Ann>
-            This is not the same screen as an empty log. An empty log is a measured zero. This one is unknown, so
-            it does not show you a zero.
+            This is not the same screen as an empty log. An empty log is a
+            measured zero. This one is unknown, so it does not show you a zero.
           </Ann>
         </div>
       </>
@@ -149,10 +152,13 @@ export function Overview() {
             <div className="empty">
               <h2>No calls yet</h2>
               <p>
-                The backend answered with an empty log, so this is a real zero. Calls land here the moment the agent
-                reports one, with the caller, the duration, and the full transcript.
+                The backend answered with an empty log, so this is a real zero.
+                Calls land here the moment the agent reports one, with the
+                caller, the duration, and the full transcript.
               </p>
-              <span className="cmd">Open Agents, pick your agent, and start a test call</span>
+              <span className="cmd">
+                Open Agents, pick your agent, and start a test call
+              </span>
             </div>
           </section>
         </div>
@@ -161,13 +167,16 @@ export function Overview() {
   }
 
   const avgTurns =
-    summary && summary.total_calls > 0 ? (summary.total_turns / summary.total_calls).toFixed(1) : null;
+    summary && summary.total_calls > 0
+      ? (summary.total_turns / summary.total_calls).toFixed(1)
+      : null;
 
   // A call still in flight has no duration yet. Drop it rather than plotting a
   // zero, which would read as an instant call. xLabels stays aligned because
   // both are derived from this same filtered list.
   const measured = calls.filter(
-    (c): c is CallRead & { duration_seconds: number } => c.duration_seconds != null,
+    (c): c is CallRead & { duration_seconds: number } =>
+      c.duration_seconds != null,
   );
 
   return (
@@ -183,7 +192,10 @@ export function Overview() {
       />
 
       {/* Measured, from your own backend. Every one of these is countable. */}
-      <div className="statrow" style={{ borderBottom: "1px solid var(--border-default)" }}>
+      <div
+        className="statrow"
+        style={{ borderBottom: "1px solid var(--border-default)" }}
+      >
         <div className="stat">
           <b className="num">{total.toLocaleString()}</b>
           <i>Calls</i>
@@ -216,7 +228,8 @@ export function Overview() {
             <header className="ph">
               Recent calls
               <span className="meta">
-                {total.toLocaleString()} recorded · <Link to="/calls">View all →</Link>
+                {total.toLocaleString()} recorded ·{" "}
+                <Link to="/calls">View all →</Link>
               </span>
             </header>
             <div className="scrollx">
@@ -243,10 +256,18 @@ export function Overview() {
                           })}
                         </Link>
                       </td>
-                      <td className={c.caller ? "pri" : "na"}>{c.caller ?? "-"}</td>
+                      <td className={c.caller ? "pri" : "na"}>
+                        {c.caller ?? "-"}
+                      </td>
                       <td>{c.channel === "sip" ? "Phone" : "Web"}</td>
-                      <td className={c.agent_name ? undefined : "na"}>{c.agent_name ?? "-"}</td>
-                      <td className={c.duration_seconds == null ? "na" : undefined}>
+                      <td className={c.agent_name ? undefined : "na"}>
+                        {c.agent_name ?? "-"}
+                      </td>
+                      <td
+                        className={
+                          c.duration_seconds == null ? "na" : undefined
+                        }
+                      >
                         {duration(c.duration_seconds)}
                       </td>
                       <td>{c.turn_count}</td>
@@ -257,7 +278,10 @@ export function Overview() {
               </table>
             </div>
             <div className="pb">
-              <Ann>A dash means unmeasured, never zero. A call still in flight has no duration to show yet.</Ann>
+              <Ann>
+                A dash means unmeasured, never zero. A call still in flight has
+                no duration to show yet.
+              </Ann>
             </div>
           </section>
 
@@ -269,20 +293,28 @@ export function Overview() {
             <div className="pb">
               {measured.length > 0 ? (
                 <DottedLineChart
-                  points={measured.map((c) => c.duration_seconds / 60).reverse()}
+                  points={measured
+                    .map((c) => c.duration_seconds / 60)
+                    .reverse()}
                   height={132}
                   label="Duration of each recent call, in minutes"
                   showAxis
                   xLabels={measured
                     .map((c) =>
-                      new Date(c.started_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                      new Date(c.started_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
                     )
                     .reverse()}
                 />
               ) : (
-                <p className="fnt" style={{ font: "var(--type-body-sm)", margin: 0 }}>
-                  No recent call has finished, so there is no length to plot. An unfinished call is not a zero
-                  minute call.
+                <p
+                  className="fnt"
+                  style={{ font: "var(--type-body-sm)", margin: 0 }}
+                >
+                  No recent call has finished, so there is no length to plot. An
+                  unfinished call is not a zero minute call.
                 </p>
               )}
             </div>

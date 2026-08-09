@@ -61,8 +61,13 @@ export function AppShell() {
           <Link to="/calls" className="btn sm" style={{ flex: "none" }}>
             View all →
           </Link>
-          <span className="num fnt" style={{ font: "var(--type-caption)", flex: "none" }}>
-            {callCount == null ? "no calls recorded yet" : `${callCount.toLocaleString()} calls recorded`}
+          <span
+            className="num fnt"
+            style={{ font: "var(--type-caption)", flex: "none" }}
+          >
+            {callCount == null
+              ? "no calls recorded yet"
+              : `${callCount.toLocaleString()} calls recorded`}
           </span>
         </footer>
       </div>
@@ -96,20 +101,32 @@ export function TopBar({
   return (
     <header className="top">
       {back && (
-        <Link to={back.to} className="fnt" style={{ font: "var(--type-body-sm)" }}>
+        <Link
+          to={back.to}
+          className="fnt"
+          style={{ font: "var(--type-body-sm)" }}
+        >
           ← {back.label}
         </Link>
       )}
       <h1>{title}</h1>
       {badge}
       {meta && (
-        <span className="num" style={{ font: "var(--type-caption)", color: "var(--text-muted)" }}>
+        <span
+          className="num"
+          style={{ font: "var(--type-caption)", color: "var(--text-muted)" }}
+        >
           {meta}
         </span>
       )}
       <div style={{ flex: 1 }} />
       {actions}
-      <a className="btn p sm upgrade" href={UPGRADE_URL} target="_blank" rel="noreferrer noopener">
+      <a
+        className="btn p sm upgrade"
+        href={UPGRADE_URL}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
         Upgrade
       </a>
     </header>

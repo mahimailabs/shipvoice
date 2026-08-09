@@ -6,16 +6,17 @@ import { Badge, Button } from "../components/ds";
 import { duration } from "../lib/format";
 import type { CallRead, CallStatus } from "../types";
 
-// Every call the agent reported, filterable. Every column here is something the
-// backend actually recorded.
-
 const CHANNELS: { key: string; label: string }[] = [
   { key: "all", label: "Any channel" },
   { key: "web", label: "Web" },
   { key: "sip", label: "Phone" },
 ];
 
-const STATUSES: { key: string; label: string; tone: "neutral" | "success" | "violation" }[] = [
+const STATUSES: {
+  key: string;
+  label: string;
+  tone: "neutral" | "success" | "violation";
+}[] = [
   { key: "all", label: "All", tone: "neutral" },
   { key: "active", label: "Active", tone: "neutral" },
   { key: "completed", label: "Completed", tone: "success" },
@@ -39,9 +40,6 @@ export function CallLogs() {
 
   useEffect(() => {
     let live = true;
-    // No setState here. React 19's lint rule rejects a synchronous setState in
-    // an effect body, and resetting to "loading" on a filter change would blank
-    // rows that are about to be replaced anyway.
     listCalls({ limit: 50, channel, status })
       .then((r) => {
         if (!live) return;
@@ -74,7 +72,11 @@ export function CallLogs() {
       <TopBar
         title="Calls"
         badge={
-          state === "unwired" ? <Badge tone="warning">No call log</Badge> : <Badge tone="neutral">this deployment</Badge>
+          state === "unwired" ? (
+            <Badge tone="warning">No call log</Badge>
+          ) : (
+            <Badge tone="neutral">this deployment</Badge>
+          )
         }
         actions={
           <Button
@@ -141,8 +143,9 @@ export function CallLogs() {
             <div className="empty">
               <h2>The call log is not wired up in this checkout yet</h2>
               <p>
-                This list is unknown, not empty. The voice path is unaffected: the agent answers and speaks whether
-                or not this console can see it.
+                This list is unknown, not empty. The voice path is unaffected:
+                the agent answers and speaks whether or not this console can see
+                it.
               </p>
               <span className="cmd">GET {API_BASE}/api/v1/calls/</span>
             </div>
@@ -156,10 +159,13 @@ export function CallLogs() {
             <div className="empty">
               <h2>No calls yet</h2>
               <p>
-                The backend answered with an empty log, so this is a measured zero. Every call the agent reports
-                lands here with its caller, duration, and transcript.
+                The backend answered with an empty log, so this is a measured
+                zero. Every call the agent reports lands here with its caller,
+                duration, and transcript.
               </p>
-              <span className="cmd">Open Agents, pick your agent, and start a test call</span>
+              <span className="cmd">
+                Open Agents, pick your agent, and start a test call
+              </span>
             </div>
           </section>
         </div>
@@ -167,8 +173,8 @@ export function CallLogs() {
         // The log is not empty, the search is. Say which one, and say how many
         // rows the current filters did load.
         <div className="empty">
-          No call matches that search. {calls.length.toLocaleString()} of {total.toLocaleString()} are loaded under
-          the current filters.
+          No call matches that search. {calls.length.toLocaleString()} of{" "}
+          {total.toLocaleString()} are loaded under the current filters.
         </div>
       ) : (
         <>
@@ -186,13 +192,21 @@ export function CallLogs() {
               </thead>
               <tbody>
                 {shown.map((c) => (
-                  <tr key={c.id} className="clickable" onClick={() => navigate(`/calls/${c.id}`)}>
+                  <tr
+                    key={c.id}
+                    className="clickable"
+                    onClick={() => navigate(`/calls/${c.id}`)}
+                  >
                     {/* A web call has no caller id. The room name is what was
                         actually recorded, so it stands in rather than a dash. */}
                     <td className="pri">
                       <Link
                         to={`/calls/${c.id}`}
-                        title={c.caller ? undefined : "No caller id on a web call, showing the room"}
+                        title={
+                          c.caller
+                            ? undefined
+                            : "No caller id on a web call, showing the room"
+                        }
                         onClick={(e) => e.stopPropagation()}
                       >
                         {c.caller ?? c.room_name}
@@ -207,7 +221,9 @@ export function CallLogs() {
                         minute: "2-digit",
                       })}
                     </td>
-                    <td className={c.duration_seconds == null ? "na" : undefined}>
+                    <td
+                      className={c.duration_seconds == null ? "na" : undefined}
+                    >
                       {duration(c.duration_seconds)}
                     </td>
                     <td>{c.turn_count}</td>
@@ -232,7 +248,10 @@ export function CallLogs() {
               {shown.length.toLocaleString()} of {total.toLocaleString()}
             </span>
             <span style={{ marginLeft: "auto" }}>
-              <Ann>A dash means unmeasured, never zero. A call still in flight has no duration yet.</Ann>
+              <Ann>
+                A dash means unmeasured, never zero. A call still in flight has
+                no duration yet.
+              </Ann>
             </span>
           </div>
         </>

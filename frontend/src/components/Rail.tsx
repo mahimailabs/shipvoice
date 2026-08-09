@@ -1,14 +1,11 @@
 import { NavLink } from "react-router";
 
-// Three groups, matching the ShipVoice Pro console: Watch what happened, Run
-// what is dialling, Build what dials next. Settings is not a nav item; it lives
-// in the footer under the deployment identity.
-//
-// Four items are ShipVoice Pro surfaces. They are shown so the shape of the
-// full product is visible, and they are inert: grey, no link, no route. There
-// is nothing behind them in this repo, so making them clickable would only
-// lead somewhere that exists to sell you something.
-type Item = { label: string; to?: string; count?: number | null; pro?: boolean };
+type Item = {
+  label: string;
+  to?: string;
+  count?: number | null;
+  pro?: boolean;
+};
 type Group = { title: string; items: Item[] };
 
 export function Rail({
@@ -57,7 +54,11 @@ export function Rail({
             <nav aria-label={group.title}>
               {group.items.map((item) =>
                 item.pro ? (
-                  <span key={item.label} className="pro-item" aria-disabled="true">
+                  <span
+                    key={item.label}
+                    className="pro-item"
+                    aria-disabled="true"
+                  >
                     {item.label}
                     <span className="nav-pro" data-testid="nav-pro">
                       Pro
@@ -71,7 +72,11 @@ export function Rail({
                     className={({ isActive }) => (isActive ? "on" : "")}
                   >
                     {item.label}
-                    {item.count != null && <span className="ct num">{item.count.toLocaleString()}</span>}
+                    {item.count != null && (
+                      <span className="ct num">
+                        {item.count.toLocaleString()}
+                      </span>
+                    )}
                   </NavLink>
                 ),
               )}
@@ -86,8 +91,13 @@ export function Rail({
             {deployment.slice(0, 1).toUpperCase()}
           </span>
           <span style={{ minWidth: 0 }}>
-            <span style={{ display: "block", font: "var(--type-body-sm)" }}>{deployment}</span>
-            <span className="fnt" style={{ display: "block", font: "var(--type-caption)" }}>
+            <span style={{ display: "block", font: "var(--type-body-sm)" }}>
+              {deployment}
+            </span>
+            <span
+              className="fnt"
+              style={{ display: "block", font: "var(--type-caption)" }}
+            >
               Deployment
             </span>
           </span>

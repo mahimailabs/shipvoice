@@ -8,7 +8,6 @@ import type { CallDetailResponse } from "../types";
 
 // One call, in full: what was said, when, and by whom.
 
-/** Offset from the start of the call. Absolute clock time is on the tooltip. */
 function elapsed(startedAt: string, at: string): string {
   const ms = new Date(at).getTime() - new Date(startedAt).getTime();
   if (!Number.isFinite(ms)) return "-";
@@ -25,8 +24,6 @@ export function CallDetail() {
   const navigate = useNavigate();
   const [data, setData] = useState<CallDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // A browser confirm() blocks automation and steals the page, so the confirm
-  // step lives in component state and renders inline in the topbar.
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -45,7 +42,9 @@ export function CallDetail() {
             "The backend answered 404. Either this call is not in the log, or the call log is not wired up in this checkout yet.",
           );
         } else {
-          setError("Could not reach the backend for this call. Your agent is unaffected.");
+          setError(
+            "Could not reach the backend for this call. Your agent is unaffected.",
+          );
         }
       });
     return () => {
@@ -119,15 +118,29 @@ export function CallDetail() {
               <span className="mut" style={{ font: "var(--type-body-sm)" }}>
                 Delete this call and its transcript?
               </span>
-              <Button size="sm" variant="danger" onClick={onDelete} disabled={deleting}>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={onDelete}
+                disabled={deleting}
+              >
                 {deleting ? "Deleting" : "Yes, delete"}
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={deleting}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setConfirming(false)}
+                disabled={deleting}
+              >
                 Cancel
               </Button>
             </>
           ) : (
-            <Button size="sm" variant="danger" onClick={() => setConfirming(true)}>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => setConfirming(true)}
+            >
               Delete call
             </Button>
           )
@@ -144,7 +157,10 @@ export function CallDetail() {
       )}
 
       {/* Measured, from the record this backend actually keeps. */}
-      <div className="statrow" style={{ borderBottom: "1px solid var(--border-default)" }}>
+      <div
+        className="statrow"
+        style={{ borderBottom: "1px solid var(--border-default)" }}
+      >
         <div className="stat">
           <b className={call.duration_seconds == null ? "num na fnt" : "num"}>
             {duration(call.duration_seconds)}
@@ -183,20 +199,27 @@ export function CallDetail() {
           <div className="ph">
             Transcript
             <span className="meta">
-              {transcript.length.toLocaleString()} turns · times are from the start of the call
+              {transcript.length.toLocaleString()} turns · times are from the
+              start of the call
             </span>
           </div>
           {transcript.length === 0 ? (
             <div className="empty">
-              No turns were recorded for this call. That is the record, not a loading state.
+              No turns were recorded for this call. That is the record, not a
+              loading state.
             </div>
           ) : (
             <div className="turns">
               {transcript.map((t) => (
                 <div className="turn" key={t.id}>
-                  <span className="who">{t.role === "agent" ? "Agent" : "Caller"}</span>
+                  <span className="who">
+                    {t.role === "agent" ? "Agent" : "Caller"}
+                  </span>
                   <span className="txt">{t.text}</span>
-                  <span className="tm" title={new Date(t.spoken_at).toLocaleString()}>
+                  <span
+                    className="tm"
+                    title={new Date(t.spoken_at).toLocaleString()}
+                  >
                     {elapsed(call.started_at, t.spoken_at)}
                   </span>
                 </div>
@@ -217,7 +240,10 @@ export function CallDetail() {
           <div className="ph">
             Call<span className="meta">as the agent reported it</span>
           </div>
-          <div className="pb" style={{ borderBottom: "1px solid var(--border-default)" }}>
+          <div
+            className="pb"
+            style={{ borderBottom: "1px solid var(--border-default)" }}
+          >
             <KV k="Room" mono>
               {call.room_name}
             </KV>
@@ -228,7 +254,13 @@ export function CallDetail() {
             <KV k="Agent">{call.agent_name ?? <Missing />}</KV>
             <KV k="Business">{call.business_name ?? <Missing />}</KV>
             <KV k="Started">{new Date(call.started_at).toLocaleString()}</KV>
-            <KV k="Ended">{call.ended_at ? new Date(call.ended_at).toLocaleString() : <Missing />}</KV>
+            <KV k="Ended">
+              {call.ended_at ? (
+                new Date(call.ended_at).toLocaleString()
+              ) : (
+                <Missing />
+              )}
+            </KV>
             <KV k="Call id" mono>
               {call.id}
             </KV>
@@ -238,12 +270,17 @@ export function CallDetail() {
             Not on this record<span className="meta">by design</span>
           </div>
           <div className="pb" style={{ flex: 1 }}>
-            <p className="mut" style={{ font: "var(--type-body-sm)", margin: "0 0 10px" }}>
-              This repo records what happened on the call. Nothing here meters what a minute cost, so there is no
-              per-provider cost on this record and no number to bill from.
+            <p
+              className="mut"
+              style={{ font: "var(--type-body-sm)", margin: "0 0 10px" }}
+            >
+              This repo records what happened on the call. Nothing here meters
+              what a minute cost, so there is no per-provider cost on this
+              record and no number to bill from.
             </p>
             <Ann>
-              A dash above means the agent never reported that field. It is an absence, not an empty string.
+              A dash above means the agent never reported that field. It is an
+              absence, not an empty string.
             </Ann>
           </div>
         </div>

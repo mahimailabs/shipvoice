@@ -4,18 +4,6 @@ import { Ann, TopBar } from "../components/AppShell";
 import { Badge, Button, Panel } from "../components/ds";
 import type { LiveKitRead } from "../types";
 
-// Two things: the LiveKit project this deployment talks to, and the compliance
-// position. Nothing about the agent lives here, that belongs to the agent.
-//
-// The credentials are stored in the database, seeded once from the environment,
-// so a change made here survives a restart. The worker reads them from the
-// backend too and restarts itself when they change, which is the only way an
-// edit here can reach the process that actually places calls.
-//
-// The secret is write-only: this backend has no authentication, so an endpoint
-// that handed it back would hand your LiveKit project to anyone who can reach
-// the port.
-
 type Save = "idle" | "saving" | "saved" | "error";
 
 export function Deployment() {
@@ -80,7 +68,8 @@ export function Deployment() {
     }
   }
 
-  const canSave = url.trim().length > 0 && apiKey.trim().length > 0 && save !== "saving";
+  const canSave =
+    url.trim().length > 0 && apiKey.trim().length > 0 && save !== "saving";
 
   return (
     <>
@@ -93,13 +82,23 @@ export function Deployment() {
             </Badge>
           )
         }
-        meta={lk?.source === "database" ? "stored" : lk ? "from the environment" : undefined}
+        meta={
+          lk?.source === "database"
+            ? "stored"
+            : lk
+              ? "from the environment"
+              : undefined
+        }
       />
 
       <div className="pad">
         <Panel
           title="LiveKit"
-          meta={editing ? "the secret is never shown" : "the project this deployment calls"}
+          meta={
+            editing
+              ? "the secret is never shown"
+              : "the project this deployment calls"
+          }
           actions={
             editing || confirming ? undefined : (
               <Button size="sm" onClick={() => setConfirming(true)}>
@@ -115,15 +114,24 @@ export function Deployment() {
               <Badge tone="warning">heads up</Badge>
               <div>
                 <p style={{ margin: 0, font: "var(--type-body-sm)" }}>
-                  Saving a new project restarts the voice worker so it connects to it. Any call in
-                  progress finishes first, but the worker is unavailable for a few seconds while it
-                  comes back, and calls that arrive in that window are missed.
+                  Saving a new project restarts the voice worker so it connects
+                  to it. Any call in progress finishes first, but the worker is
+                  unavailable for a few seconds while it comes back, and calls
+                  that arrive in that window are missed.
                 </p>
                 <div className="row" style={{ gap: 8, marginTop: 10 }}>
-                  <button type="button" className="btn p sm" onClick={startEditing}>
+                  <button
+                    type="button"
+                    className="btn p sm"
+                    onClick={startEditing}
+                  >
                     Edit anyway
                   </button>
-                  <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setConfirming(false)}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -135,7 +143,9 @@ export function Deployment() {
             <div className="kvs">
               <div className="kv">
                 <span className="k">Project URL</span>
-                <span className="v mono">{lk?.url ?? <span className="na">-</span>}</span>
+                <span className="v mono">
+                  {lk?.url ?? <span className="na">-</span>}
+                </span>
               </div>
               <div className="kv">
                 <span className="k">API key</span>
@@ -149,7 +159,10 @@ export function Deployment() {
                   {lk?.secret_set ? "Set" : <span className="na">Not set</span>}
                 </span>
               </div>
-              <p className="mut" style={{ font: "var(--type-caption)", margin: "8px 0 0" }}>
+              <p
+                className="mut"
+                style={{ font: "var(--type-caption)", margin: "8px 0 0" }}
+              >
                 {lk?.source === "database"
                   ? "Stored here. The environment seeded it once and is no longer read."
                   : "Read from the environment. It will be stored the first time you save."}
@@ -192,7 +205,11 @@ export function Deployment() {
                   type="password"
                   value={apiSecret}
                   onChange={(e) => setApiSecret(e.target.value)}
-                  placeholder={lk?.secret_set ? "leave blank to keep the stored one" : "required"}
+                  placeholder={
+                    lk?.secret_set
+                      ? "leave blank to keep the stored one"
+                      : "required"
+                  }
                   autoComplete="off"
                 />
               </label>
@@ -201,7 +218,11 @@ export function Deployment() {
                 <button type="submit" className="btn p sm" disabled={!canSave}>
                   {save === "saving" ? "Saving" : "Save"}
                 </button>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditing(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -219,26 +240,38 @@ export function Deployment() {
           title={<span style={{ color: "var(--warning)" }}>Compliance</span>}
           meta="read this one"
         >
-          <p style={{ margin: 0, font: "var(--type-body-sm)", lineHeight: "var(--lh-relaxed)" }}>
-            This starter has no compliance gate. Nothing in it checks consent, a suppression list,
-            or the local calling window, and it will dial whoever you point it at. There is no
-            setting on this page that changes that, because there is no code behind one. You are the
+          <p
+            style={{
+              margin: 0,
+              font: "var(--type-body-sm)",
+              lineHeight: "var(--lh-relaxed)",
+            }}
+          >
+            This starter has no compliance gate. Nothing in it checks consent, a
+            suppression list, or the local calling window, and it will dial
+            whoever you point it at. There is no setting on this page that
+            changes that, because there is no code behind one. You are the
             caller of record and the liability is yours.
           </p>
         </Panel>
 
         {save === "saved" && (
-          <p className="mut" style={{ font: "var(--type-body-sm)", margin: "0 0 12px" }}>
-            Saved. The worker checks for this and restarts itself within about fifteen seconds. If
-            you run it by hand rather than under Docker or Fly, start it again yourself.
+          <p
+            className="mut"
+            style={{ font: "var(--type-body-sm)", margin: "0 0 12px" }}
+          >
+            Saved. The worker checks for this and restarts itself within about
+            fifteen seconds. If you run it by hand rather than under Docker or
+            Fly, start it again yourself.
           </p>
         )}
 
         <Ann>
-          The worker takes its LiveKit project from here, not from its own environment, so a change
-          reaches the process placing calls instead of silently disagreeing with it. The secret is
-          write-only: this backend has no sign-in, so nothing usable as a credential is ever sent
-          back to the browser.
+          The worker takes its LiveKit project from here, not from its own
+          environment, so a change reaches the process placing calls instead of
+          silently disagreeing with it. The secret is write-only: this backend
+          has no sign-in, so nothing usable as a credential is ever sent back to
+          the browser.
         </Ann>
       </div>
     </>

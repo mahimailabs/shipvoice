@@ -5,14 +5,6 @@ import type { AgentSummary } from "../types";
 import { Ann, TopBar } from "../components/AppShell";
 import { Badge, Button, Panel } from "../components/ds";
 
-// One worker serves one agent, selected by AGENT_NAME, so this table has one
-// row.
-//
-// Every column here is something the backend can actually answer for. The
-// column that would need call aggregation stays a dash rather than a zero,
-// because this deployment does not roll calls up by agent and a zero would read
-// as a measured "no calls".
-
 type Load = "loading" | "ok" | "forbidden" | "missing" | "error";
 
 /** A value the backend did not give us. Never a zero, never a guess. */
@@ -46,10 +38,16 @@ function AgentTable({ agents }: { agents: AgentSummary[] }) {
                 <Cell value={a.stt} />
                 <Cell value={a.llm} />
                 <Cell value={a.tts} />
-                <td style={{ fontFamily: "var(--font-mono)" }}>{a.prompt_path}</td>
+                <td style={{ fontFamily: "var(--font-mono)" }}>
+                  {a.prompt_path}
+                </td>
                 <td className="na">-</td>
                 <td>
-                  {a.active ? <Badge tone="success">Active</Badge> : <Badge tone="neutral">Idle</Badge>}
+                  {a.active ? (
+                    <Badge tone="success">Active</Badge>
+                  ) : (
+                    <Badge tone="neutral">Idle</Badge>
+                  )}
                 </td>
               </tr>
             ))}
@@ -58,9 +56,10 @@ function AgentTable({ agents }: { agents: AgentSummary[] }) {
       </div>
       <div className="disclose">
         <Ann>
-          Calls in the last 7 days needs per-agent aggregation. The call log records which agent
-          answered, but this backend does not roll it up by agent, so the column stays a dash. A dash
-          means unmeasured, never zero.
+          Calls in the last 7 days needs per-agent aggregation. The call log
+          records which agent answered, but this backend does not roll it up by
+          agent, so the column stays a dash. A dash means unmeasured, never
+          zero.
         </Ann>
       </div>
     </Panel>
@@ -98,11 +97,12 @@ export function Agents() {
         <div className="empty">
           <h2>This account is not an administrator</h2>
           <p>
-            The backend is reachable and answered. The agent list is admin-only, and this account
-            does not have is_superuser set.
+            The backend is reachable and answered. The agent list is admin-only,
+            and this account does not have is_superuser set.
           </p>
           <span className="cmd">
-            UPDATE users SET is_superuser = true WHERE email = &apos;your@email&apos;;
+            UPDATE users SET is_superuser = true WHERE email =
+            &apos;your@email&apos;;
           </span>
         </div>
       </Panel>
@@ -112,8 +112,8 @@ export function Agents() {
       <div className="banner" role="alert">
         <Badge tone="warning">not wired</Badge>
         <span>
-          This backend has no /api/v1/agents route, so the agent it runs cannot be described here.
-          The agent itself is unaffected.
+          This backend has no /api/v1/agents route, so the agent it runs cannot
+          be described here. The agent itself is unaffected.
         </span>
       </div>
     );
@@ -121,7 +121,10 @@ export function Agents() {
     content = (
       <div className="banner bad" role="alert">
         <Badge tone="violation">API unreachable</Badge>
-        <span>The agent list is unknown, not empty. An agent already running is unaffected.</span>
+        <span>
+          The agent list is unknown, not empty. An agent already running is
+          unaffected.
+        </span>
       </div>
     );
   } else if (load === "loading") {
@@ -132,8 +135,9 @@ export function Agents() {
         <div className="empty">
           <h2>No agent yet</h2>
           <p>
-            This deployment is not running one. Describe the agent you want in Claude Code and it
-            writes the prompt, the worker config, and the env the three services need.
+            This deployment is not running one. Describe the agent you want in
+            Claude Code and it writes the prompt, the worker config, and the env
+            the three services need.
           </p>
           <span className="cmd">/setup</span>
         </div>
