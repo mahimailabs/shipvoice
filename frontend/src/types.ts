@@ -38,6 +38,38 @@ export interface CallSummaryResponse {
   total_turns: number;
 }
 
+/** How many calls failed in a trailing window, and out of how many. */
+export interface CallOverviewFailed {
+  count: number;
+  of: number;
+  window_hours: number;
+}
+
+/**
+ * When the agent last reported a call to the backend.
+ *
+ * Null on both fields means no report has ever landed. That is unknown, not a
+ * healthy silence, so the Overview says so rather than drawing a green light.
+ */
+export interface CallOverviewLastReport {
+  at: string | null;
+  seconds_ago: number | null;
+}
+
+/**
+ * The Overview rollup: only the figures this deployment actually measures.
+ *
+ * There is deliberately no cost, no billing, and no campaign here. Nothing in
+ * this repo prices a minute, so a field for it would only ever carry a guess.
+ */
+export interface CallOverviewResponse {
+  calls_today: number;
+  metered_minutes: number;
+  active: number;
+  failed: CallOverviewFailed;
+  last_report: CallOverviewLastReport;
+}
+
 /**
  * How the worker is wired. Two shapes only: one agent handling the call, or a
  * supervisor routing to specialists. Anything else is not something this

@@ -373,6 +373,167 @@ async def test_the_rollup_splits_the_same_calls_by_channel(
     assert sum(r.calls for r in rollup.by_agent) == rollup.total
 
 
+# ---- the live numbers behind the Overview page ----------------------------
+
+# Today's UTC midnight, the boundary calls_today is measured from. Read once
+# here for the same reason NOW is: the service reads its own, and pinning a
+# literal date would pass today and fail tomorrow.
+TODAY_START = NOW.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+async def test_the_overview_of_an_empty_log_is_zeroes_and_nulls(
+    calls_service: CallsService,
+):
+    """A fresh clone renders the Overview before it has taken a call.
+
+    Every count is a zero, and the two window numbers are a pair of zeroes
+    rather than a rate: nothing here divides, so nothing here can divide by
+    the zero an empty window hands it.
+    """
+    overview = await calls_service.overview()
+
+    assert overview.calls_today == 0
+    assert overview.metered_minutes == 0
+    assert overview.active == 0
+    assert (overview.failed.count, overview.failed.of) == (0, 0)
+    assert overview.failed.window_hours == 24
+    # Never reported is not a time and not zero seconds ago.
+    assert overview.last_report.at is None
+    assert overview.last_report.seconds_ago is None
+
+
+async def test_calls_today_counts_from_utc_midnight(calls_service: CallsService):
+    """Today is the UTC day, and the boundary is the call's start.
+
+    A second either side of midnight decides it, so both sides are here: the
+    off-by-one that counts yesterday's last call is invisible on any day the
+    deployment was quiet overnight.
+    """
+    await calls_service.start_call(
+        CallStart(room_name="first-of-the-day", started_at=TODAY_START)
+    )
+    await calls_service.start_call(
+        CallStart(
+            room_name="last-of-yesterday", started_at=TODAY_START - timedelta(seconds=1)
+        )
+    )
+    await calls_service.start_call(
+        CallStart(room_name="yesterday", started_at=NOW - timedelta(days=1))
+    )
+
+    overview = await calls_service.overview()
+
+    assert overview.calls_today == 1
+    # The other two are in the log, they are just not today. A filter that
+    # dropped rows rather than excluding them would look identical here.
+    assert (await calls_service.list_calls()).total == 3
+
+
+async def test_the_overview_counts_the_calls_still_in_flight(
+    calls_service: CallsService,
+):
+    """Active is what the Health panel reads, counted inside the same window."""
+    await calls_service.start_call(CallStart(room_name="running", started_at=NOW))
+    await calls_service.start_call(CallStart(room_name="done", started_at=NOW))
+    await calls_service.finish_call(
+        CallFinish(room_name="done", ended_at=NOW + timedelta(seconds=90))
+    )
+    await calls_service.start_call(CallStart(room_name="broken", started_at=NOW))
+    await calls_service.finish_call(
+        CallFinish(
+            room_name="broken", status="failed", ended_at=NOW + timedelta(seconds=40)
+        )
+    )
+
+    overview = await calls_service.overview()
+
+    assert overview.active == 1
+    # 130 seconds measured across the log, to one decimal. The running call
+    # has no duration yet and contributes nothing rather than a zero.
+    assert overview.metered_minutes == 2.2
+
+
+async def test_the_failed_rate_is_a_count_over_the_calls_in_the_same_window(
+    calls_service: CallsService,
+):
+    """count and of are one window's worth, so the pair is a rate.
+
+    A failure counted against a population from some other window is the one
+    way this number can read fine and be wrong, so the call outside the window
+    is here to be excluded from both halves and not just from one.
+    """
+    for room in ("failed-1", "failed-2"):
+        await calls_service.start_call(
+            CallStart(room_name=room, started_at=NOW - timedelta(hours=1))
+        )
+        await calls_service.finish_call(CallFinish(room_name=room, status="failed"))
+    await calls_service.start_call(
+        CallStart(room_name="fine", started_at=NOW - timedelta(hours=1))
+    )
+    await calls_service.finish_call(CallFinish(room_name="fine"))
+    await calls_service.start_call(
+        CallStart(
+            room_name="failed-the-day-before", started_at=NOW - timedelta(hours=30)
+        )
+    )
+    await calls_service.finish_call(
+        CallFinish(room_name="failed-the-day-before", status="failed")
+    )
+
+    overview = await calls_service.overview()
+
+    assert (overview.failed.count, overview.failed.of) == (2, 3)
+    assert overview.failed.window_hours == 24
+
+
+async def test_the_last_report_is_the_newest_start_not_the_newest_end(
+    calls_service: CallsService,
+):
+    """The seam is proved alive by what the worker last sent.
+
+    It sends the start the moment it picks up, so a long call still running is
+    fresher news than an older one that has just ended. Reading the newest end
+    would show a stale heartbeat on a deployment that is busy right now.
+    """
+    await calls_service.start_call(
+        CallStart(room_name="older", started_at=NOW - timedelta(minutes=10))
+    )
+    await calls_service.start_call(
+        CallStart(room_name="newer", started_at=NOW - timedelta(minutes=1))
+    )
+    await calls_service.finish_call(CallFinish(room_name="older", ended_at=NOW))
+
+    overview = await calls_service.overview()
+
+    assert overview.last_report.at == NOW - timedelta(minutes=1)
+    assert overview.last_report.seconds_ago is not None
+    # A real age measured against the request's own clock, not a stored one.
+    assert 60 <= overview.last_report.seconds_ago < 300
+
+
+async def test_a_worker_clock_running_ahead_does_not_age_a_call_backwards(
+    calls_service: CallsService,
+):
+    """started_at is the worker's clock, and it drifts from this backend's.
+
+    A worker a few seconds ahead reports a call that has not happened yet.
+    That is skew, and the honest reading of it is 0s ago, not a negative age
+    the page renders as a bug in itself.
+    """
+    await calls_service.start_call(
+        CallStart(
+            room_name="from-the-future",
+            started_at=datetime.now(UTC) + timedelta(hours=1),
+        )
+    )
+
+    overview = await calls_service.overview()
+
+    assert overview.last_report.seconds_ago == 0
+    # Still reported, and still stamped with the time the worker claimed.
+    assert overview.last_report.at is not None
+
+
 # ---- the line free does not cross ----------------------------------------
 
 # Substrings, not exact names. The field that would appear here is not called
@@ -456,3 +617,23 @@ def test_the_tables_still_match_the_shipped_migration():
         "text",
         "spoken_at",
     }
+
+
+async def test_a_call_left_open_by_a_dead_worker_stops_counting_as_in_flight(
+    calls_service: CallsService,
+):
+    """'active' is only cleared by a finish report, which a killed worker never sends.
+
+    Unbounded, that one row would be reported as a call in flight for the life
+    of the deployment.
+    """
+    await calls_service.start_call(
+        CallStart(room_name="stale", started_at=NOW - timedelta(hours=30))
+    )
+    await calls_service.start_call(
+        CallStart(room_name="live", started_at=NOW - timedelta(minutes=2))
+    )
+
+    overview = await calls_service.overview()
+
+    assert overview.active == 1

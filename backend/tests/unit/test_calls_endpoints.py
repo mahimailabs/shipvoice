@@ -174,6 +174,57 @@ async def test_the_rollup_answers_in_the_window_the_console_asked_for(calls_serv
         container.unwire()
 
 
+async def test_overview_is_not_swallowed_by_the_call_id_route(calls_service):
+    """The third route in the same trap as /summary and /rollup. Declared after
+    /{call_id}, this answers 422 and the Overview page's live numbers go blank
+    while every other page on the console still works."""
+    app, container = _build_app(calls_service)
+    try:
+        async with _client(app) as c:
+            resp = await c.get("/api/v1/calls/overview")
+        assert resp.status_code == 200
+        # The whole shape on an empty log, keys and all. The page reads every
+        # one of these and none of them should have to be guarded.
+        assert resp.json() == {
+            "calls_today": 0,
+            "metered_minutes": 0.0,
+            "active": 0,
+            "failed": {"count": 0, "of": 0, "window_hours": 24},
+            "last_report": {"at": None, "seconds_ago": None},
+        }
+    finally:
+        container.unwire()
+
+
+async def test_the_overview_reports_what_the_worker_actually_sent(calls_service):
+    """End to end over the wire: the worker writes, the console reads."""
+    app, container = _build_app(calls_service)
+    try:
+        async with _client(app) as c:
+            for room in ("room-1", "room-2"):
+                await c.post(
+                    "/api/v1/internal/agent/calls/start",
+                    json={"room_name": room},
+                    headers=_auth(),
+                )
+            await c.post(
+                "/api/v1/internal/agent/calls/finish",
+                json={"room_name": "room-2", "status": "failed"},
+                headers=_auth(),
+            )
+
+            body = (await c.get("/api/v1/calls/overview")).json()
+
+        assert body["calls_today"] == 2
+        assert body["active"] == 1
+        assert body["failed"] == {"count": 1, "of": 2, "window_hours": 24}
+        # A heartbeat with a real timestamp on it, seconds old rather than null.
+        assert body["last_report"]["at"] is not None
+        assert body["last_report"]["seconds_ago"] == 0
+    finally:
+        container.unwire()
+
+
 async def test_a_call_that_is_not_in_the_log_is_a_404(calls_service):
     """The console tells these two apart: 404 means this call is not in the
     log, anything else means the log itself did not answer."""

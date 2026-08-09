@@ -1262,3 +1262,19 @@
     opacity: 1;
     visibility: visible;
 }
+
+/* The reference draws the date range as a bordered field beside the Export
+   button, not as a second button. Nothing here filters by date, so it is inert:
+   it carries the shape and a title saying why, and takes no focus. */
+.sv-console .inert-field {
+    display: inline-flex;
+    align-items: center;
+    height: var(--control-h-sm);
+    padding: 0 var(--pad-control-x);
+    border: var(--border-hairline);
+    border-radius: var(--sv-radius-sm);
+    color: var(--text-faint);
+    font: var(--type-body-sm);
+    white-space: nowrap;
+    cursor: default;
+}

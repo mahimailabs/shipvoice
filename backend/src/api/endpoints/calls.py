@@ -6,6 +6,7 @@ from src.schemas.calls_schemas import (
     CallChannel,
     CallDetailResponse,
     CallListResponse,
+    CallOverviewResponse,
     CallRollupResponse,
     CallStatus,
     CallSummaryResponse,
@@ -62,6 +63,19 @@ async def read_rollup(
 ) -> CallRollupResponse:
     """Calls in the last `days`, by agent and by channel. Counts, no money."""
     return await service.rollup(days=days)
+
+
+# Declared before /{call_id} for the third time and the same reason: the path
+# is a word, the route below it takes an int, and an int path parameter that
+# fails to parse answers 422 rather than falling through. Move this down and
+# the Overview page's live numbers go blank while every other page still works.
+@router.get("/overview", response_model=CallOverviewResponse)
+@inject
+async def read_overview(
+    service: CallsService = Depends(Provide[Container.calls_service]),
+) -> CallOverviewResponse:
+    """The Overview page's live numbers. Minutes measured, never money."""
+    return await service.overview()
 
 
 @router.get("/{call_id}", response_model=CallDetailResponse)

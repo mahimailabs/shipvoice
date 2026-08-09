@@ -15,6 +15,7 @@ export function AppShell() {
   const [ticks, setTicks] = useState<number[]>([]);
   const [project, setProject] = useState<string | null>(null);
   const [reachable, setReachable] = useState<boolean | null>(null);
+  const [active, setActive] = useState<number | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -30,6 +31,11 @@ export function AppShell() {
         if (!live) return;
         setCallCount(r.total);
         setTicks(r.calls.map((c) => c.turn_count).reverse());
+        // Counted off the same page of calls the pulse is drawn from, so the
+        // footer never claims a call is in flight that the bar beside it does
+        // not show. The reference pairs this with a queued count; nothing here
+        // queues a call, so that half is simply absent rather than invented.
+        setActive(r.calls.filter((c) => c.status === "active").length);
       })
       .catch(() => undefined);
     getLiveKit()
@@ -72,7 +78,9 @@ export function AppShell() {
               ? reachable === false
                 ? "backend not reachable"
                 : "no calls recorded yet"
-              : `${callCount.toLocaleString()} calls recorded`}
+              : active
+                ? `${active.toLocaleString()} calls active · ${callCount.toLocaleString()} recorded`
+                : `${callCount.toLocaleString()} calls recorded`}
           </span>
         </footer>
       </div>

@@ -17,11 +17,14 @@ from src.schemas.calls_schemas import (
     CallDetailResponse,
     CallFinish,
     CallListResponse,
+    CallOverviewResponse,
     CallRead,
     CallRollupResponse,
     CallStart,
     CallSummaryResponse,
     ChannelCallCount,
+    FailedCallRate,
+    LastReport,
     TurnAppend,
     TurnRead,
 )
@@ -38,6 +41,11 @@ MAX_ROLLUP_DAYS = 365
 # that happened is not a call that did not, so it is counted under a name
 # rather than dropped.
 UNKNOWN_GROUP = "unknown"
+
+# The window the Overview's failed rate is measured over, and the number the
+# console prints beside it. One constant, so the label cannot drift from the
+# window it describes.
+FAILED_WINDOW_HOURS = 24
 
 
 def _tally(rows: Iterable[tuple[str | None, int]]) -> list[tuple[str, int]]:
@@ -204,6 +212,58 @@ class CallsService:
                 for name, count in by_channel
             ],
         )
+
+    async def overview(self) -> CallOverviewResponse:
+        """The live numbers on the Overview page.
+
+        Today is the UTC day. This backend stores UTC and the request says
+        nothing about where the reader is sitting, so a local midnight would
+        be a guess wearing the clothes of a fact: pick the server's zone and a
+        reader four hours west sees a day that ended before their evening did.
+        UTC is at least a day the reader can name and check.
+
+        Nothing here divides. The failed count ships with the population it
+        came out of and the console does the arithmetic it wants, which is
+        also why a window holding no calls at all is a pair of zeroes rather
+        than a rate nobody can compute.
+        """
+        # One clock for the whole answer. Reading now() again per number would
+        # let the window and the heartbeat disagree about when the page was.
+        now = datetime.now(UTC)
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        window_start = now - timedelta(hours=FAILED_WINDOW_HOURS)
+
+        counts = await self._repository.overview_counts(day_start, window_start)
+
+        return CallOverviewResponse(
+            calls_today=counts.started_today,
+            # Rounded here rather than in the page, so two readers of the same
+            # deployment never disagree about the number.
+            metered_minutes=round(counts.total_seconds / 60, 1),
+            active=counts.active,
+            failed=FailedCallRate(
+                count=counts.failed_in_window,
+                of=counts.started_in_window,
+                window_hours=FAILED_WINDOW_HOURS,
+            ),
+            last_report=self._last_report(counts.last_started_at, now),
+        )
+
+    @staticmethod
+    def _last_report(last_started_at: datetime | None, now: datetime) -> LastReport:
+        """The metering seam's heartbeat, or nulls when nothing has run here.
+
+        A fresh clone has never been reported to, and that is not an error and
+        not zero seconds ago. The page prints nothing rather than a time that
+        would read as a call.
+        """
+        if last_started_at is None:
+            return LastReport(at=None, seconds_ago=None)
+        elapsed = (now - _aware(last_started_at)).total_seconds()
+        # Clamped. The worker and this backend keep separate clocks, and one
+        # running a second ahead stamps a start in the future, which would
+        # otherwise print as a call reported minus one seconds ago.
+        return LastReport(at=last_started_at, seconds_ago=max(0, int(elapsed)))
 
     async def summary(self) -> CallSummaryResponse:
         calls, seconds, turns = await self._repository.totals()

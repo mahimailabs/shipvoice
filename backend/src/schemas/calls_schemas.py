@@ -126,6 +126,64 @@ class CallRollupResponse(BaseModel):
     by_channel: list[ChannelCallCount]
 
 
+class FailedCallRate(BaseModel):
+    """Failed calls inside one window, and the calls they came out of."""
+
+    count: int
+    # Every call that started in the same window, failed or not. The count and
+    # the population it is a rate over are read together on purpose: shipping
+    # a percentage instead would hide whether the window held three calls or
+    # three hundred, and the reader cannot tell a bad night from a bad agent
+    # without it.
+    of: int
+    # Echoed back so the console labels its own row instead of hardcoding 24h
+    # and drifting the day this constant changes.
+    window_hours: int
+
+
+class LastReport(BaseModel):
+    """When the worker last reported a call to this backend.
+
+    The heartbeat of the agent-to-backend seam. The worker posts the start of
+    a call the moment it picks up, so the newest start is the newest proof the
+    seam is alive. Both fields are null on an empty log: never is not a time,
+    and it is not zero seconds ago either.
+    """
+
+    at: datetime | None
+    # Whole seconds, and never negative. The worker stamps started_at from its
+    # own clock, so one running a little ahead of this backend reports a call
+    # that has not happened yet. That is skew, not a call from the future.
+    seconds_ago: int | None
+
+    @field_validator("at")
+    @classmethod
+    def stamp_utc(cls, v: datetime | None) -> datetime | None:
+        return _as_utc(v)
+
+
+class CallOverviewResponse(BaseModel):
+    """The live numbers on the Overview page.
+
+    Only what this deployment measures itself. Everything else the page shows
+    is either a sample it labels as one or a dash, and none of it comes from
+    here.
+    """
+
+    # Calls that started since UTC midnight. See CallsService.overview for why
+    # the day is UTC and not the reader's.
+    calls_today: int
+    # Duration summed across the whole log, in minutes to one decimal. Minutes
+    # measured, not minutes billed: what a minute is worth is the paid product.
+    metered_minutes: float
+    # Calls still open, within the same window as 'failed'. 'active' is only
+    # cleared by a finish report, so a worker killed mid-call leaves a row that
+    # never closes. Unbounded, that row would be counted as in flight forever.
+    active: int
+    failed: FailedCallRate
+    last_report: LastReport
+
+
 class CallStart(BaseModel):
     """The worker reporting that a call began."""
 

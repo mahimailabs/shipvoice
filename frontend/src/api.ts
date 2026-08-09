@@ -4,6 +4,7 @@ import type {
   AgentPromptRead,
   CallDetailResponse,
   CallListResponse,
+  CallOverviewResponse,
   CallRollupResponse,
   CallSummaryResponse,
   DeploymentRead,
@@ -100,6 +101,20 @@ export async function getSummary(): Promise<CallSummaryResponse> {
   return get<CallSummaryResponse>(
     "/api/v1/calls/summary",
     "Loading the summary",
+  );
+}
+
+/**
+ * The Overview page's own rollup.
+ *
+ * Fetched separately from the call list so a backend that predates this route
+ * still renders the page: the figures fall back to dashes instead of taking the
+ * whole screen down.
+ */
+export async function getCallOverview(): Promise<CallOverviewResponse> {
+  return get<CallOverviewResponse>(
+    "/api/v1/calls/overview",
+    "Loading the overview",
   );
 }
 
