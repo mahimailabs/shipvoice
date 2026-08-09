@@ -14,6 +14,6 @@ async def create_room_token(
     payload: RoomTokenRequest,
     service: TokenService = Depends(Provide[Container.token_service]),
 ) -> RoomTokenResponse:
-    # Public. This backend has no authentication at all: see the deploy note
-    # in the root README before putting it on a public address.
+    # Public. This backend has no authentication at all: do not put it on a
+    # public address without something in front of it.
     return await service.create_room_token(payload)

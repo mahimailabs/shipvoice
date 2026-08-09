@@ -8,6 +8,10 @@ class LiveKitRead(BaseModel):
     api_key_hint: str | None
     secret_set: bool
     source: str
+    # Whether the worker can actually follow a change made here. False when no
+    # service token is configured, which is the shipped default, and the page
+    # must not claim otherwise.
+    worker_follows: bool
 
 
 class LiveKitWrite(BaseModel):

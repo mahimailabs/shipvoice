@@ -68,13 +68,38 @@ def test_a_partial_payload_never_half_applies(monkeypatch):
     assert "LIVEKIT_API_KEY" not in os.environ
 
 
-def test_watch_does_nothing_without_a_starting_revision(monkeypatch):
-    called = []
+def test_watch_still_starts_when_the_boot_fetch_failed(monkeypatch):
+    """One transient outage must not disable the watcher for the whole run.
+
+    watch() used to return immediately when the boot fetch failed, so a backend
+    that was slow to come up left the worker permanently unable to follow a
+    console edit, silently, while the console went on promising it would.
+    """
+    started: list[dict] = []
     monkeypatch.setattr(
-        livekit_sync.threading, "Thread", lambda **kw: called.append(kw)
+        livekit_sync.threading, "Thread", lambda **kw: _FakeThread(started, kw)
     )
     livekit_sync.watch("http://backend:8000", "tok", None)
-    assert called == []
+    assert started, "the watcher must run even without a starting revision"
+
+
+def test_watch_does_nothing_when_sync_is_not_configured(monkeypatch):
+    started: list[dict] = []
+    monkeypatch.setattr(
+        livekit_sync.threading, "Thread", lambda **kw: _FakeThread(started, kw)
+    )
+    livekit_sync.watch(None, None, "rev")
+    assert started == []
+
+
+class _FakeThread:
+    """Stands in for Thread so watch() can call .start() without running it."""
+
+    def __init__(self, sink: list[dict], kwargs: dict) -> None:
+        self._sink, self._kwargs = sink, kwargs
+
+    def start(self) -> None:
+        self._sink.append(self._kwargs)
 
 
 def test_missing_credentials_name_themselves(monkeypatch, capsys):
@@ -121,10 +146,12 @@ def test_download_files_must_not_require_credentials():
     import pathlib
     import re
 
-    src = pathlib.Path(__file__).resolve().parents[1] / "src" / "agent.py"
-    text = src.read_text()
+    sync = (
+        pathlib.Path(__file__).resolve().parents[1] / "src" / "core" / "livekit_sync.py"
+    )
+    text = sync.read_text()
 
-    match = re.search(r"NEEDS_LIVEKIT = (.+)", text)
+    match = re.search(r"if not any\(cmd in _sys\.argv for cmd in \((.+?)\)\)", text)
     assert match, "the subcommand gate is gone"
     gate = match.group(1)
     for cmd in ("start", "dev", "connect"):
@@ -132,4 +159,20 @@ def test_download_files_must_not_require_credentials():
     assert "download-files" not in gate
     assert "console" not in gate
 
-    assert "if NEEDS_LIVEKIT:" in text, "the gate must guard the startup block"
+
+def test_the_sync_never_runs_at_module_import():
+    """LiveKit re-imports the agent module in every job subprocess.
+
+    Anything started at import time therefore runs once per subprocess: a
+    credential poller each, all fetching the plaintext LiveKit secret on a
+    timer, and none able to restart anything because job processes set SIGTERM
+    to SIG_IGN.
+    """
+    import pathlib
+
+    agent_src = (
+        pathlib.Path(__file__).resolve().parents[1] / "src" / "agent.py"
+    ).read_text()
+    before_main = agent_src.split('if __name__ == "__main__":')[0]
+    for call in ("start_livekit_sync(", "bootstrap(", "watch("):
+        assert call not in before_main, f"{call} must not run at import time"

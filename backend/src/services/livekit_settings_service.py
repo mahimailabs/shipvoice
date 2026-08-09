@@ -47,7 +47,7 @@ class LiveKitSettingsService:
                 select(LiveKitSettings).order_by(col(LiveKitSettings.id))
             )
             return result.scalars().first()
-        except SQLAlchemyError:
+        except (SQLAlchemyError, OSError):
             logger.warning(
                 "could not read livekit_settings, using the environment",
                 exc_info=True,
@@ -109,7 +109,10 @@ class LiveKitSettingsService:
         try:
             async with self._session_factory() as session:
                 return await self._row(session)
-        except SQLAlchemyError:
+        except (SQLAlchemyError, OSError):
+            # OSError matters: asyncpg raises a bare ConnectionRefusedError on
+            # connect, which SQLAlchemy does not wrap, so catching only
+            # SQLAlchemyError left the documented manual path answering 500.
             logger.warning("database unavailable, using the environment")
             return None
 
@@ -121,12 +124,14 @@ class LiveKitSettingsService:
                 api_key_hint=_hint(row.api_key),
                 secret_set=bool(row.api_secret),
                 source="database",
+                worker_follows=bool(self._config.AGENT_SERVICE_TOKEN),
             )
         return LiveKitRead(
             url=self._config.LIVEKIT_URL,
             api_key_hint=_hint(self._config.LIVEKIT_API_KEY),
             secret_set=self._config.LIVEKIT_API_SECRET is not None,
             source="environment",
+            worker_follows=bool(self._config.AGENT_SERVICE_TOKEN),
         )
 
     async def write(self, payload: LiveKitWrite) -> LiveKitRead:

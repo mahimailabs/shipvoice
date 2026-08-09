@@ -24,6 +24,7 @@ class _FakeService:
             api_key_hint="...kd91",
             secret_set=True,
             source="database",
+            worker_follows=True,
         )
 
     async def write(self, payload: LiveKitWrite) -> LiveKitRead:
@@ -31,8 +32,8 @@ class _FakeService:
         return await self.read()
 
 
-def _build_app(env: str = "dev"):
-    cfg = Config(ENV=env, _env_file=None)
+def _build_app(env: str = "dev", *, writes: bool = True):
+    cfg = Config(ENV=env, _env_file=None, CONSOLE_WRITES_ENABLED=writes)
     service = _FakeService()
     container = Container()
     container.config.override(cfg)
@@ -84,9 +85,14 @@ async def test_write_is_accepted_in_dev():
 
 
 @pytest.mark.asyncio
-async def test_write_is_refused_outside_dev():
-    """No auth means an open write would let anyone repoint the calls."""
-    app, service, container = _build_app("prod")
+async def test_write_is_refused_unless_explicitly_enabled():
+    """No auth means an open write would let anyone repoint the calls.
+
+    This used to be gated on ENV != dev, which meant changing ENV's default for
+    console ergonomics silently flipped an authorization decision from refuse
+    to allow.
+    """
+    app, service, container = _build_app(writes=False)
     try:
         async with await _client(app) as c:
             resp = await c.put(
@@ -113,6 +119,27 @@ async def test_a_url_that_is_not_a_websocket_is_rejected():
                 json={"url": "https://example.com", "api_key": "x", "api_secret": "y"},
             )
         assert resp.status_code == 422
+    finally:
+        container.unwire()
+
+
+@pytest.mark.asyncio
+async def test_the_write_gate_does_not_follow_env():
+    """Regression guard: ENV must not decide who may rewrite the project."""
+    app, service, container = _build_app("prod", writes=True)
+    try:
+        async with await _client(app) as c:
+            resp = await c.put(
+                "/api/v1/livekit",
+                json={
+                    "url": "wss://ok.livekit.cloud",
+                    "api_key": "k",
+                    "api_secret": "s",
+                },
+            )
+        assert resp.status_code == 200, (
+            "ENV=prod must not block an explicitly enabled write"
+        )
     finally:
         container.unwire()
 

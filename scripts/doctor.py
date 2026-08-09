@@ -73,7 +73,7 @@ def check_env_file(env: dict[str, str]) -> list[Result]:
                 BAD,
                 ".env",
                 "missing",
-                "cp .env.example .env, then fill in the six values it asks for",
+                "cp .env.example .env, then fill in the values it asks for",
             )
         ]
     return [Result(OK, ".env", f"{len(env)} values", "")]
@@ -121,7 +121,18 @@ def check_livekit_url(env: dict[str, str]) -> list[Result]:
                 "It starts with wss://",
             )
         ]
-    return [Result(OK, "LIVEKIT_URL", url, "")]
+    out = [Result(OK, "LIVEKIT_URL", url, "")]
+    # The worker requires all three. Checking only the URL meant a stranger who
+    # pasted one value got a green run and the line "Everything required is
+    # set", then a worker that exits and crash-loops.
+    for var in ("LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"):
+        if env.get(var):
+            out.append(Result(OK, var, "set", ""))
+        else:
+            out.append(
+                Result(BAD, var, "not set", "Set it in .env, from your LiveKit project")
+            )
+    return out
 
 
 def check_service_token(env: dict[str, str]) -> list[Result]:

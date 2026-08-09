@@ -72,7 +72,7 @@ The fastest path. One command brings up Postgres, the backend, the agent, and th
 frontend together:
 
 ```bash
-cp .env.example .env     # six values, each needing an account somewhere
+cp .env.example .env     # the values it asks for, each needing an account
 docker compose up --build
 ```
 
@@ -152,7 +152,7 @@ a plugin for this repo and does not depend on it.
 - **Own your margin**: every minute of STT, LLM, TTS, and telephony metered per provider, so each call carries a cost you can read.
 - **Per-minute billing**: Stripe Billing Meters, checkout, and webhook, wired.
 - **Auth and entitlement**: end-user accounts behind a paid entitlement gate.
-- **Compliance that fails closed**: TCPA and HIPAA gates refuse to author or start an agent that would breach them.
+- **Compliance machinery**: consent records, a suppression list, and a callee-local calling window, advisory by default with a strict opt-in.
 - **Telephony (SIP / PSTN)** with a 10DLC registration runbook.
 - **One-command deploy** to Fly.
 
@@ -168,6 +168,19 @@ Lifetime updates. Launches September 2, 2026: [shipvoice.dev](https://shipvoice.
 
 Each package has its own README with details:
 [`agent/`](agent/README.md) · [`backend/`](backend/README.md) · [`frontend/`](frontend/README.md)
+
+## Where your secrets live
+
+The values you fill in stay in `.env`, which is gitignored. One thing moves:
+the first time the backend starts it copies the LiveKit project into Postgres,
+and the console edits it there. So after that, **your LiveKit signing secret is
+stored unencrypted in the `livekit_settings` table**, which means it is also in
+the `pgdata` volume and in any database dump you take. Rotating the key in your
+LiveKit project is the revocation path.
+
+The backend has no authentication. Do not put it on a public address without
+something in front of it, and leave `CONSOLE_WRITES_ENABLED` off anywhere that
+is not your own machine.
 
 ## Third-party code
 

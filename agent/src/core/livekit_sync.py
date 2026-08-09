@@ -71,16 +71,40 @@ def watch(
 
     Runs on a daemon thread so it can never hold up shutdown.
     """
-    if not base_url or not token or revision is None:
+    if not base_url or not token:
         return
 
+    # revision is None when the boot fetch failed: an unreachable backend, a
+    # refused token, or a database that was not up yet. Returning here would
+    # make one transient outage disable the watcher for the life of the worker,
+    # silently, while the console kept promising that edits reach it. So the
+    # watcher starts anyway and adopts whatever the first successful poll finds.
+    known: str | None = revision
+
     def _loop() -> None:
+        nonlocal known
         while True:
             time.sleep(interval_seconds)
             payload = _fetch(base_url, token)
             if not payload:
                 continue
-            if str(payload["revision"]) == revision:
+            if known is None:
+                known = str(payload["revision"])
+                # Only restart if the backend disagrees with what we booted on.
+                # Otherwise this is just the late arrival of a fetch that failed
+                # at startup, and there is nothing to adopt.
+                if payload["url"] == os.environ.get("LIVEKIT_URL") and payload[
+                    "api_key"
+                ] == os.environ.get("LIVEKIT_API_KEY"):
+                    logger.info("backend reachable again, project unchanged")
+                    continue
+                logger.warning(
+                    "backend reachable again and its LiveKit project differs, "
+                    "restarting to adopt it"
+                )
+                os.kill(os.getpid(), signal.SIGTERM)
+                return
+            if str(payload["revision"]) == known:
                 continue
             logger.warning(
                 "LiveKit project changed in the console, draining and restarting so calls are placed on the new project"
@@ -131,3 +155,31 @@ def _die(problem: str, fix: str) -> None:
     # so a logger call here would be swallowed at the default WARNING root.
     print(f"\nCannot start the voice worker: {problem}\n{fix}\n", file=sys.stderr)
     raise SystemExit(1)
+
+
+def start_livekit_sync() -> None:
+    """Adopt the backend's LiveKit project, then watch it. Entrypoint only.
+
+    Call this from a '__main__' guard. LiveKit re-imports the agent module in
+    every job subprocess, so running any of this at import time gives each of
+    them its own poller, each fetching the LiveKit secret on a timer, and none
+    of them able to restart anything: job processes set SIGTERM to SIG_IGN.
+    """
+    import sys as _sys
+
+    # 'download-files' prefetches models during the Docker build with no
+    # credentials, and 'console' runs the whole loop against the provider APIs
+    # only. Neither touches LiveKit.
+    if not any(cmd in _sys.argv for cmd in ("start", "dev", "connect")):
+        return
+
+    from src.core.config import config
+
+    revision = bootstrap(config.BACKEND_API_URL, config.BACKEND_API_TOKEN)
+    require_livekit_or_exit()
+    watch(
+        config.BACKEND_API_URL,
+        config.BACKEND_API_TOKEN,
+        revision,
+        config.LIVEKIT_SYNC_INTERVAL_SECONDS,
+    )

@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.core.config import Config
 from src.core.container import Container
-from src.core.enums import EnvironmentOption
 from src.schemas.livekit_schemas import LiveKitRead, LiveKitWrite
 from src.services.livekit_settings_service import LiveKitSettingsService
 
@@ -31,13 +30,14 @@ async def write_livekit(
     config: Config = Depends(Provide[Container.config]),
 ) -> LiveKitRead:
     """Change the LiveKit project. Refused outside dev."""
-    if config.ENV != EnvironmentOption.DEV:
+    if not config.CONSOLE_WRITES_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                "Editing LiveKit credentials over the API is only allowed when "
-                "ENV=dev, because this backend has no authentication. Set them "
-                "in the environment and restart."
+                "Editing LiveKit credentials over the API is disabled. This "
+                "backend has no authentication, so an open write would let "
+                "anyone who can reach it repoint your calls. Set "
+                "CONSOLE_WRITES_ENABLED=true only where that is safe."
             ),
         )
     try:

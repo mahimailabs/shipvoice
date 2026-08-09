@@ -88,6 +88,13 @@ class Config(BaseSettings):
     # opening it.
     AGENT_SERVICE_TOKEN: str = ""
 
+    # Whether the console may rewrite the LiveKit project over HTTP. This is an
+    # authorization decision and it used to be inferred from ENV, which meant
+    # flipping ENV's default for console ergonomics silently opened an
+    # unauthenticated write on every deployment. Off unless someone says
+    # otherwise; compose turns it on for local use.
+    CONSOLE_WRITES_ENABLED: bool = False
+
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""
 

@@ -22,9 +22,15 @@ def _upgrade_to_head() -> None:
     from alembic.config import Config as AlembicConfig
 
     ini = Path(__file__).resolve().parents[2] / "alembic.ini"
-    # migrations/env.py reads the URL from the app config itself, so there is
-    # nothing to pass here.
-    command.upgrade(AlembicConfig(str(ini)), "head")
+    cfg = AlembicConfig(str(ini))
+    # env.py calls fileConfig(), whose disable_existing_loggers default sets
+    # disabled=True on every logger that already exists. configure_logging()
+    # ran moments ago, so without this the app silences its own logging for the
+    # life of the process, including the warnings that say the env fallback is
+    # active. migrations/env.py honours this flag.
+    cfg.attributes["configure_logger"] = False
+    # env.py reads the database URL from the app config, so nothing to pass.
+    command.upgrade(cfg, "head")
 
 
 async def _prepare_database(container) -> None:

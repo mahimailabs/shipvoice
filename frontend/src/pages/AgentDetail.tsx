@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ApiError, listAgents } from "../api";
+import { listAgents } from "../api";
 import type { AgentSummary } from "../types";
 import { Ann, TopBar } from "../components/AppShell";
 import { TestCall } from "../components/TestCall";
@@ -25,7 +25,6 @@ function Dash() {
 export function AgentDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [agents, setAgents] = useState<AgentSummary[] | null>(null);
-  const [forbidden, setForbidden] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -35,31 +34,14 @@ export function AgentDetail() {
         if (!live) return;
         setAgents(r.agents);
       })
-      .catch((e: unknown) => {
+      .catch(() => {
         if (!live) return;
-        if (e instanceof ApiError && e.isForbidden) setForbidden(true);
-        else setError(true);
+        setError(true);
       });
     return () => {
       live = false;
     };
   }, []);
-
-  if (forbidden) {
-    return (
-      <div className="pad">
-        <Panel flush>
-          <div className="empty">
-            <h2>This account is not an administrator</h2>
-            <p>
-              The backend is reachable and answered. Agent detail is admin-only,
-              and this account does not have is_superuser set.
-            </p>
-          </div>
-        </Panel>
-      </div>
-    );
-  }
 
   if (error) {
     return (

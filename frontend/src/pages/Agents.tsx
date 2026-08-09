@@ -5,7 +5,7 @@ import type { AgentSummary } from "../types";
 import { Ann, TopBar } from "../components/AppShell";
 import { Badge, Button, Panel } from "../components/ds";
 
-type Load = "loading" | "ok" | "forbidden" | "missing" | "error";
+type Load = "loading" | "ok" | "missing" | "error";
 
 /** A value the backend did not give us. Never a zero, never a guess. */
 function Cell({ value }: { value: string | null }) {
@@ -26,7 +26,6 @@ function AgentTable({ agents }: { agents: AgentSummary[] }) {
               <th>LLM</th>
               <th>TTS</th>
               <th>Prompt</th>
-              <th>Calls · 7d</th>
               <th>State</th>
             </tr>
             {agents.map((a) => (
@@ -41,7 +40,6 @@ function AgentTable({ agents }: { agents: AgentSummary[] }) {
                 <td style={{ fontFamily: "var(--font-mono)" }}>
                   {a.prompt_path}
                 </td>
-                <td className="na">-</td>
                 <td>
                   {a.active ? (
                     <Badge tone="success">Active</Badge>
@@ -80,9 +78,7 @@ export function Agents() {
       })
       .catch((e: unknown) => {
         if (!live) return;
-        // 401 is handled globally by dropping back to the login form, so it is
-        if (e instanceof ApiError && e.isForbidden) setLoad("forbidden");
-        else if (e instanceof ApiError && e.isMissing) setLoad("missing");
+        if (e instanceof ApiError && e.isMissing) setLoad("missing");
         else setLoad("error");
       });
     return () => {
@@ -91,23 +87,7 @@ export function Agents() {
   }, []);
 
   let content;
-  if (load === "forbidden") {
-    content = (
-      <Panel flush>
-        <div className="empty">
-          <h2>This account is not an administrator</h2>
-          <p>
-            The backend is reachable and answered. The agent list is admin-only,
-            and this account does not have is_superuser set.
-          </p>
-          <span className="cmd">
-            UPDATE users SET is_superuser = true WHERE email =
-            &apos;your@email&apos;;
-          </span>
-        </div>
-      </Panel>
-    );
-  } else if (load === "missing") {
+  if (load === "missing") {
     content = (
       <div className="banner" role="alert">
         <Badge tone="warning">not wired</Badge>

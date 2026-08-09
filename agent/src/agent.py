@@ -17,20 +17,12 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from src.agents.assistant import Assistant
 from src.core.config import config
 from src.core.events import register_event_handlers
-from src.core.livekit_sync import bootstrap as bootstrap_livekit
-from src.core.livekit_sync import require_livekit_or_exit
-from src.core.livekit_sync import watch as watch_livekit
 from src.utils.room import identify
 
 logger = logging.getLogger("agent")
 
 CONSOLE_MODE = "console" in sys.argv
 
-# Which subcommands actually connect to LiveKit. 'download-files' prefetches
-# the VAD and turn-detector models and runs during the Docker build, where no
-# credentials exist and none are needed; 'console' runs the whole loop locally
-# against the provider APIs only.
-NEEDS_LIVEKIT = any(cmd in sys.argv for cmd in ("start", "dev", "connect"))
 
 # Quiet noisy third-party loggers.
 for _noisy in ("livekit.plugins", "livekit.turn_detector", "asyncio"):
@@ -43,19 +35,6 @@ if config.SENTRY_DSN:
         environment=os.getenv("FLY_APP_NAME", "development"),
     )
 
-
-if NEEDS_LIVEKIT:
-    _revision = bootstrap_livekit(config.BACKEND_API_URL, config.BACKEND_API_TOKEN)
-    # After the sync, because the backend may be where the credentials come
-    # from. Before the CLI, so the failure is one sentence instead of an
-    # endless 401 loop.
-    require_livekit_or_exit()
-    watch_livekit(
-        config.BACKEND_API_URL,
-        config.BACKEND_API_TOKEN,
-        _revision,
-        config.LIVEKIT_SYNC_INTERVAL_SECONDS,
-    )
 
 server = AgentServer(drain_timeout=300, shutdown_process_timeout=30)
 
@@ -106,4 +85,8 @@ async def entrypoint(ctx: JobContext) -> None:
 
 
 if __name__ == "__main__":
+    # Running this file directly is the same entrypoint as main.py.
+    from src.core.livekit_sync import start_livekit_sync
+
+    start_livekit_sync()
     cli.run_app(server)

@@ -37,6 +37,9 @@ services:
       PORT: 8080
       # Defaults so .env only has to carry the six values that need an account.
       ENV: ${ENV:-dev}
+      # Local only. This publishes on 127.0.0.1, so "anyone who can reach it"
+      # is you. Do not carry this into a deployment.
+      CONSOLE_WRITES_ENABLED: ${CONSOLE_WRITES_ENABLED:-true}
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
@@ -45,7 +48,13 @@ services:
       DB_SSL: ${DB_SSL:-disable}
       CORS_ORIGINS_STR: ${CORS_ORIGINS_STR:-http://localhost:5173}
     ports:
-      - "8000:8080" # http://localhost:8000  (docs at /docs)
+      - "127.0.0.1:8000:8080" # http://localhost:8000  (docs at /docs)
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health', timeout=3).status==200 else 1)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     depends_on:
       db:
         condition: service_healthy
@@ -67,7 +76,11 @@ services:
     # restarts itself when it changes there. 'restart: unless-stopped' is what
     # turns that restart into a running worker again, so keep it.
     depends_on:
-      - backend
+      # service_healthy, not just started: the worker asks the backend for its
+      # LiveKit project at boot, and a bare depends_on made that fetch race the
+      # backend coming up.
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -80,7 +93,7 @@ services:
         VITE_AGENT_NAME: ${VITE_AGENT_NAME:-${AGENT_NAME:-assistant}}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
     ports:
-      - "5173:80" # http://localhost:5173
+      - "127.0.0.1:5173:80" # http://localhost:5173
     depends_on:
       - backend
 

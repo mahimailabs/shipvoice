@@ -50,7 +50,7 @@ A voice AI starter. Three services, each independently runnable:
 ## Running it
 
 ```bash
-cp .env.example .env         # six values, all needing an account somewhere
+cp .env.example .env         # LiveKit and three provider keys
 docker compose up --build    # postgres, backend, agent, console
 ```
 
