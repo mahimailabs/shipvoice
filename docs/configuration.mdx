@@ -1,0 +1,100 @@
+---
+title: Configuration
+description: Which env file is read when, and the variables that matter.
+---
+
+## Which file is read
+
+`docker compose` reads the root `.env` and nothing else. It passes that file to
+the backend and the agent containers, and passes the `VITE_` values to the
+frontend as **build** arguments.
+
+The per-service files exist for running one service by hand:
+
+| File               | Read by                                        |
+| ------------------ | ---------------------------------------------- |
+| `.env`             | `docker compose`, for every service            |
+| `agent/.env`       | `uv run python main.py dev` and console mode   |
+| `backend/.env`     | `uv run uvicorn src.main:app`                  |
+| `frontend/.env`    | `pnpm dev` and `pnpm build`                    |
+
+A value in the wrong file gives you a stack that works one way and not the
+other. Start with the root file.
+
+## Required
+
+Nothing runs without these six.
+
+| Variable              | Where to get it                                             |
+| --------------------- | ----------------------------------------------------------- |
+| `LIVEKIT_URL`         | your LiveKit project, the `wss://` address                   |
+| `LIVEKIT_API_KEY`     | the same project                                             |
+| `LIVEKIT_API_SECRET`  | the same project                                             |
+| `DEEPGRAM_API_KEY`    | [console.deepgram.com](https://console.deepgram.com)         |
+| `CEREBRAS_API_KEY`    | [cloud.cerebras.ai](https://cloud.cerebras.ai)               |
+| `INWORLD_API_KEY`     | [platform.inworld.ai](https://platform.inworld.ai)           |
+
+Console mode needs the last three only.
+
+## Identity
+
+| Variable            | Default     | Notes                                                                       |
+| ------------------- | ----------- | --------------------------------------------------------------------------- |
+| `AGENT_NAME`        | `assistant` | The dispatch name, and the agent's slug in the console and its API routes.   |
+| `VITE_AGENT_NAME`   | `AGENT_NAME`| Must be byte-identical to `AGENT_NAME`. Baked at frontend build time.        |
+| `BUSINESS_NAME`     | unset       | What the agent says it works for, shown next to a call in the console.       |
+
+## The service token
+
+One secret with two names. The agent sends `BACKEND_API_TOKEN`, the backend
+checks it against `AGENT_SERVICE_TOKEN`.
+
+| Variable                     | Default | Notes                                                                          |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `AGENT_SERVICE_TOKEN`        | empty   | Backend side. Empty disables the endpoint rather than opening it.               |
+| `BACKEND_API_TOKEN`          | empty   | Agent side. Must equal the value above.                                        |
+| `BACKEND_API_URL`            | `http://backend:8080` in compose | Where the worker asks for the LiveKit project.        |
+| `BACKEND_REPORTING_ENABLED`  | `true` in compose, `false` in code | Whether the worker posts calls to the backend.       |
+
+Set them with `openssl rand -hex 32`. Without the pair the worker keeps its own
+LiveKit credentials and the Calls page stays empty.
+
+## Console and API
+
+| Variable                 | Default                                  | Notes                                                              |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------ |
+| `CONSOLE_WRITES_ENABLED` | `true` in compose, `false` in code       | Gates the prompt and LiveKit writes. Off anywhere that is not your own machine. |
+| `VITE_TOKEN_ENDPOINT`    | `http://localhost:8000/api/v1/token`     | Build argument.                                                     |
+| `VITE_API_BASE_URL`      | `http://localhost:8000`                  | Build argument.                                                     |
+| `CORS_ORIGINS_STR`       | `http://localhost:5173` in compose, empty in code | Comma separated origins the backend accepts. Empty means every origin, so set it explicitly off your own machine. |
+| `AGENT_PATTERN`          | `sequential`                             | `sequential` or `supervisor`. How the console describes this deployment. Anything else falls back to `sequential`. |
+
+<Warning>
+  The three `VITE_` values are baked into the frontend bundle at image build
+  time. Changing one needs `docker compose up -d --build`, never `restart`.
+</Warning>
+
+## Database and environment
+
+Compose has a working default for each, so the root `.env` only needs them when
+you point at a Postgres that is not the bundled one.
+
+| Variable      | Default      |
+| ------------- | ------------ |
+| `DB_HOST`     | `db`         |
+| `DB_PORT`     | `5432`       |
+| `DB_USER`     | `postgres`   |
+| `DB_PASSWORD` | `postgres`   |
+| `DB_NAME`     | `app`        |
+| `DB_SSL`      | `disable`    |
+| `ENV`         | `dev`        |
+
+`AGENT_PROMPT_FILE` is set literally in `docker-compose.yml` and is not
+overridable there. It has to name the mounted prompts directory, and pointing
+it elsewhere writes a persona the worker never reads.
+
+## Optional
+
+| Variable     | Notes                          |
+| ------------ | ------------------------------ |
+| `SENTRY_DSN` | Error tracking. Off when unset. |

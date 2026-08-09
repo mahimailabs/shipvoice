@@ -1,4 +1,4 @@
-# ShipVoice Agent
+# ShipVoice Lite Agent
 
 A minimal LiveKit voice agent: joins a room (web or SIP), greets, and converses.
 Deepgram `nova-3` → Cerebras `gemma-4-31b` → Inworld `inworld-tts-2`, with Silero VAD and the

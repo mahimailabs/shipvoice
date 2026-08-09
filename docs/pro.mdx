@@ -1,0 +1,44 @@
+---
+title: ShipVoice Pro
+description: What Pro adds over Lite. The Pro documentation itself is not published yet.
+---
+
+<Note>
+  The Pro documentation is not published yet. This page is the accurate summary
+  of the line between the two products until it is.
+</Note>
+
+ShipVoice Lite gets you a voice agent you own. It does not get you a business.
+The part that does not one-shot is metering, billing, auth, telephony
+registration and compliance, and that is what
+[ShipVoice Pro](https://shipvoice.dev) ships.
+
+Pro is a separate repository. It shares this one's stack and lineage. It is not
+a plugin for this repo and does not depend on it.
+
+## Not in Lite
+
+| Capability          | What Pro adds                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Agent authoring     | Describe an agent in one line and its subagents generate it, then a validation gate refuses to ship one that is malformed. No gallery to pick from. |
+| Cost                | Every minute of speech to text, the model, speech and telephony metered per provider, so each call carries a cost you can read. |
+| Billing             | Stripe Billing Meters, checkout and webhook, wired.                                                                     |
+| Auth                | End-user accounts behind a paid entitlement gate. The backend in Lite has none.                                        |
+| Compliance          | Consent records, a suppression list and a callee-local calling window, advisory by default with a strict opt-in.        |
+| Telephony           | SIP and PSTN, with a 10DLC registration runbook.                                                                        |
+| Deploy              | One command to Fly.                                                                                                     |
+
+## Already in Lite
+
+The parts that are not the wedge are here and stay MIT: the LiveKit worker, the
+token server, the console with Overview, Calls, Agents and Deployment, the
+prompt-as-a-file persona, console mode, the doctor, and the Dockerfiles.
+
+The greyed-out entries in the console rail (Campaigns, Channels, Customers,
+Evaluations) are the shape of Pro, shown rather than stubbed. An empty table is
+worse than an honest absence.
+
+## Where it is
+
+[shipvoice.dev](https://shipvoice.dev). Lifetime updates. Launches September 2,
+2026.

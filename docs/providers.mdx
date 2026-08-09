@@ -1,0 +1,100 @@
+---
+title: Swapping providers
+description: Speech to text, the model and text to speech are three arguments in one constructor.
+---
+
+Every provider choice lives in one place: the `AgentSession` built in
+`agent/src/agent.py`.
+
+```python agent/src/agent.py
+session: AgentSession = AgentSession(
+    stt=deepgram.STT(model="nova-3"),
+    llm=cerebras.LLM(model="gemma-4-31b"),
+    tts=inworld.TTS(model="inworld-tts-2", voice="Ashley"),
+    vad=ctx.proc.userdata["vad"],
+    turn_handling=TurnHandlingOptions(
+        turn_detection=MultilingualModel(),
+        interruption={"mode": "vad"},
+    ),
+)
+```
+
+The plugins come from one import at the top of the same file:
+
+```python agent/src/agent.py
+from livekit.plugins import cerebras, deepgram, inworld, silero
+from livekit.plugins.turn_detector.multilingual import MultilingualModel
+```
+
+## Changing one
+
+Three edits, all in `agent/`.
+
+<Steps>
+  <Step title="Add the plugin">
+    ```bash
+    cd agent
+    uv add livekit-plugins-openai
+    ```
+  </Step>
+
+  <Step title="Import it">
+    Add it to the `from livekit.plugins import ...` line in `src/agent.py`.
+  </Step>
+
+  <Step title="Replace the argument">
+    Swap the one constructor argument. The other two are untouched.
+
+    ```python
+    llm=openai.LLM(model="gpt-4o-mini"),
+    ```
+  </Step>
+</Steps>
+
+Set the new provider's key in the root `.env` (and in `agent/.env` if you run
+the worker by hand). Then rebuild the worker image:
+
+```bash
+docker compose up -d --build agent
+```
+
+## Voice, model and language
+
+Model names are strings on the constructor, so changing a voice or a model
+version is a one-word edit. `inworld.TTS` also takes `voice`, which is
+`"Ashley"` by default.
+
+## VAD and turn detection are separate
+
+`vad` and `turn_handling` are not provider choices in the same sense:
+
+- The Silero VAD is loaded once per process in `prewarm()` and shared across
+  sessions through `ctx.proc.userdata["vad"]`.
+- Turn detection is LiveKit's `MultilingualModel`, and interruption is set to
+  VAD mode.
+
+Changing speech to text or the model does not touch either.
+
+<Note>
+  `scripts/doctor.py` probes Deepgram, Cerebras and Inworld by name. Its
+  provider list is hardcoded, so after a swap it checks a key the session no
+  longer uses. Its agent-name, LiveKit and stack checks stay correct.
+</Note>
+
+## Noise cancellation
+
+An opt-in, noted in a comment in `src/agent.py`:
+
+```bash
+cd agent
+uv add livekit-plugins-noise-cancellation
+```
+
+Then import `RoomInputOptions` from `livekit.agents` and `noise_cancellation`
+from `livekit.plugins`, and pass it to `session.start`:
+
+```python
+room_input_options=RoomInputOptions(
+    noise_cancellation=noise_cancellation.BVC(),
+)
+```
