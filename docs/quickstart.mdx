@@ -1,91 +1,114 @@
 ---
 title: Quickstart
-description: Fill in one env file, bring up the stack with one command, and start a test call.
+description: "Clone it, open it in a coding agent, type /setup."
 ---
 
-You need a LiveKit project (URL, API key, API secret) and three provider keys:
-Deepgram, Cerebras, Inworld. A free LiveKit Cloud project works.
+## With a coding agent
 
-<Steps>
-  <Step title="Copy the env file">
-    ```bash
-    cp .env.example .env
-    ```
+```bash
+git clone https://github.com/mahimailabs/shipvoice
+cd shipvoice
+```
 
-    Fill in `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`,
-    `DEEPGRAM_API_KEY`, `CEREBRAS_API_KEY` and `INWORLD_API_KEY`. Everything
-    else has a working default in compose or in code.
-  </Step>
+Open the folder in [Claude Code](https://claude.com/code), then type `/setup` at
+its prompt.
 
-  <Step title="Bring up the stack">
-    ```bash
-    docker compose up --build
-    ```
+It asks one question, what this agent should do, and does the rest: copies
+`.env.example` to `.env`, runs `scripts/doctor.py`, names the variables still
+missing and where each comes from, rewrites `agent/prompts/instructions.md` for
+what you described, brings the stack up, and runs the doctor again.
 
-    That is Postgres, the backend, the voice worker and the console. LiveKit
-    itself is external: the worker connects out to `LIVEKIT_URL`.
+Agents other than Claude Code read `AGENTS.md`, which carries the same facts.
+Open the repo in one and say "set this up".
 
-    The backend runs `alembic upgrade head` on startup, so there is no
-    migration step.
-  </Step>
+It will ask you for a LiveKit project (URL, API key, API secret) and three
+provider keys: Deepgram, Cerebras and Inworld. A free LiveKit Cloud project
+works.
 
-  <Step title="Start a test call">
-    Open [http://localhost:5173](http://localhost:5173), go to **Agents**, open
-    the agent, choose **Test call**, then **Start test call**. Allow the
-    microphone, then talk.
-  </Step>
-</Steps>
+<Note>
+  The agent never handles your API keys. You paste them into `.env` yourself.
+
+  Everything typed into a coding-agent conversation is written to that agent's
+  transcript on disk, so a key that passes through the chat is a key sitting in
+  a file you did not know to look in. `/setup` names the variable and the file,
+  then waits for you. That is the reason to trust this flow, not the price of
+  it.
+</Note>
+
+When the doctor passes, open [http://localhost:5173](http://localhost:5173), go
+to **Agents**, open the agent, then **Test call** and **Start test call**. Allow
+the microphone, then talk.
+
+## By hand
+
+```bash
+cp .env.example .env       # fill in the six values named below
+docker compose up --build  # postgres, backend, voice worker, console
+```
+
+The six are `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`,
+`DEEPGRAM_API_KEY`, `CEREBRAS_API_KEY` and `INWORLD_API_KEY`. Everything else
+has a working default. LiveKit is external: the worker connects out to
+`LIVEKIT_URL`. The backend brings the schema to head on startup, so there is no
+migration step.
+
+Then [http://localhost:5173](http://localhost:5173), **Agents**, open the agent,
+**Test call**, **Start test call**. The Agents list has no such control, the
+agent's own page does.
 
 <Warning>
   `docker compose` reads the root `.env` and nothing else. The `agent/.env`,
-  `backend/.env` and `frontend/.env` files exist for running a service by hand.
+  `backend/.env` and `frontend/.env` files are for running one service by hand.
   A value written into the wrong one produces a config that works one way and
   not the other.
 </Warning>
 
-## What is published where
+The console is [http://localhost:5173](http://localhost:5173), the backend
+[http://localhost:8000](http://localhost:8000) with OpenAPI at `/docs`. Both
+publish on `127.0.0.1`, so nothing is reachable from the network.
 
-| URL                                              | Service                        |
-| ------------------------------------------------ | ------------------------------ |
-| [http://localhost:5173](http://localhost:5173)   | the console                    |
-| [http://localhost:8000](http://localhost:8000)   | the backend, OpenAPI at `/docs` |
+### Console mode, before anything else is up
 
-Both are bound to `127.0.0.1`, so nothing is reachable from the network.
+The whole speech to model to speech loop in a terminal. No LiveKit, no backend,
+no database, no browser.
+
+```bash
+cd agent
+cp .env.example .env
+uv sync
+uv run python main.py console
+```
+
+The agent greets you first, then answers. It needs `DEEPGRAM_API_KEY`,
+`CEREBRAS_API_KEY` and `INWORLD_API_KEY` in `agent/.env` and nothing else. It is not offline: it calls the real Deepgram,
+Cerebras and Inworld APIs, and drops the transport and the storage, not the
+providers. A console run never reports a call, so the Calls page stays empty
+whatever `BACKEND_REPORTING_ENABLED` says.
+
+If console mode talks and the browser does not, the problem is transport or
+config, not the agent.
+
+### Running the three services separately
+
+Three terminals, one per service, each with its own `.env.example`.
+
+```bash
+cd backend && cp .env.example .env && uv sync && uv run uvicorn src.main:app --reload
+```
+
+```bash
+cd agent && cp .env.example .env && uv sync && uv run python main.py dev
+```
+
+```bash
+cd frontend && cp .env.example .env && pnpm install && pnpm dev
+```
 
 ## If nothing speaks
 
-Do not guess. Every failure in this stack is quiet: a mismatched agent name
-mints a valid token, opens a real room, and logs no error anywhere.
+Run the doctor rather than the logs. It names the cause and the fix, and
+[Troubleshooting](/troubleshooting) lists every symptom.
 
 ```bash
-cd agent
-uv run python ../scripts/doctor.py --live
-```
-
-It names the cause and the fix. See [Troubleshooting](/troubleshooting) for
-what it is checking and why.
-
-## Running the services by hand
-
-Three terminals, one per service. Each has its own `.env.example`.
-
-```bash
-cd backend
-cp .env.example .env
-uv sync
-uv run uvicorn src.main:app --reload
-```
-
-```bash
-cd agent
-cp .env.example .env
-uv sync
-uv run python main.py dev
-```
-
-```bash
-cd frontend
-cp .env.example .env
-pnpm install
-pnpm dev
+cd agent && uv run python ../scripts/doctor.py --live
 ```

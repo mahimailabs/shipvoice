@@ -1,9 +1,7 @@
 ---
 title: Deploy
-description: What Docker Compose gives you, and what has to change before this faces anything but your laptop.
+description: "What compose gives you, and what has to change before this faces anything but your laptop."
 ---
-
-## What compose is
 
 `docker-compose.yml` is a local stack: Postgres, the backend, the voice worker
 and the console, on one network, with both published ports bound to
@@ -26,7 +24,7 @@ external in every case: the worker connects out to `LIVEKIT_URL`.
   something in front of it, or do not expose it.
 </Warning>
 
-Three more facts that follow from that:
+Three facts follow from that:
 
 - **`CONSOLE_WRITES_ENABLED` stays off.** It defaults to `false` in code.
   Compose turns it on because compose is local. Anywhere else, leave it off and
@@ -39,32 +37,27 @@ Three more facts that follow from that:
 - **`CORS_ORIGINS_STR` unset means every origin is allowed.** Compose sets it
   to `http://localhost:5173`, but the code default is empty and
   `BACKEND_CORS_ORIGINS` returns `["*"]` for empty, so a backend started
-  without it accepts browser calls from anywhere. Set it explicitly on any
-  host that is not your own machine.
+  without it accepts browser calls from anywhere. Set it explicitly on any host
+  that is not your own machine.
 
-## The worker
+## The three services
 
 `agent/fly.toml` is set up for Fly: `performance-1x`, blue/green, and a
 `kill_timeout` of five minutes matching the `drain_timeout=300` on
 `AgentServer`. That pairing is what makes a deploy mid-call finish the call
-instead of dropping it.
+instead of dropping it. The worker also restarts itself when the stored LiveKit
+project changes, which is why the compose service carries
+`restart: unless-stopped`. Whatever you deploy onto needs the same: a process
+supervisor that brings it back.
 
-The worker restarts itself when the stored LiveKit project changes, which is
-why the compose service carries `restart: unless-stopped`. Whatever you deploy
-onto needs the same: a process supervisor that brings it back.
+The backend runs `alembic upgrade head` on startup under a Postgres advisory
+lock, so concurrent boots serialise. There is no separate migration step, and a
+slow database does not stop it booting: it serves tokens from the environment
+until Postgres catches up.
 
-## The backend
-
-It runs `alembic upgrade head` on startup, under a Postgres advisory lock so
-concurrent boots serialise. There is no separate migration step, and a slow
-database does not stop it booting: it serves tokens from the environment until
-Postgres catches up.
-
-## The console
-
-Static files. The three `VITE_` values are compiled in at build time, so the
-image is environment-specific: build one per environment, and never reuse a
-local image against a remote backend.
+The console is static files. The three `VITE_` values are compiled in at build
+time, so the image is environment-specific: build one per environment, and
+never reuse a local image against a remote backend.
 
 ## Where secrets live
 

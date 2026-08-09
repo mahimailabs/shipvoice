@@ -7,21 +7,23 @@ ShipVoice Lite is the free MIT starter for real-time voice agents. It is the
 whole loop, not a single script: microphone to speech recognition to model to
 speech, over WebRTC, with a console in front of it.
 
+Clone it, open it in a coding agent, type `/setup`. See the
+[Quickstart](/quickstart).
+
 "ShipVoice" names the product line. The free starter is ShipVoice Lite. The
 paid product is [ShipVoice Pro](https://shipvoice.dev), a separate repository
 that shares this one's stack and lineage.
 
 ## The three services
 
-| Service     | What it is                                                                                                                             |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `agent/`    | A LiveKit Agents worker. Deepgram `nova-3` speech to text, Cerebras `gemma-4-31b`, Inworld `inworld-tts-2`, Silero VAD, LiveKit's multilingual turn detector. |
-| `backend/`  | FastAPI. Mints LiveKit room tokens, stores the LiveKit project, serves the agent and its calls to the console.                          |
-| `frontend/` | The console. React, Vite, Tailwind, LiveKit's Agents UI components.                                                                    |
+| Service | What it is |
+| ------- | ---------- |
+| `agent/` | A LiveKit Agents worker. Deepgram `nova-3` speech to text, Cerebras `gemma-4-31b`, Inworld `inworld-tts-2`, Silero VAD, LiveKit's multilingual turn detector. |
+| `backend/` | FastAPI. Mints LiveKit room tokens, stores the LiveKit project, serves the agent and its calls to the console. |
+| `frontend/` | The console. React, Vite, Tailwind, LiveKit's Agents UI components. |
 
-Each runs on its own. The backend and the agent share one set of LiveKit
-credentials, so a backend-minted token is valid for the room the worker joins.
-Works against LiveKit Cloud or a self-hosted LiveKit.
+The backend and the agent share one set of LiveKit credentials, so a
+backend-minted token is valid for the room the worker joins.
 
 ## What is in the console
 
@@ -40,17 +42,6 @@ There is no authentication on the backend. Every route is open. There is no
 metering, no billing, no campaign runner and no evaluation harness. Those
 belong to [ShipVoice Pro](/pro).
 
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="terminal" href="/quickstart">
-    One command to Postgres, the backend, the worker and the console.
-  </Card>
-  <Card title="Console mode" icon="microphone" href="/console-mode">
-    Prove the agent talks before anything else is up.
-  </Card>
-</CardGroup>
-
-## License
-
 MIT for the code written here. Some UI components are vendored from public
-component registries and are licensed by their upstream authors. See
-`LICENSE` and `THIRD_PARTY_NOTICES.md` in the repository.
+component registries and are licensed by their upstream authors. See `LICENSE`
+and `THIRD_PARTY_NOTICES.md` in the repository.

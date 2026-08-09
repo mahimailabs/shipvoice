@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: The quiet failures in this stack, what each one looks like, and the fix.
+description: "The quiet failures in this stack, what each one looks like, and the fix."
 ---
 
 Every failure here is quiet. A mismatched agent name mints a valid token, opens
@@ -14,7 +14,7 @@ cd agent
 uv run python ../scripts/doctor.py --live
 ```
 
-It prints one line per check with the fix underneath. Without `--live` it reads
+One line per check, with the fix underneath. Without `--live` it reads
 configuration only. With `--live` it also probes the three provider APIs, asks
 `docker compose ps` whether all four services are running, hits the backend's
 `/health`, mints a real token, and reads `/api/v1/agents`.
@@ -24,16 +24,14 @@ Two things about how it reads config:
 - It runs through the agent's environment because it imports `httpx`. Hence
   `cd agent` and the `../` in the path.
 - It parses the **root** `.env` only. A key that lives in `agent/.env` and
-  nowhere else is invisible to it, and it will report that key as unset.
+  nowhere else is invisible to it, and it reports that key as unset.
 
 ## The room opens and nothing ever speaks
 
-`AGENT_NAME` and `VITE_AGENT_NAME` differ.
-
-LiveKit dispatches the worker by exact string match. When the two differ the
-token is valid, the room is real, the browser connects, and no worker is ever
-dispatched. Nothing errors. The doctor checks this before anything else for
-that reason.
+`AGENT_NAME` and `VITE_AGENT_NAME` differ. LiveKit dispatches the worker by
+exact string match, so when the two differ the token is valid, the room is real,
+the browser connects, and no worker is ever dispatched. Nothing errors. The
+doctor checks this before anything else for that reason.
 
 ```bash
 AGENT_NAME=assistant
@@ -45,8 +43,8 @@ Byte-identical, in the root `.env`. Change both or neither.
 ## You changed a `VITE_` value and nothing changed
 
 `VITE_TOKEN_ENDPOINT`, `VITE_AGENT_NAME` and `VITE_API_BASE_URL` are build
-arguments in `docker-compose.yml`. They are baked into the frontend bundle when
-the image is built.
+arguments in `docker-compose.yml`, baked into the frontend bundle when the image
+is built.
 
 ```bash
 docker compose up -d --build
@@ -69,25 +67,24 @@ case explicitly so you do not rotate a key that was never wrong.
 
 ## Saving the prompt in the console is refused
 
-Two different refusals, and the status code tells them apart.
+The status code tells the two refusals apart.
 
 - **403.** `CONSOLE_WRITES_ENABLED` is off. It defaults to `false` in code and
   compose sets it to `true`. The editor loads read-only and says why.
-- **409.** The backend has no read-write mount of `./agent/prompts`, so the
-  save cannot land. The message names the path it could not write, and the
-  prompt the agent is running is unchanged.
+- **409.** The backend has no read-write mount of `./agent/prompts`, so the save
+  cannot land. The message names the path it could not write, and the prompt the
+  agent is running is unchanged.
 
-See [Persona](/persona).
+See [Customize](/customize).
 
 ## Console edits to the LiveKit project do not reach the worker
 
-The worker takes its LiveKit project from the backend when `BACKEND_API_URL`
-and `BACKEND_API_TOKEN` are both set, and restarts itself when the stored
-project changes. Two failures:
+The worker takes its LiveKit project from the backend when `BACKEND_API_URL` and
+`BACKEND_API_TOKEN` are both set, and restarts itself when the stored project
+changes. Two failures:
 
-- `AGENT_SERVICE_TOKEN` and `BACKEND_API_TOKEN` differ. They are one secret
-  with two names. The backend answers 403 and the worker logs that it was
-  refused.
+- `AGENT_SERVICE_TOKEN` and `BACKEND_API_TOKEN` differ. They are one secret with
+  two names. The backend answers 403 and the worker logs that it was refused.
 - Both are empty. The endpoint that serves the credentials is disabled rather
   than opened, and the worker stays on its own environment.
 

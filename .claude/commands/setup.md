@@ -51,7 +51,8 @@ cd agent && uv run python ../scripts/doctor.py --live
 ```
 
 Report what the doctor says. If everything passes, tell them to open
-http://localhost:5173, go to Agents, and hit **Start test call**.
+http://localhost:5173, go to **Agents**, open the agent, then **Test call** and
+**Start test call**.
 
 If something fails, the doctor already named the cause and the fix. Do that,
 run it again, and do not start guessing at logs.
