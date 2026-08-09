@@ -2,12 +2,7 @@ from pydantic import BaseModel
 
 
 class DeploymentRead(BaseModel):
-    """Deployment posture, with nothing secret in it.
-
-    No API key, no secret, no database URL. The LiveKit URL is here because the
-    browser already receives it on every token request, so withholding it would
-    be theatre rather than security.
-    """
+    """Deployment posture, with nothing secret in it."""
 
     project_name: str
     env: str

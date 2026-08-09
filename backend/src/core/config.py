@@ -21,12 +21,9 @@ _SSL_OPTIONAL = {"allow", "prefer"}
 
 
 def _to_async_url(url: str) -> str:
-    """Coerce a Postgres URL to the asyncpg driver and drop libpq-only query
+    """
+    Coerce a Postgres URL to the asyncpg driver and drop libpq-only query
     params (sslmode, channel_binding) that asyncpg rejects.
-
-    Lets you paste a managed-Postgres URL (Neon/Supabase) verbatim, e.g.
-    ``postgresql://u:p@host/db?sslmode=require`` ->
-    ``postgresql+asyncpg://u:p@host/db``.
     """
     parts = urlsplit(url)
     base_scheme = parts.scheme.split("+", 1)[0]

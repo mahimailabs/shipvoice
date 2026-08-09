@@ -20,12 +20,7 @@ def _hint(api_key: str | None) -> str | None:
 
 
 class LiveKitSettingsService:
-    """The LiveKit project, with the database as the source of truth.
-
-    Env is the bootstrap, not the authority: it seeds the row on a fresh
-    database and is ignored from then on. That is the whole point of moving this
-    out of .env, a value changed in the console has to survive a restart.
-    """
+    """The LiveKit project, with the database as the source of truth."""
 
     def __init__(
         self,

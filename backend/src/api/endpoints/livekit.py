@@ -17,11 +17,7 @@ async def read_livekit(
         Provide[Container.livekit_settings_service]
     ),
 ) -> LiveKitRead:
-    """The LiveKit project, without the secret.
-
-    Safe to serve on an open backend: a url, four characters of the key, and
-    whether a secret exists. Nothing here is usable as a credential.
-    """
+    """The LiveKit project, without the secret."""
     return await service.read()
 
 
@@ -34,13 +30,7 @@ async def write_livekit(
     ),
     config: Config = Depends(Provide[Container.config]),
 ) -> LiveKitRead:
-    """Change the LiveKit project. Refused outside dev.
-
-    This backend has no authentication. An open write that repoints the LiveKit
-    project would let anyone who can reach the port take over the calls, so it
-    is allowed only where the console is what it was designed to be: a tool on
-    the machine you are sitting at. Deployed instances edit the env and restart.
-    """
+    """Change the LiveKit project. Refused outside dev."""
     if config.ENV != EnvironmentOption.DEV:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

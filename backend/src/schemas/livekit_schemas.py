@@ -2,13 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class LiveKitRead(BaseModel):
-    """What the console is allowed to see.
-
-    The secret is never here. This backend has no authentication, so an endpoint
-    that returned it would hand your LiveKit project to anyone who can reach the
-    port. The key is reduced to its last four characters for the same reason:
-    enough to tell two projects apart, not enough to use.
-    """
+    """What the console is allowed to see."""
 
     url: str | None
     api_key_hint: str | None

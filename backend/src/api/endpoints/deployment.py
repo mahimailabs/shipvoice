@@ -13,12 +13,7 @@ router = APIRouter(prefix="/deployment", tags=["deployment"])
 async def read_deployment(
     config: Config = Depends(Provide[Container.config]),
 ) -> DeploymentRead:
-    """What this deployment is pointed at.
-
-    Deliberately narrow: the project name and the environment, nothing else.
-
-    It reports no key and no secret.
-    """
+    """What this deployment is pointed at."""
     return DeploymentRead(
         project_name=config.PROJECT_NAME,
         env=str(config.ENV.value if hasattr(config.ENV, "value") else config.ENV),

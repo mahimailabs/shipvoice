@@ -18,11 +18,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.container.init_resources()
         logger.info("Container resources initialized")
 
-        # Seed the LiveKit project from the environment, once, on a database
-        # that has never had a row. This is what makes .env the way you
-        # bootstrap a fresh clone and the database the source of truth after.
-        # A database that is not up yet must not stop the app booting: token
-        # minting falls back to the environment until it is.
         try:
             await app.state.container.livekit_settings_service().seed_from_env()
         except Exception:

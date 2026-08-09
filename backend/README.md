@@ -1,4 +1,4 @@
-# Backend (FastAPI)
+# ShipVoice Backend
 
 Mints LiveKit room tokens and gives you a clean, layered FastAPI base
 (API → service → repository → model) to build on. Ships a `/token` endpoint plus

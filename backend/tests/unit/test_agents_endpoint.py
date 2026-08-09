@@ -1,11 +1,4 @@
-"""GET /api/v1/agents, and the guard that keeps it honest.
-
-The provider strings this endpoint reports are compiled into the worker, not
-configured, so the backend cannot observe them. It declares them instead, and
-the drift test below reads the worker's source and fails if they stop matching.
-Without it, the console would keep confidently reporting a model the agent
-stopped using.
-"""
+"""GET /api/v1/agents, and the guard that keeps it honest."""
 
 import pathlib
 

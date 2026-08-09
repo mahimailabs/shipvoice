@@ -21,16 +21,7 @@ PROMPT_PATH = "agent/src/prompts/instructions.py"
 async def list_agents(
     config: Config = Depends(Provide[Container.config]),
 ) -> AgentListResponse:
-    """List the agents this deployment runs.
-
-    One worker serves one agent, selected by AGENT_NAME, so this returns a
-    single row.
-
-    Unauthenticated, because the console has no sign-in. What it exposes is the
-    agent's name and the provider names already published in this repo's source
-    and README, so there is nothing here a reader of the repo does not have.
-    Adding "_actor: AdminUser" from src.api.deps gates it if you want it gated.
-    """
+    """List the agents this deployment runs."""
     return AgentListResponse(
         agents=[
             AgentSummary(

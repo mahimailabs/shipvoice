@@ -19,12 +19,7 @@ def require_service_token(
     credentials: HTTPAuthorizationCredentials = Depends(service_scheme),
     config: Config = Depends(Provide[Container.config]),
 ) -> None:
-    """The worker's only credential.
-
-    Fails closed on an unset token. An empty AGENT_SERVICE_TOKEN comparing equal
-    to an empty header would turn the one endpoint that serves the LiveKit
-    secret into a public one.
-    """
+    """The worker's only credential."""
     expected = config.AGENT_SERVICE_TOKEN
     if not expected:
         raise HTTPException(
@@ -48,13 +43,7 @@ async def read_credentials(
         Provide[Container.livekit_settings_service]
     ),
 ) -> LiveKitCredentials:
-    """The full LiveKit credentials, for the voice worker only.
-
-    This is the one place the secret leaves the process, which is why it is the
-    one place with a credential in front of it. The worker polls this and
-    restarts itself when the revision changes, so editing the project in the
-    console reaches the worker instead of silently diverging from it.
-    """
+    """The full LiveKit credentials, for the voice worker only."""
     creds = await service.credentials()
     revision = await service.revision()
     if creds is None:

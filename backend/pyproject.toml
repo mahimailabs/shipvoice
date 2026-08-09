@@ -22,12 +22,6 @@ dependencies = [
   "sqlmodel>=0.0.38",
 ]
 
-[tool.uv]
-# This is an application, not a library: nothing imports it as a package.
-# The runtime resolves src.main through PYTHONPATH, so uv must not try to
-# build a distribution from a src/<name> directory that does not exist.
-package = false
-
 [dependency-groups]
 dev = [
   "httpx>=0.27.0",
@@ -93,3 +87,6 @@ ignore = [
   "C901",
   "W191",
 ]
+
+[tool.uv]
+package = false

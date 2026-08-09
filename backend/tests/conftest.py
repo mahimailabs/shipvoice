@@ -1,7 +1,5 @@
 import os
 
-# Run the test suite in dev mode so importing config does not trip the
-# production JWT-secret check. Must be set before any src.* import.
 os.environ.setdefault("ENV", "dev")
 
 import pytest  # noqa: E402

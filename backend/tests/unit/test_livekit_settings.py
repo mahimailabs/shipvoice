@@ -1,9 +1,4 @@
-"""The LiveKit project resource.
-
-This backend has no authentication, so the value of these tests is mostly in
-what the endpoints refuse: the secret is never served, and the write is refused
-outside dev. A regression in either is a credential leak or a takeover.
-"""
+"""The LiveKit project resource."""
 
 import pytest
 from fastapi import FastAPI
