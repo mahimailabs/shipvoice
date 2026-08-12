@@ -20,6 +20,18 @@ export interface CallListResponse {
   total: number;
 }
 
+/**
+ * The call log's query. It lives here rather than beside the fetch, because the
+ * demo build serves the same call from fixtures and both have to spell the
+ * arguments the same way.
+ */
+export interface CallListParams {
+  limit?: number;
+  offset?: number;
+  channel?: string;
+  status?: string;
+}
+
 export interface TurnRead {
   id: number;
   role: "user" | "agent";

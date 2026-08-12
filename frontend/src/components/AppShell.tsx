@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Outlet } from "react-router";
 import { getLiveKit, listAgents, listCalls } from "../api";
+import { DemoBar } from "../demo/DemoBar";
+import { DEMO } from "../demo/flag";
 import { Rail } from "./Rail";
 import { LiveEventsBar } from "./ds";
 
@@ -50,6 +52,7 @@ export function AppShell() {
     <div className="sv-console fr">
       <Rail counts={{ agents: agentCount, calls: callCount }} />
       <div className="cv">
+        {DEMO && <DemoBar />}
         <div className="bd">
           <Outlet />
         </div>

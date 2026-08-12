@@ -1295,3 +1295,44 @@
     vertical-align: middle;
     cursor: help;
 }
+
+/* ---------- preview banner ---------- */
+/* Only in the demo build (VITE_DEMO), where the console runs on fixtures. It
+   sits above .bd rather than inside it, so it is on every screen and does not
+   scroll away, and it has no dismiss control on purpose: a banner people can
+   close is a banner people close, and then sample figures start reading as a
+   deployment's own. */
+.sv-console .demo-bar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px var(--pad-frame);
+    border-bottom: 1px solid var(--border-default);
+    background: var(--surface-sunken);
+    font: var(--type-body-sm);
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.sv-console .demo-tag {
+    flex: none;
+    padding: 2px 7px;
+    border-radius: var(--sv-radius-sm);
+    background: var(--accent-quiet);
+    color: var(--accent-quiet-text);
+    font: var(--type-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+}
+
+.sv-console .demo-say {
+    min-width: 0;
+    flex: 1 1 320px;
+}
+
+.sv-console .demo-bar a {
+    flex: none;
+    margin-left: auto;
+    white-space: nowrap;
+}

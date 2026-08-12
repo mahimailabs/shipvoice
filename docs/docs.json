@@ -41,6 +41,10 @@
   "navbar": {
     "links": [
       {
+        "label": "Demo",
+        "href": "https://shipvoice.dev/demo"
+      },
+      {
         "label": "Discord",
         "href": "https://discord.gg/ysFaF4uSB"
       },

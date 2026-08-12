@@ -60,9 +60,16 @@ describe("Rail", () => {
   });
 
 
-  it("uses the real ShipVoice mark", () => {
+  it("uses the real ShipVoice mark, resolved against the bundle's base", () => {
+    // Against BASE_URL rather than the literal "/logo-boat.svg": a build with a
+    // base, which is what the /demo preview is, serves it from under that base
+    // and a bare absolute path 404s there.
     const { container } = withRouter(<Rail />);
-    expect(container.querySelector('img[src="/logo-boat.svg"]')).not.toBeNull();
+    const mark = container.querySelector<HTMLImageElement>("img");
+    expect(mark).not.toBeNull();
+    expect(mark?.getAttribute("src")).toBe(
+      `${import.meta.env.BASE_URL}logo-boat.svg`,
+    );
   });
 });
 

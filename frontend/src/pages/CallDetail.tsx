@@ -135,7 +135,12 @@ export function CallDetail() {
         setDeleteError(
           e instanceof ApiError && e.isMissing
             ? "This call is already gone from the log."
-            : "Could not delete this call. Nothing was removed.",
+            : // Nobody answered, so the error's own sentence is the only
+              // account of why. The line below is true either way, but it does
+              // not say what to do about it.
+              e instanceof ApiError && e.status === 0 && e.message
+              ? e.message
+              : "Could not delete this call. Nothing was removed.",
         );
       });
   };

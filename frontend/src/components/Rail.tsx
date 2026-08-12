@@ -1,5 +1,15 @@
 import { NavLink } from "react-router";
 
+/**
+ * The mark, resolved against wherever this bundle is served from.
+ *
+ * It lives in public/, so Vite copies it verbatim and does not rewrite the
+ * reference the way it rewrites an imported asset. A bare "/logo-boat.svg"
+ * therefore 404s in any build with a base, which is what the /demo preview is.
+ * BASE_URL is "/" for the normal build and carries its own trailing slash.
+ */
+const MARK = `${import.meta.env.BASE_URL}logo-boat.svg`;
+
 type Item = {
   label: string;
   to?: string;
@@ -46,7 +56,7 @@ export function Rail({
   return (
     <aside className="rail">
       <div className="brand">
-        <img src="/logo-boat.svg" alt="" width={20} height={20} />
+        <img src={MARK} alt="" width={20} height={20} />
         <span>ShipVoice</span>
       </div>
 

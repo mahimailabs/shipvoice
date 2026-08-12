@@ -36,9 +36,26 @@ as editable source. Swap the visualizer by importing a different
 ```bash
 pnpm dev          # dev server
 pnpm build        # production build -> dist/
+pnpm build:demo   # public preview build -> dist-demo/
 pnpm run lint     # eslint
 pnpm test         # vitest
 ```
+
+## The preview build
+
+`pnpm build:demo` produces the console at shipvoice.dev/demo. It is this same
+app, with one substitution: `vite.config.ts` resolves `src/api.ts` to
+`src/demo/fixtures.ts`, so every read comes from a fixed sample deployment and
+every write is refused. Nothing in that bundle makes a request.
+
+Fixtures rather than a live deployment, because the backend has no
+authentication on any route: a public one would let anyone rewrite the agent's
+prompt, repoint the LiveKit project, and spend your provider credits.
+
+Settings live in `.env.demo`. `VITE_DEMO_BASE` moves it off `/demo/`, and the
+router switches to hashes so a deep link needs no server rewrite. A test call
+needs a real LiveKit project and a microphone, so that screen renders with its
+button disabled rather than replaying a conversation that never happened.
 
 ## Deploy
 

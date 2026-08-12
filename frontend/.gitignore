@@ -10,16 +10,19 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# The public preview build (pnpm build:demo).
+dist-demo
 *.local
 
 # Test coverage (vitest)
 coverage
 
-# Env (copy .env
-.env.*
-!.env.example.example -> .env)
+# Env (copy .env.example -> .env). Two files here are committed and carry no
+# secret: the example, and .env.demo, which configures the preview build.
 .env
-.env.local
+.env.*
+!.env.example
+!.env.demo
 
 # Editor directories and files
 .vscode/*
