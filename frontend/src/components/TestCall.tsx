@@ -11,6 +11,7 @@ import { AgentSessionProvider } from "@/components/agents-ui/agent-session-provi
 import { useInputControls } from "@/hooks/agents-ui/use-agent-control-bar";
 import { AGENT_NAME, tokenSource } from "@/lib/token-source";
 import { listAgents } from "../api";
+import { DEMO } from "../demo/flag";
 import type { AgentSummary } from "../types";
 import { Ann, TopBar } from "./AppShell";
 import { Badge, Button, Panel } from "./ds";
@@ -25,6 +26,17 @@ import { Badge, Button, Panel } from "./ds";
 // a unit on it implies a reading was attempted.
 
 const NO_JOIN_MS = 10_000;
+
+/**
+ * Why the preview draws this screen and will not run it.
+ *
+ * A test call opens a real WebRTC room against a real LiveKit project and takes
+ * a real microphone. None of that can be faked without inventing a conversation
+ * that never happened, so the preview shows the surface, disables the button,
+ * and says what is missing. There is no scripted transcript here.
+ */
+const DEMO_NO_CALL =
+  "A test call runs against your own LiveKit project and your own microphone, so it does not run in this preview. Clone the repo, add your keys, and this button places a real call to your worker.";
 
 const MONO = { fontFamily: "var(--font-mono)", color: "var(--text-primary)" };
 
@@ -221,9 +233,9 @@ function CallSurface({
       >
         {!connected ? (
           <p className="fnt" style={{ font: "var(--type-body-sm)", margin: 0 }}>
-            Talk to the agent from this browser. Your microphone is used only
-            while the call is connected, and the call runs through the same
-            LiveKit room a real caller would land in.
+            {DEMO
+              ? DEMO_NO_CALL
+              : "Talk to the agent from this browser. Your microphone is used only while the call is connected, and the call runs through the same LiveKit room a real caller would land in."}
           </p>
         ) : messages.length === 0 ? (
           <p className="fnt" style={{ font: "var(--type-body-sm)", margin: 0 }}>
@@ -270,7 +282,12 @@ function CallSurface({
           greyed Evaluations rail item is where that absence is stated. */}
       <div style={{ marginTop: "auto", display: "flex", gap: 8 }}>
         {!connected && (
-          <Button variant="primary" onClick={onStart} disabled={connecting}>
+          <Button
+            variant="primary"
+            onClick={onStart}
+            disabled={connecting || DEMO}
+            title={DEMO ? DEMO_NO_CALL : undefined}
+          >
             {connecting ? "Connecting…" : "Start test call"}
           </Button>
         )}
@@ -338,6 +355,10 @@ export function TestCall() {
   }, []);
 
   const start = (): void => {
+    // Belt and braces with the disabled button above. The preview is a static
+    // page on a public host, and it must not open a socket from there under any
+    // path, including one a browser extension or a stale bundle finds.
+    if (DEMO) return;
     setError(null);
     void session
       .start()
@@ -489,10 +510,12 @@ export function TestCall() {
               cost, so there is no figure to show for either.
             </p>
             <div style={{ marginTop: 16 }}>
+              {/* Present tense in the preview would claim this page places a
+                  real call, directly under the copy saying it does not. */}
               <Ann>
-                A test call runs on your own provider keys and your own LiveKit
-                project. It is a real call to the same worker a caller reaches,
-                and nothing here bills it to anyone.
+                {DEMO
+                  ? "In your own clone, a test call runs on your provider keys and your LiveKit project, and reaches the same worker a caller does. Nothing here does any of that."
+                  : "A test call runs on your own provider keys and your own LiveKit project. It is a real call to the same worker a caller reaches, and nothing here bills it to anyone."}
               </Ann>
             </div>
           </div>

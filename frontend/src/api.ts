@@ -1,8 +1,12 @@
-// The only module that knows the backend's base URL.
+// The only module that knows the backend's base URL, and the console's one seam
+// to it. The demo build (VITE_DEMO) resolves this specifier to
+// src/demo/fixtures.ts instead, so nothing below ships in that bundle. See the
+// alias in vite.config.ts.
 import type {
   AgentListResponse,
   AgentPromptRead,
   CallDetailResponse,
+  CallListParams,
   CallListResponse,
   CallOverviewResponse,
   CallRollupResponse,
@@ -13,30 +17,13 @@ import type {
   RoomTokenResponse,
 } from "./types";
 
+export { ApiError } from "./api-error";
+export type { CallListParams } from "./types";
+
+import { ApiError } from "./api-error";
+
 export const API_BASE =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
-export class ApiError extends Error {
-  readonly status: number;
-
-  constructor(status: number, message: string) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-
-  get isForbidden(): boolean {
-    return this.status === 401 || this.status === 403;
-  }
-
-  get isUnreachable(): boolean {
-    return this.status === 0 || this.status >= 500;
-  }
-
-  get isMissing(): boolean {
-    return this.status === 404;
-  }
-}
 
 /**
  * Turn a non-2xx into an ApiError.
@@ -72,13 +59,6 @@ async function get<T>(path: string, what: string): Promise<T> {
   }
   await guard(res, what);
   return (await res.json()) as T;
-}
-
-export interface CallListParams {
-  limit?: number;
-  offset?: number;
-  channel?: string;
-  status?: string;
 }
 
 export async function listCalls(

@@ -61,9 +61,14 @@ export function Deployment() {
     } catch (e: unknown) {
       setSave("error");
       setSaveError(
-        e instanceof ApiError && e.isForbidden
-          ? "Editing is only allowed when the backend runs with ENV=dev. Set these in the environment and restart."
-          : "Save failed. Check the URL starts with wss:// and the key is not blank.",
+        // Nobody answered, so the error's own sentence is the whole account of
+        // what happened. A guess about the URL would send the reader to fix a
+        // field when the backend is not running, or not there at all.
+        e instanceof ApiError && e.status === 0 && e.message
+          ? e.message
+          : e instanceof ApiError && e.isForbidden
+            ? "Editing is only allowed when the backend runs with ENV=dev. Set these in the environment and restart."
+            : "Save failed. Check the URL starts with wss:// and the key is not blank.",
       );
     }
   }
