@@ -1,14 +1,15 @@
 """What the voice worker reports about a call. Not for browsers.
 
-Guarded by the same shared service token as /internal/livekit, imported rather
-than reimplemented so there is one place that decides what a valid worker is.
-An unset AGENT_SERVICE_TOKEN disables these routes instead of opening them.
+The only writes this API takes. They come from the process that placed the
+call, not from the console, and they are guarded by the shared service token in
+src/api/service_token.py. An unset AGENT_SERVICE_TOKEN disables these routes
+instead of opening them.
 """
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
-from src.api.endpoints.internal_livekit import require_service_token
+from src.api.service_token import require_service_token
 from src.core.container import Container
 from src.schemas.calls_schemas import CallFinish, CallRead, CallStart, TurnAppend
 from src.services.calls_service import CallsService

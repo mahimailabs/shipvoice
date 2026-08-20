@@ -18,9 +18,11 @@ class Config(BaseSettings):
     ENV: str = "dev"
     PROJECT_NAME: str = "Voice Agent"
 
+    # Where this worker posts its call reports, and the token it posts with.
+    # Reporting is the only thing the worker asks the backend for: its LiveKit
+    # project comes from LIVEKIT_* in this process's own environment.
     BACKEND_API_URL: str | None = None
     BACKEND_API_TOKEN: str | None = None
-    LIVEKIT_SYNC_INTERVAL_SECONDS: float = 15.0
 
     # Whether the worker posts each call's start, its turns and its end to the
     # backend, which is what fills the console's Calls page. Off unless someone

@@ -30,30 +30,28 @@ class AgentListResponse(BaseModel):
 
 
 class AgentPromptRead(BaseModel):
-    """The persona file, and whether the console is allowed to rewrite it.
+    """The persona file as it is on disk, and where to edit it.
 
-    Every field is required. The console renders a text area, a byte counter and
-    a reason for a disabled save button from one response, and an optional field
-    would let it render half of that with no way to tell missing from absent.
+    Read only. The buyer changes what the agent says by opening the file this
+    response names, and git is the version history. There is no companion write
+    model here and there is not meant to be one.
+
+    Every field is required. The console renders the prompt, its size and its
+    path from one response, and an optional field would let it render half of
+    that with no way to tell missing from absent.
     """
 
     slug: str
     # What to call the file in the UI, not where it lives on this host. The path
     # on disk differs per deployment and means nothing to the person reading it.
+    # This is the field that stands where a platform would put a form.
     path: str
     # Empty when 'exists' is false. The worker falls back to a packaged default
-    # in that case, so an empty editor is not an empty agent.
+    # in that case, so an empty prompt here is not an agent with no prompt.
     content: str
     exists: bool
-    editable: bool
-    # Why a save would be refused. None exactly when 'editable' is true.
-    read_only_reason: str | None
     byte_size: int
-    max_bytes: int
-    # Notes worth showing next to the editor. Never a reason a save failed: a
-    # response carrying warnings is a response that already wrote the file.
+    # Notes worth showing next to the prompt: the file is missing, empty, or
+    # not the encoding it needs to be. Every one of them describes the file the
+    # worker is reading right now.
     warnings: list[str]
-
-
-class AgentPromptWrite(BaseModel):
-    content: str

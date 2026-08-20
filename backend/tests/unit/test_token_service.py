@@ -2,6 +2,7 @@ import pytest
 from fastapi import HTTPException
 from livekit.api import TokenVerifier
 
+from src.core.config import Config
 from src.schemas.token_schemas import RoomTokenRequest
 from src.services.token_service import TokenService
 
@@ -10,18 +11,24 @@ SECRET = "devsecret-devsecret-devsecret-1234"
 URL = "wss://example.livekit.cloud"
 
 
-class _FixedSettings:
-    """Stands in for the settings service: no database, fixed credentials."""
-
-    def __init__(self, credentials: tuple[str, str, str] | None) -> None:
-        self._credentials = credentials
-
-    async def credentials(self) -> tuple[str, str, str] | None:
-        return self._credentials
+def _config(**overrides) -> Config:
+    # Explicit values, not just _env_file=None: src/core/config.py calls
+    # load_dotenv() at import, so a developer's real .env is already in
+    # os.environ and pydantic-settings would read it.
+    return Config(
+        ENV="dev",
+        _env_file=None,
+        **{
+            "LIVEKIT_URL": URL,
+            "LIVEKIT_API_KEY": KEY,
+            "LIVEKIT_API_SECRET": SECRET,
+            **overrides,
+        },
+    )
 
 
 def _service() -> TokenService:
-    return TokenService(_FixedSettings((URL, KEY, SECRET)))
+    return TokenService(_config())
 
 
 def _claims(token: str):
@@ -76,6 +83,21 @@ async def test_room_config_enables_agent_dispatch():
 
 async def test_unconfigured_livekit_raises_503():
     """No credentials anywhere: refuse, rather than mint a token nobody can use."""
+    bare = _config(LIVEKIT_URL=None, LIVEKIT_API_KEY=None, LIVEKIT_API_SECRET=None)
     with pytest.raises(HTTPException) as exc:
-        await TokenService(_FixedSettings(None)).create_room_token(RoomTokenRequest())
+        await TokenService(bare).create_room_token(RoomTokenRequest())
     assert exc.value.status_code == 503
+
+
+async def test_the_first_boot_of_a_fresh_clone_mints_a_token():
+    """The credentials are environment, so no table can be in the way.
+
+    This used to be the bug that made the first run impossible: the project
+    lived in Postgres, and POST /api/v1/token answered 500 with a raw
+    UndefinedTableError against a database nobody had migrated yet. There is
+    now nothing between the environment and the signature, and the constructor
+    below is the proof: a Config is all this service is given.
+    """
+    service = TokenService(_config())
+    resp = await service.create_room_token(RoomTokenRequest(room_name="first-boot"))
+    assert _claims(resp.participant_token).video.room == "first-boot"

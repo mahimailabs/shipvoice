@@ -33,6 +33,12 @@ There is no auth. Every route is open, which is the right trade for a tool you
 run on your own machine and the wrong one on a public address. Read the deploy
 section of the root README before exposing it.
 
+Nothing here takes a write from a browser. The console reads the running
+configuration and the call log; the agent's prompt and the LiveKit project are
+files and environment, so changing them is an edit and a restart, and git is
+the history. The only writes are the voice worker's call reports, behind
+`AGENT_SERVICE_TOKEN`.
+
 ## Layout
 
 ```

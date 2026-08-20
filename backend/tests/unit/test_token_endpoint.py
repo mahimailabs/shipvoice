@@ -4,6 +4,7 @@ from httpx import ASGITransport, AsyncClient
 from livekit.api import TokenVerifier
 
 from src.api.endpoints.token import router as token_router
+from src.core.config import Config
 from src.core.container import Container
 from src.services.token_service import TokenService
 
@@ -12,20 +13,19 @@ SECRET = "devsecret-devsecret-devsecret-1234"
 URL = "wss://example.livekit.cloud"
 
 
-class _FixedSettings:
-    """Stands in for the settings service: no database, fixed credentials."""
-
-    def __init__(self, credentials: tuple[str, str, str] | None) -> None:
-        self._credentials = credentials
-
-    async def credentials(self) -> tuple[str, str, str] | None:
-        return self._credentials
-
-
 @pytest.fixture
 def token_app():
+    # Explicit values, not just _env_file=None: src/core/config.py calls
+    # load_dotenv() at import, so a developer's real .env would be read here.
+    config = Config(
+        ENV="dev",
+        _env_file=None,
+        LIVEKIT_URL=URL,
+        LIVEKIT_API_KEY=KEY,
+        LIVEKIT_API_SECRET=SECRET,
+    )
     container = Container()
-    container.token_service.override(TokenService(_FixedSettings((URL, KEY, SECRET))))
+    container.token_service.override(TokenService(config))
     container.wire(modules=["src.api.endpoints.token"])
 
     app = FastAPI()

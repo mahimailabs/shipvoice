@@ -1,5 +1,5 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query
 
 from src.core.container import Container
 from src.schemas.calls_schemas import (
@@ -17,6 +17,9 @@ from src.services.calls_service import (
     CallsService,
 )
 
+# Reads only. The call log is a record of what happened, and a console that can
+# edit the record is a console whose numbers nobody can trust. Removing a call
+# is a DELETE against the database, by hand and on purpose.
 router = APIRouter(prefix="/calls", tags=["calls"])
 
 
@@ -86,14 +89,3 @@ async def read_call(
 ) -> CallDetailResponse:
     """One call and everything said on it."""
     return await service.get_call_with_turns(call_id)
-
-
-@router.delete("/{call_id}", status_code=status.HTTP_204_NO_CONTENT)
-@inject
-async def delete_call(
-    call_id: int,
-    service: CallsService = Depends(Provide[Container.calls_service]),
-) -> Response:
-    """Remove a call and its transcript. 404 when it is already gone."""
-    await service.delete_call(call_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

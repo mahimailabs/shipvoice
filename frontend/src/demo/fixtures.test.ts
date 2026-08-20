@@ -11,8 +11,8 @@ import type { CallRead } from "../types";
 // the preview from breaking silently are here.
 //
 //   1. The contract. Fixtures must export everything api.ts exports, with
-//      compatible signatures. Adding a fourteenth call to api.ts and using it
-//      on a page must fail here rather than on shipvoice.dev.
+//      compatible signatures. Adding a tenth call to api.ts and using it on a
+//      page must fail here rather than on shipvoice.dev.
 //   2. The arithmetic. Every figure the Overview prints is folded out of the
 //      same call list the log renders, so a reader who counts the rows and
 //      compares them with "Calls today" gets the same answer.
@@ -39,7 +39,7 @@ describe("the demo seam matches the real api module", () => {
     expect(missing).toEqual([]);
   });
 
-  it("exports all thirteen calls plus the error type and the base", () => {
+  it("exports all ten calls plus the error type and the base", () => {
     // Named rather than counted, so a rename shows up as the name that went
     // missing instead of as an off-by-one.
     for (const name of [
@@ -47,15 +47,12 @@ describe("the demo seam matches the real api module", () => {
       "getSummary",
       "getCallOverview",
       "getCall",
-      "deleteCall",
       "listAgents",
       "getCallRollup",
       "getTestCallToken",
       "getAgentPrompt",
-      "putAgentPrompt",
       "getDeployment",
       "getLiveKit",
-      "saveLiveKit",
     ]) {
       expect(typeof (fixtures as Record<string, unknown>)[name]).toBe(
         "function",
@@ -75,11 +72,11 @@ describe("the demo seam matches the real api module", () => {
     expect(fixtures.API_BASE).not.toMatch(/localhost|http/);
   });
 
-  it("makes no request, on any of the thirteen", async () => {
+  it("makes no request, on any of the ten", async () => {
     // The reason the preview exists as fixtures rather than as a deployment:
     // the Lite backend has no authentication on any route, so a public one
-    // would let a stranger rewrite the prompt and spend someone else's
-    // provider credits. One request from this module and that is back.
+    // would let a stranger spend someone else's provider credits. One request
+    // from this module and that is back.
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const xhr = vi.spyOn(XMLHttpRequest.prototype, "open");
 
@@ -93,9 +90,6 @@ describe("the demo seam matches the real api module", () => {
       fixtures.getAgentPrompt("assistant"),
       fixtures.getDeployment(),
       fixtures.getLiveKit(),
-      fixtures.deleteCall(1),
-      fixtures.putAgentPrompt("assistant", "x"),
-      fixtures.saveLiveKit({ url: "wss://x", api_key: "k" }),
       fixtures.getTestCallToken("assistant"),
     ];
     await Promise.allSettled(calls);
@@ -109,39 +103,25 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("the preview refuses every write, and says why", () => {
-  const writes: [string, () => Promise<unknown>][] = [
-    ["deleteCall", () => fixtures.deleteCall(1)],
-    ["putAgentPrompt", () => fixtures.putAgentPrompt("assistant", "hi")],
-    [
-      "saveLiveKit",
-      () => fixtures.saveLiveKit({ url: "wss://x", api_key: "k" }),
-    ],
-    ["getTestCallToken", () => fixtures.getTestCallToken("assistant")],
-  ];
-
-  for (const [name, run] of writes) {
-    it(`${name} refuses rather than pretending to succeed`, async () => {
-      await expect(run()).rejects.toBeInstanceOf(ApiError);
-      await run().catch((e: unknown) => {
-        const err = e as ApiError;
-        // Status 0 is "the request reached nobody", which is exactly true here.
-        expect(err.status).toBe(0);
-        expect(err.message).toMatch(/no backend behind this page/i);
-        // Nothing may read as a write that landed. "Written to
-        // agent/prompts/instructions.md" is the console's success wording.
-        expect(err.message).not.toMatch(/written to|to disk/i);
-      });
+describe("the preview refuses the one call that needs a live room", () => {
+  it("getTestCallToken refuses rather than pretending to succeed", async () => {
+    const run = () => fixtures.getTestCallToken("assistant");
+    await expect(run()).rejects.toBeInstanceOf(ApiError);
+    await run().catch((e: unknown) => {
+      const err = e as ApiError;
+      // Status 0 is "the request reached nobody", which is exactly true here.
+      expect(err.status).toBe(0);
+      expect(err.message).toMatch(/no backend behind this page/i);
+      // Nothing may read as something that landed somewhere.
+      expect(err.message).not.toMatch(/written to|to disk/i);
     });
-  }
+  });
 
-  it("serves the prompt read-only rather than offering a save that cannot land", async () => {
+  it("serves the prompt file the clone ships, not an invention", async () => {
     const prompt = await fixtures.getAgentPrompt("assistant");
-    expect(prompt.editable).toBe(false);
-    expect(prompt.read_only_reason).toMatch(/no backend/i);
     expect(prompt.exists).toBe(true);
-    // The file this repo ships, not an invention: it is the one thing on the
-    // Agents page a reader can check against the clone.
+    // It is the one thing on the Agents page a reader can check against the
+    // clone, and there is nothing here that could have edited it.
     expect(prompt.content).toContain("{agent_name}");
     expect(prompt.byte_size).toBe(
       new TextEncoder().encode(prompt.content).length,

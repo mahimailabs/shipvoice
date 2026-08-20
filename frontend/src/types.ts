@@ -141,28 +141,27 @@ export interface DeploymentRead {
   livekit_url: string | null;
 }
 
-/** The LiveKit project. The secret is never sent, only whether one is set. */
+/**
+ * The LiveKit project this deployment booted with.
+ *
+ * A mirror of the environment, and the whole of it: there is no write model
+ * beside this one, and no field saying where the values came from, because
+ * there is only one place they can come from. The secret is never sent, only
+ * whether one is set.
+ */
 export interface LiveKitRead {
   url: string | null;
   api_key_hint: string | null;
   secret_set: boolean;
-  source: "database" | "environment";
-  /** False when no service token is set, which is the shipped default. */
-  worker_follows: boolean;
-}
-
-export interface LiveKitWrite {
-  url: string;
-  api_key: string;
-  /** Blank means keep the stored secret: the console cannot read it back. */
-  api_secret?: string;
 }
 
 /**
  * The agent's system prompt, as the file on disk.
  *
- * There is no database behind this and no revision history: the file is the
- * single source of truth, and every field here describes that one file.
+ * There is no database behind this and no revision history here: the file is
+ * the single source of truth and git is the history. Read only, so there is no
+ * companion write model and no field describing whether a save would be
+ * allowed.
  */
 export interface AgentPromptRead {
   slug: string;
@@ -172,14 +171,8 @@ export interface AgentPromptRead {
   content: string;
   /** False when the file is not on disk yet. The agent then uses its default. */
   exists: boolean;
-  /** CONSOLE_WRITES_ENABLED, and the target is writable. */
-  editable: boolean;
-  /** Why editable is false. Null when it is true. */
-  read_only_reason: string | null;
   /** utf-8 byte length of content. */
   byte_size: number;
-  /** The cap a save enforces. */
-  max_bytes: number;
-  /** Non-blocking notes about the prompt. Never an error, never a refusal. */
+  /** Non-blocking notes about the file. Never an error, never a refusal. */
   warnings: string[];
 }

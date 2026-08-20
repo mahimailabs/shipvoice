@@ -15,7 +15,7 @@ from sqlalchemy import ColumnElement
 from sqlalchemy import select as sa_select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import case, col, delete, func, select
+from sqlmodel import case, col, func, select
 
 from src.models.calls_model import Call, Turn
 
@@ -166,19 +166,6 @@ class CallsRepository:
                 .order_by(col(Turn.spoken_at), col(Turn.id))
             )
             return call, rows.scalars().all()
-
-    async def delete(self, call_id: int) -> bool:
-        """Remove a call and its transcript. False when it was already gone."""
-        async with self._session_factory() as session:
-            call = await session.get(Call, call_id)
-            if call is None:
-                return False
-            # Turns first. The foreign key will not let them stay pointed at a
-            # call that no longer exists.
-            await session.execute(delete(Turn).where(col(Turn.call_id) == call_id))
-            await session.delete(call)
-            await session.commit()
-            return True
 
     async def counts_since(
         self, since: datetime

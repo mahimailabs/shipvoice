@@ -45,12 +45,12 @@ pnpm test         # vitest
 
 `pnpm build:demo` produces the console at shipvoice.dev/demo. It is this same
 app, with one substitution: `vite.config.ts` resolves `src/api.ts` to
-`src/demo/fixtures.ts`, so every read comes from a fixed sample deployment and
-every write is refused. Nothing in that bundle makes a request.
+`src/demo/fixtures.ts`, so every read comes from a fixed sample deployment.
+Nothing in that bundle makes a request.
 
 Fixtures rather than a live deployment, because the backend has no
-authentication on any route: a public one would let anyone rewrite the agent's
-prompt, repoint the LiveKit project, and spend your provider credits.
+authentication on any route: a public one would let anyone read your call
+transcripts and spend your provider credits on test calls.
 
 Settings live in `.env.demo`. `VITE_DEMO_BASE` moves it off `/demo/`, and the
 router switches to hashes so a deep link needs no server rewrite. A test call

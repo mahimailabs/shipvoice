@@ -26,25 +26,26 @@ def _upgrade_to_head() -> None:
     # env.py calls fileConfig(), whose disable_existing_loggers default sets
     # disabled=True on every logger that already exists. configure_logging()
     # ran moments ago, so without this the app silences its own logging for the
-    # life of the process, including the warnings that say the env fallback is
-    # active. migrations/env.py honours this flag.
+    # life of the process. migrations/env.py honours this flag.
     cfg.attributes["configure_logger"] = False
     # env.py reads the database URL from the app config, so nothing to pass.
     command.upgrade(cfg, "head")
 
 
 async def _prepare_database(container) -> None:
-    """Migrate, then seed the LiveKit project, under one lock.
+    """Bring the schema up to head, once, however many workers boot.
 
     Gunicorn runs several workers and each one executes this. Alembic is not
-    safe to run concurrently against one database, and the seed's
-    check-then-insert is not atomic either, which is how a single-row table
-    ended up with two rows. A Postgres advisory lock serialises both: the first
-    worker does the work, the rest find it done.
+    safe to run concurrently against one database, so a Postgres advisory lock
+    serialises it: the first worker migrates, the rest find it done.
+
+    The database holds the call log and nothing else. No configuration is
+    seeded here, because none of it lives in a table: the LiveKit project comes
+    from the environment and the agent's prompt is a file.
 
     Nothing in here is allowed to stop the app booting. A backend that refuses
-    to start because Postgres is slow is worse than one that serves tokens from
-    the environment until the database catches up.
+    to start because Postgres is slow is worse than one that serves tokens
+    until the database catches up.
     """
     database = container.database()
 
@@ -55,7 +56,6 @@ async def _prepare_database(container) -> None:
         try:
             await asyncio.to_thread(_upgrade_to_head)
             logger.info("Schema is at head")
-            await container.livekit_settings_service().seed_from_env()
         finally:
             await session.execute(
                 text("SELECT pg_advisory_unlock(:k)"), {"k": _STARTUP_LOCK_KEY}
@@ -73,12 +73,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         try:
             await _prepare_database(app.state.container)
         except Exception:
-            # The service layer falls back to the environment for LiveKit
-            # credentials when it cannot read the table, so the voice path
-            # still works from here.
+            # The voice path does not read the database at all: room tokens are
+            # signed from the environment, so a call still connects from here.
+            # Only the call log is unavailable until the schema lands.
             logger.warning(
-                "Could not prepare the database. The API will run on the "
-                "environment; run 'alembic upgrade head' once Postgres is up.",
+                "Could not prepare the database. The call log will be "
+                "unavailable; run 'alembic upgrade head' once Postgres is up.",
                 exc_info=True,
             )
 

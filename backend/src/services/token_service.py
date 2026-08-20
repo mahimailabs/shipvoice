@@ -3,9 +3,9 @@ import uuid
 from google.protobuf.json_format import ParseDict
 from livekit import api
 
+from src.core.config import Config
 from src.core.exceptions import create_service_unavailable_exception
 from src.schemas.token_schemas import RoomTokenRequest, RoomTokenResponse
-from src.services.livekit_settings_service import LiveKitSettingsService
 
 
 def _to_room_config(data: dict) -> "api.RoomConfiguration":
@@ -20,20 +20,31 @@ def _to_room_config(data: dict) -> "api.RoomConfiguration":
 class TokenService:
     """Mints LiveKit room access tokens.
 
-    Reads the credentials through the settings service on every call rather than
-    capturing them at construction, so a change made in the console takes effect
-    on the next token without restarting the process.
+    The credentials come from the environment and nowhere else, so this path
+    touches no table and cannot be broken by a database that is unmigrated,
+    slow or absent. A fresh clone mints a token on its first boot.
     """
 
-    def __init__(self, settings: LiveKitSettingsService) -> None:
-        self._settings = settings
+    def __init__(self, config: Config) -> None:
+        self._config = config
+
+    def _credentials(self) -> tuple[str, str, str] | None:
+        """(url, key, secret) for signing, or None when unconfigured."""
+        url = self._config.LIVEKIT_URL
+        key = self._config.LIVEKIT_API_KEY
+        secret = (
+            self._config.LIVEKIT_API_SECRET.get_secret_value()
+            if self._config.LIVEKIT_API_SECRET
+            else None
+        )
+        return (url, key, secret) if (url and key and secret) else None
 
     async def create_room_token(self, payload: RoomTokenRequest) -> RoomTokenResponse:
-        credentials = await self._settings.credentials()
+        credentials = self._credentials()
         if credentials is None:
             raise create_service_unavailable_exception(
-                "LiveKit is not configured: set LIVEKIT_URL, LIVEKIT_API_KEY, "
-                "and LIVEKIT_API_SECRET, or set them from the console"
+                "LiveKit is not configured: set LIVEKIT_URL, LIVEKIT_API_KEY "
+                "and LIVEKIT_API_SECRET in the environment, then restart"
             )
         url, key, secret = credentials
 

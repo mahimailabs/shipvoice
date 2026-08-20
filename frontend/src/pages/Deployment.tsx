@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
-import { ApiError, getLiveKit, saveLiveKit } from "../api";
+import { ApiError, getLiveKit } from "../api";
 import { Ann, TopBar } from "../components/AppShell";
-import { Badge, Button, Panel } from "../components/ds";
+import { Badge, Panel } from "../components/ds";
 import type { LiveKitRead } from "../types";
 
-type Save = "idle" | "saving" | "saved" | "error";
+// The deployment, as configured.
+//
+// A mirror, not a form. The LiveKit project comes from the environment the
+// services booted with, so this page reads it back and says where to change it.
+// The buyer is the operator: they own the .env file and the process, and a
+// restart is how an edit to one reaches the other.
 
 export function Deployment() {
   const [lk, setLk] = useState<LiveKitRead | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [url, setUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [apiSecret, setApiSecret] = useState("");
-  const [confirming, setConfirming] = useState(false);
-  const [save, setSave] = useState<Save>("idle");
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -34,48 +32,6 @@ export function Deployment() {
     };
   }, []);
 
-  function startEditing(): void {
-    setConfirming(false);
-    setUrl(lk?.url ?? "");
-    setApiKey("");
-    setApiSecret("");
-    setSave("idle");
-    setSaveError(null);
-    setEditing(true);
-  }
-
-  async function submit(): Promise<void> {
-    setSave("saving");
-    setSaveError(null);
-    try {
-      const next = await saveLiveKit({
-        url: url.trim(),
-        api_key: apiKey.trim(),
-        // Blank means keep whatever is stored.
-        api_secret: apiSecret.trim() || undefined,
-      });
-      setLk(next);
-      setSave("saved");
-      setEditing(false);
-      setConfirming(false);
-    } catch (e: unknown) {
-      setSave("error");
-      setSaveError(
-        // Nobody answered, so the error's own sentence is the whole account of
-        // what happened. A guess about the URL would send the reader to fix a
-        // field when the backend is not running, or not there at all.
-        e instanceof ApiError && e.status === 0 && e.message
-          ? e.message
-          : e instanceof ApiError && e.isForbidden
-            ? "Editing is only allowed when the backend runs with ENV=dev. Set these in the environment and restart."
-            : "Save failed. Check the URL starts with wss:// and the key is not blank.",
-      );
-    }
-  }
-
-  const canSave =
-    url.trim().length > 0 && apiKey.trim().length > 0 && save !== "saving";
-
   return (
     <>
       <TopBar
@@ -87,64 +43,14 @@ export function Deployment() {
             </Badge>
           )
         }
-        meta={
-          lk?.source === "database"
-            ? "stored"
-            : lk
-              ? "from the environment"
-              : undefined
-        }
+        meta={lk ? "from the environment" : undefined}
       />
 
       <div className="pad">
-        <Panel
-          title="LiveKit"
-          meta={
-            editing
-              ? "the secret is never shown"
-              : "the project this deployment calls"
-          }
-          actions={
-            editing || confirming ? undefined : (
-              <Button size="sm" onClick={() => setConfirming(true)}>
-                Edit
-              </Button>
-            )
-          }
-        >
+        <Panel title="LiveKit" meta="the project this deployment calls">
           {loadError && <p className="na">{loadError}</p>}
 
-          {!loadError && confirming && (
-            <div className="banner planned" role="alertdialog">
-              <Badge tone="warning">heads up</Badge>
-              <div>
-                <p style={{ margin: 0, font: "var(--type-body-sm)" }}>
-                  Saving a new project restarts the voice worker so it connects
-                  to it. Any call in progress finishes first, but the worker is
-                  unavailable for a few seconds while it comes back, and calls
-                  that arrive in that window are missed.
-                </p>
-                <div className="row" style={{ gap: 8, marginTop: 10 }}>
-                  <button
-                    type="button"
-                    className="btn p sm"
-                    onClick={startEditing}
-                  >
-                    Edit anyway
-                  </button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setConfirming(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!loadError && !editing && !confirming && (
+          {!loadError && (
             <div className="kvs">
               <div className="kv">
                 <span className="k">Project URL</span>
@@ -168,76 +74,11 @@ export function Deployment() {
                 className="mut"
                 style={{ font: "var(--type-caption)", margin: "8px 0 0" }}
               >
-                {lk?.source === "database"
-                  ? "Stored here. The environment seeded it once and is no longer read."
-                  : "Read from the environment. It will be stored the first time you save."}
+                Read from the environment. To point this deployment at another
+                project, edit LIVEKIT_URL, LIVEKIT_API_KEY and
+                LIVEKIT_API_SECRET in .env and restart the services.
               </p>
             </div>
-          )}
-
-          {!loadError && editing && (
-            <form
-              className="kvs"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void submit();
-              }}
-            >
-              <label className="fld">
-                <span className="lb">Project URL</span>
-                <input
-                  className="in"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="wss://your-project.livekit.cloud"
-                  autoComplete="off"
-                />
-              </label>
-              <label className="fld">
-                <span className="lb">API key</span>
-                <input
-                  className="in"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder={lk?.api_key_hint ?? "APIxxxxxxxx"}
-                  autoComplete="off"
-                />
-              </label>
-              <label className="fld">
-                <span className="lb">API secret</span>
-                <input
-                  className="in"
-                  type="password"
-                  value={apiSecret}
-                  onChange={(e) => setApiSecret(e.target.value)}
-                  placeholder={
-                    lk?.secret_set
-                      ? "leave blank to keep the stored one"
-                      : "required"
-                  }
-                  autoComplete="off"
-                />
-              </label>
-
-              <div className="row" style={{ gap: 8, marginTop: 4 }}>
-                <button type="submit" className="btn p sm" disabled={!canSave}>
-                  {save === "saving" ? "Saving" : "Save"}
-                </button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-
-              {saveError && (
-                <p role="alert" className="na" style={{ margin: 0 }}>
-                  {saveError}
-                </p>
-              )}
-            </form>
           )}
         </Panel>
 
@@ -260,23 +101,12 @@ export function Deployment() {
           </p>
         </Panel>
 
-        {save === "saved" && (
-          <p
-            className="mut"
-            style={{ font: "var(--type-body-sm)", margin: "0 0 12px" }}
-          >
-            Saved. The worker checks for this and restarts itself within about
-            fifteen seconds. If you run it by hand rather than under Docker or
-            Fly, start it again yourself.
-          </p>
-        )}
-
         <Ann>
-          The worker takes its LiveKit project from here, not from its own
-          environment, so a change reaches the process placing calls instead of
-          silently disagreeing with it. The secret is write-only: this backend
-          has no sign-in, so nothing usable as a credential is ever sent back to
-          the browser.
+          Nothing on this page can be changed from here, and there is nowhere
+          for a change to be stored: the environment is the record and the
+          console only reads it. The secret never leaves the backend either,
+          only whether one is set, so nothing usable as a credential reaches the
+          browser.
         </Ann>
       </div>
     </>
