@@ -9,15 +9,9 @@ from src.schemas.agents_schemas import (
     AgentListResponse,
     AgentPattern,
     AgentPromptRead,
-    AgentPromptWrite,
     AgentSummary,
 )
-from src.services.agent_prompt_service import (
-    WRITES_DISABLED_REASON,
-    AgentPromptService,
-    PromptTooLargeError,
-    PromptWriteFailedError,
-)
+from src.services.agent_prompt_service import AgentPromptService
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -71,10 +65,14 @@ def _known_agent_or_404(slug: str, config: Config) -> None:
     )
 
 
-# Two path segments with a literal at the end, so neither of these can shadow
-# the list route above or each other. There is deliberately no bare
-# "/{slug}" route: adding one later would have to be declared after these, or
-# it would swallow every prompt request as a slug lookup.
+# Two path segments with a literal at the end, so this cannot shadow the list
+# route above. There is deliberately no bare "/{slug}" route: adding one later
+# would have to be declared after this, or it would swallow every prompt
+# request as a slug lookup.
+#
+# There is no PUT here either, and that is the architecture rather than an
+# omission. The prompt is a file the buyer edits and git tracks. The console
+# reports its path so the reader knows which file that is.
 @router.get("/{slug}/prompt", response_model=AgentPromptRead)
 @inject
 async def read_agent_prompt(
@@ -85,35 +83,3 @@ async def read_agent_prompt(
     """The agent's persona. 200 with exists=false when there is no file yet."""
     _known_agent_or_404(slug, config)
     return await service.read()
-
-
-@router.put("/{slug}/prompt", response_model=AgentPromptRead)
-@inject
-async def write_agent_prompt(
-    slug: str,
-    payload: AgentPromptWrite,
-    config: Config = Depends(Provide[Container.config]),
-    service: AgentPromptService = Depends(Provide[Container.agent_prompt_service]),
-) -> AgentPromptRead:
-    """Rewrite the persona. The next call speaks it, with no restart."""
-    # Before the write gate, so a typo in the slug reads as a typo rather than
-    # as a permissions problem on an agent that does not exist.
-    _known_agent_or_404(slug, config)
-    if not config.CONSOLE_WRITES_ENABLED:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=WRITES_DISABLED_REASON,
-        )
-    try:
-        return await service.write(payload.content)
-    except PromptTooLargeError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
-        ) from exc
-    except PromptWriteFailedError as exc:
-        # 409 rather than 500: the request was fine and the file is intact. What
-        # failed is the deployment's ability to accept it, and the detail says
-        # which mount to fix.
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
-        ) from exc

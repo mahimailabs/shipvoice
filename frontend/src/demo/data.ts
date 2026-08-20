@@ -106,8 +106,6 @@ export const DEMO_LIVEKIT: LiveKitRead = {
   url: "wss://demo-project.example.com",
   api_key_hint: "APIdemo000000",
   secret_set: true,
-  source: "environment",
-  worker_follows: false,
 };
 
 export const DEMO_DEPLOYMENT: DeploymentRead = {

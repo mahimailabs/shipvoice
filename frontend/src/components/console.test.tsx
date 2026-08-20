@@ -9,56 +9,32 @@ function withRouter(ui: React.ReactNode) {
 }
 
 describe("Rail", () => {
-  it("renders the reference console's three groups", () => {
+  it("lists the three pages this repo serves", () => {
     withRouter(<Rail />);
-    ["Watch", "Run", "Build"].forEach((g) =>
-      expect(screen.getByText(g)).toBeInTheDocument(),
+    ["Overview", "Calls", "Agents"].forEach((label) =>
+      expect(screen.getByText(label)).toBeInTheDocument(),
     );
   });
 
-  it("shows all seven items from the reference design", () => {
+  it("carries no entry for a module the free repo does not have", () => {
+    // A boilerplate does not grey out a door it never built. There is no
+    // campaigns module here, so there is no Campaigns entry to disable.
     withRouter(<Rail />);
-    [
-      "Overview",
-      "Calls",
-      "Campaigns",
-      "Channels",
-      "Customers",
-      "Agents",
-      "Evaluations",
-    ].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument());
-  });
-
-  it("leaves the four unbacked surfaces inert and unlabelled", () => {
-    // Grey and not clickable. No badge: the reference has none there, and a
-    // label would be selling rather than describing.
-    withRouter(<Rail />);
-    expect(screen.getAllByTestId("nav-inactive")).toHaveLength(4);
-    expect(screen.queryByText("Pro")).toBeNull();
-  });
-
-  it("does not make the inactive items clickable", () => {
-    // There is nothing behind them in this repo, so a link would lead nowhere
-    // useful.
-    const { container } = withRouter(<Rail />);
-    const links = Array.from(container.querySelectorAll("a")).map(
-      (a) => a.textContent ?? "",
+    ["Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) =>
+      expect(screen.queryByText(label)).toBeNull(),
     );
-    ["Campaigns", "Channels", "Customers", "Evaluations"].forEach((label) => {
-      expect(links.some((text) => text.includes(label))).toBe(false);
-    });
   });
 
-  it("keeps the free surfaces navigable", () => {
+  it("makes every entry a link, and nothing else", () => {
     const { container } = withRouter(<Rail />);
+    expect(container.querySelector("[aria-disabled]")).toBeNull();
     const hrefs = Array.from(container.querySelectorAll("a")).map((a) =>
       a.getAttribute("href"),
     );
-    expect(hrefs).toEqual(
-      expect.arrayContaining(["/", "/calls", "/agents", "/deployment"]),
-    );
+    // Exact, not arrayContaining: this list is the whole rail, and a new entry
+    // has to be a page before it can be a link.
+    expect(hrefs).toEqual(["/", "/calls", "/agents", "/deployment"]);
   });
-
 
   it("uses the real ShipVoice mark, resolved against the bundle's base", () => {
     // Against BASE_URL rather than the literal "/logo-boat.svg": a build with a

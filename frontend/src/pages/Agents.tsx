@@ -406,7 +406,7 @@ export function Agents() {
   const topBar = (
     <TopBar
       title="Agents"
-      meta="authored in Claude Code, providers editable here"
+      meta="authored in Claude Code, configured in files"
       actions={
         <Button
           size="sm"

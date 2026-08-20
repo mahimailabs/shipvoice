@@ -2,6 +2,11 @@
 // to it. The demo build (VITE_DEMO) resolves this specifier to
 // src/demo/fixtures.ts instead, so nothing below ships in that bundle. See the
 // alias in vite.config.ts.
+//
+// Every call here is a read. The console shows what the deployment is running
+// and what it has run; the configuration behind it lives in files and the
+// environment, and is changed there. The one POST is the browser test call,
+// which mints a room token rather than storing anything.
 import type {
   AgentListResponse,
   AgentPromptRead,
@@ -13,7 +18,6 @@ import type {
   CallSummaryResponse,
   DeploymentRead,
   LiveKitRead,
-  LiveKitWrite,
   RoomTokenResponse,
 } from "./types";
 
@@ -29,11 +33,9 @@ export const API_BASE =
  * Turn a non-2xx into an ApiError.
  *
  * FastAPI puts the sentence worth reading in `detail`, and for some refusals
- * that sentence is the whole message: a refused write names the flag that would
- * allow it, and a failed write names the path and the mount it needs. Prefer it,
- * and keep the generic line for a response that carries no detail at all.
- * A validation error's detail is a list rather than a string, so only a string
- * is taken.
+ * that sentence is the whole message. Prefer it, and keep the generic line for
+ * a response that carries no detail at all. A validation error's detail is a
+ * list rather than a string, so only a string is taken.
  */
 async function guard(res: Response, what: string): Promise<void> {
   if (res.ok) return;
@@ -104,16 +106,6 @@ export async function getCall(
   return get<CallDetailResponse>(`/api/v1/calls/${id}`, "Loading the call");
 }
 
-export async function deleteCall(id: number | string): Promise<void> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}/api/v1/calls/${id}`, { method: "DELETE" });
-  } catch {
-    throw new ApiError(0, "Could not reach the backend");
-  }
-  await guard(res, "Deleting the call");
-}
-
 export async function listAgents(): Promise<AgentListResponse> {
   return get<AgentListResponse>("/api/v1/agents", "Loading agents");
 }
@@ -150,7 +142,8 @@ export async function getTestCallToken(
 
 /**
  * The agent's system prompt file. A file that is not on disk yet is a 200 with
- * exists false, never a 404, so the console can offer to write the first one.
+ * exists false, never a 404, so a missing prompt reads as a missing file rather
+ * than as a missing agent. Read only: the buyer edits the file.
  */
 export async function getAgentPrompt(slug: string): Promise<AgentPromptRead> {
   return get<AgentPromptRead>(
@@ -159,47 +152,10 @@ export async function getAgentPrompt(slug: string): Promise<AgentPromptRead> {
   );
 }
 
-/** Replace the prompt file. The backend writes it atomically. */
-export async function putAgentPrompt(
-  slug: string,
-  content: string,
-): Promise<AgentPromptRead> {
-  let res: Response;
-  try {
-    res = await fetch(
-      `${API_BASE}/api/v1/agents/${encodeURIComponent(slug)}/prompt`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      },
-    );
-  } catch {
-    throw new ApiError(0, "Could not reach the backend");
-  }
-  await guard(res, "Saving the prompt");
-  return (await res.json()) as AgentPromptRead;
-}
-
 export async function getDeployment(): Promise<DeploymentRead> {
   return get<DeploymentRead>("/api/v1/deployment", "Loading the deployment");
 }
 
 export async function getLiveKit(): Promise<LiveKitRead> {
   return get<LiveKitRead>("/api/v1/livekit", "Loading the LiveKit project");
-}
-
-export async function saveLiveKit(payload: LiveKitWrite): Promise<LiveKitRead> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}/api/v1/livekit`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  } catch {
-    throw new ApiError(0, "Could not reach the backend");
-  }
-  await guard(res, "Saving the LiveKit project");
-  return (await res.json()) as LiveKitRead;
 }

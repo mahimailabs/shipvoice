@@ -119,11 +119,12 @@ class Config(BaseSettings):
     AGENT_NAME: str = "assistant"
     BUSINESS_NAME: str | None = None
 
-    # The agent's persona, which is a file and not a row. The worker builds its
-    # Agent once per job and re-reads this file every time it does, so a write
-    # here is picked up by the next call with no restart. Both services must
-    # point at the SAME file: in compose that is one host directory mounted into
-    # both, read-write here and read-only there.
+    # The agent's persona, which is a file and not a row. The console reads it
+    # to show what the agent says and to name the file to edit; nothing here
+    # writes it. The worker builds its Agent once per job and re-reads the file
+    # every time, so an edit is picked up by the next call. Both services must
+    # point at the SAME file: in compose that is one host directory mounted
+    # into both.
     AGENT_PROMPT_FILE: Path = DEFAULT_AGENT_PROMPT_FILE
 
     # How this deployment says it runs a call. Declared, not measured: nothing
@@ -136,17 +137,10 @@ class Config(BaseSettings):
     def keep_the_pattern_legal(cls, value: str) -> str:
         return _resolve_agent_pattern(value)
 
-    # Shared with the voice worker. It guards the one endpoint that serves the
-    # LiveKit secret, so an empty value disables that endpoint rather than
-    # opening it.
+    # Shared with the voice worker. It guards the call-log ingestion endpoints,
+    # which are the only routes on this API that write anything, so an empty
+    # value disables them rather than opening them.
     AGENT_SERVICE_TOKEN: str = ""
-
-    # Whether the console may rewrite the LiveKit project over HTTP. This is an
-    # authorization decision and it used to be inferred from ENV, which meant
-    # flipping ENV's default for console ergonomics silently opened an
-    # unauthenticated write on every deployment. Off unless someone says
-    # otherwise; compose turns it on for local use.
-    CONSOLE_WRITES_ENABLED: bool = False
 
     # CORS: comma-separated origins. Empty means allow all ("*").
     CORS_ORIGINS_STR: str | None = ""

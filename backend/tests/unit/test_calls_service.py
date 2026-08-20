@@ -184,33 +184,6 @@ async def test_the_channel_and_status_filters_narrow_the_list(
     assert both.total == 1
 
 
-async def test_deleting_a_call_takes_its_transcript_with_it(
-    calls_service: CallsService,
-):
-    """Leaving the turns behind would orphan rows against a live foreign key."""
-    call = await calls_service.start_call(_start("room-1"))
-    await calls_service.append_turn(
-        TurnAppend(room_name="room-1", role="user", text="hello")
-    )
-
-    await calls_service.delete_call(call.id)
-
-    assert (await calls_service.list_calls()).total == 0
-    assert (await calls_service.summary()).total_turns == 0
-    with pytest.raises(HTTPException) as caught:
-        await calls_service.get_call_with_turns(call.id)
-    assert caught.value.status_code == 404
-
-
-async def test_deleting_a_call_that_is_already_gone_is_a_404(
-    calls_service: CallsService,
-):
-    with pytest.raises(HTTPException) as caught:
-        await calls_service.delete_call(4242)
-
-    assert caught.value.status_code == 404
-
-
 async def test_the_summary_counts_minutes_only_from_measured_calls(
     calls_service: CallsService,
 ):

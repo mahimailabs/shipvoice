@@ -8,16 +8,13 @@
 //
 // Nothing in here touches the network. That is the point: the Lite backend has
 // no authentication on any route, so a public deployment of it would let a
-// stranger rewrite the agent's prompt, repoint the LiveKit project and spend
-// someone else's provider credits. AGENTS.md says never expose it, so the
-// preview reads fixtures and refuses every write.
+// stranger spend someone else's provider credits. AGENTS.md says never expose
+// it, so the preview reads fixtures.
 //
-// Writes: refused, all three of them, with one sentence saying why. The
-// alternative was to mutate the fixtures in memory, which would have made the
-// console print "Written to agent/prompts/instructions.md" and "the worker
-// restarts itself within about fifteen seconds" over a page where neither is
-// true. A refusal the console already knows how to render beats a success it
-// would have to lie about.
+// The console has no writes left to refuse. One call still cannot be answered
+// here: a test call needs a live LiveKit room and a microphone at the other
+// end, so it refuses with one sentence saying why rather than hand back a token
+// that reaches nobody.
 
 import { ApiError } from "../api-error";
 import type {
@@ -31,7 +28,6 @@ import type {
   CallSummaryResponse,
   DeploymentRead,
   LiveKitRead,
-  LiveKitWrite,
   RoomTokenResponse,
 } from "../types";
 import { utf8Bytes } from "../lib/format";
@@ -66,25 +62,14 @@ export const API_BASE = "";
 const MAX_PAGE_SIZE = 200;
 
 /**
- * What every write answers with.
+ * What the one unanswerable call answers with.
  *
  * Status 0 is what api.ts raises when the request never reached anyone, and
- * that is exactly what happened: there is nothing to reach. The pages surface
+ * that is exactly what happened: there is nothing to reach. The page surfaces
  * this sentence verbatim, so it has to explain itself with no other context.
  */
 const NO_BACKEND =
   "This is a preview of the console running on sample data. There is no backend behind this page, so nothing here can be saved. Clone the repo to run the console against your own deployment.";
-
-/**
- * A call that cannot be answered without a backend.
- *
- * One factory rather than four bodies: the refusal is then stated once, and no
- * argument has to be named here only to be thrown away. The annotation on each
- * export below is what pins the signature to api.ts's.
- */
-function refused<A extends unknown[], R>(): (...args: A) => Promise<R> {
-  return () => Promise.reject(new ApiError(0, NO_BACKEND));
-}
 
 // ---------- reads ----------
 
@@ -138,11 +123,10 @@ export async function getCallRollup(days = 7): Promise<CallRollupResponse> {
 }
 
 /**
- * The prompt, read-only.
+ * The prompt file, as the backend reports it.
  *
- * editable false is what makes the preview honest without a single branch in
- * PromptDialog: the console already knows how to render a prompt it may not
- * write, and it prints read_only_reason as the explanation.
+ * Nothing in the preview has to be softened for this one: the route is a read
+ * everywhere, and what it describes is a file in the clone.
  */
 export async function getAgentPrompt(slug: string): Promise<AgentPromptRead> {
   if (slug !== DEMO_AGENT_SLUG) {
@@ -156,12 +140,7 @@ export async function getAgentPrompt(slug: string): Promise<AgentPromptRead> {
     path: DEMO_AGENT.prompt_path,
     content: DEMO_PROMPT,
     exists: true,
-    editable: false,
-    read_only_reason: NO_BACKEND,
     byte_size: utf8Bytes(DEMO_PROMPT),
-    // The backend's MAX_BYTES, so the byte counter in the footer reads against
-    // the same cap a real save would be measured against.
-    max_bytes: 100_000,
     warnings: [],
   };
 }
@@ -174,24 +153,16 @@ export async function getLiveKit(): Promise<LiveKitRead> {
   return DEMO_LIVEKIT;
 }
 
-// ---------- writes, and the one read that needs a live room ----------
+// ---------- the one call that needs a live room ----------
 
 /**
  * A test call needs a LiveKit project and a microphone, so it cannot be
  * simulated honestly and this refuses rather than hand back a fake token.
  * Nothing in the preview reaches it: the Start button on the test call screen
- * is disabled, and says why.
+ * is disabled, and says why. The annotation is what pins the signature to
+ * api.ts's.
  */
 export const getTestCallToken: (
   agentName: string,
-) => Promise<RoomTokenResponse> = refused();
-
-export const deleteCall: (id: number | string) => Promise<void> = refused();
-
-export const putAgentPrompt: (
-  slug: string,
-  content: string,
-) => Promise<AgentPromptRead> = refused();
-
-export const saveLiveKit: (payload: LiveKitWrite) => Promise<LiveKitRead> =
-  refused();
+) => Promise<RoomTokenResponse> = () =>
+  Promise.reject(new ApiError(0, NO_BACKEND));

@@ -1,8 +1,11 @@
-"""The routes the console calls, and the token the worker needs to write.
+"""The routes the console reads, and the token the worker needs to write.
 
 The service under these routes is the real one on sqlite (the calls_service
 fixture), so what these tests check is the wiring: paths, filters, status
 codes, and who is allowed to post.
+
+The console's half is entirely reads. The log is a record of what happened, and
+a console that can edit the record is a console whose numbers nobody can trust.
 """
 
 import pytest
@@ -21,7 +24,7 @@ WIRED = [
     "src.api.endpoints.internal_calls",
     # require_service_token is defined there, and @inject resolves its Provide
     # markers against the module it was defined in, not the one that reuses it.
-    "src.api.endpoints.internal_livekit",
+    "src.api.service_token",
 ]
 
 
@@ -232,12 +235,11 @@ async def test_a_call_that_is_not_in_the_log_is_a_404(calls_service):
     try:
         async with _client(app) as c:
             assert (await c.get("/api/v1/calls/4242")).status_code == 404
-            assert (await c.delete("/api/v1/calls/4242")).status_code == 404
     finally:
         container.unwire()
 
 
-async def test_a_call_can_be_read_in_full_and_then_deleted(calls_service):
+async def test_a_call_can_be_read_in_full(calls_service):
     app, container = _build_app(calls_service)
     try:
         async with _client(app) as c:
@@ -258,10 +260,6 @@ async def test_a_call_can_be_read_in_full_and_then_deleted(calls_service):
             body = detail.json()
             assert body["call"]["caller"] == "+15195550123"
             assert [t["text"] for t in body["transcript"]] == ["hello"]
-
-            deleted = await c.delete(f"/api/v1/calls/{call_id}")
-            assert deleted.status_code == 204
-            assert (await c.get(f"/api/v1/calls/{call_id}")).status_code == 404
     finally:
         container.unwire()
 

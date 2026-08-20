@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
-import { ApiError, deleteCall, getCall, listAgents } from "../api";
+import { useParams } from "react-router";
+import { ApiError, getCall, listAgents } from "../api";
 import { TopBar } from "../components/AppShell";
 import { Badge, Button, KV, Stat } from "../components/ds";
 import type {
@@ -16,6 +16,10 @@ import type {
 // transcript, and a compliance / stack / quality column. This repo records what
 // was said and nothing else, so every cell it cannot measure renders a dash on
 // the "na" class. A dash means unmeasured, never zero.
+//
+// The page reads the log and copies out of it. It does not edit it: the call
+// log is a record of what the deployment did, and a record a console can prune
+// is a weaker record.
 
 /** Elapsed time from the start of the call, mm:ss, as the reference shows it. */
 function elapsed(startedAt: string, at: string): string {
@@ -71,13 +75,9 @@ function toMarkdown(call: CallRead, transcript: TurnRead[]): string {
 
 export function CallDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [data, setData] = useState<CallDetailResponse | null>(null);
   const [agents, setAgents] = useState<AgentSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [confirming, setConfirming] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
 
   useEffect(() => {
@@ -123,27 +123,6 @@ export function CallDetail() {
     const t = window.setTimeout(() => setCopied("idle"), 2500);
     return () => window.clearTimeout(t);
   }, [copied]);
-
-  const onDelete = (): void => {
-    if (!id) return;
-    setDeleting(true);
-    setDeleteError(null);
-    deleteCall(id)
-      .then(() => navigate("/calls"))
-      .catch((e: unknown) => {
-        setDeleting(false);
-        setDeleteError(
-          e instanceof ApiError && e.isMissing
-            ? "This call is already gone from the log."
-            : // Nobody answered, so the error's own sentence is the only
-              // account of why. The line below is true either way, but it does
-              // not say what to do about it.
-              e instanceof ApiError && e.status === 0 && e.message
-              ? e.message
-              : "Could not delete this call. Nothing was removed.",
-        );
-      });
-  };
 
   if (error) {
     return (
@@ -218,64 +197,24 @@ export function CallDetail() {
         }
         meta={meta}
         actions={
-          confirming ? (
-            <>
-              <span className="mut" style={{ font: "var(--type-body-sm)" }}>
-                Delete this call and its transcript?
-              </span>
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={onDelete}
-                disabled={deleting}
-              >
-                {deleting ? "Deleting" : "Yes, delete"}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setConfirming(false)}
-                disabled={deleting}
-              >
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                size="sm"
-                disabled
-                title="Not built here: this starter has no eval runner, so there is nowhere for a scenario to go."
-              >
-                Save as eval scenario
-              </Button>
-              <Button size="sm" onClick={onCopy}>
-                {copied === "done"
-                  ? "Copied"
-                  : copied === "failed"
-                    ? "Clipboard blocked"
-                    : "Copy as .md"}
-              </Button>
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={() => setConfirming(true)}
-              >
-                Delete call
-              </Button>
-            </>
-          )
+          <>
+            <Button
+              size="sm"
+              disabled
+              title="Not built here: this starter has no eval runner, so there is nowhere for a scenario to go."
+            >
+              Save as eval scenario
+            </Button>
+            <Button size="sm" onClick={onCopy}>
+              {copied === "done"
+                ? "Copied"
+                : copied === "failed"
+                  ? "Clipboard blocked"
+                  : "Copy as .md"}
+            </Button>
+          </>
         }
       />
-
-      {deleteError && (
-        <div className="pad">
-          <div className="banner bad" role="alert">
-            <Badge tone="violation">error</Badge>
-            <span>{deleteError}</span>
-          </div>
-        </div>
-      )}
 
       {/* The money strip of the full product. Every value here is a dash because
           nothing in this repo meters a minute. The hints are real where a real

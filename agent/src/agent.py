@@ -110,7 +110,7 @@ async def entrypoint(ctx: JobContext) -> None:
 
 if __name__ == "__main__":
     # Running this file directly is the same entrypoint as main.py.
-    from src.core.livekit_sync import start_livekit_sync
+    from src.core.preflight import require_livekit_or_exit
 
-    start_livekit_sync()
+    require_livekit_or_exit()
     cli.run_app(server)

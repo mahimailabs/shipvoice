@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router";
 import {
   Background,
@@ -21,7 +15,6 @@ import { listAgents } from "../api";
 import type { AgentPattern, AgentSummary } from "../types";
 import { Ann, TopBar } from "../components/AppShell";
 import { Badge, Button, KV, Panel } from "../components/ds";
-import { PromptDialog } from "../components/PromptDialog";
 import { AGENT_NAME } from "../lib/token-source";
 
 // One agent, in full.
@@ -39,6 +32,54 @@ function Dash({ why }: { why?: string }) {
     <span className="na fnt" title={why}>
       -
     </span>
+  );
+}
+
+/**
+ * A file to open, shown as a path.
+ *
+ * This is where a platform puts a form. The console is a window: it says which
+ * file decides the behaviour and stops there, because the edit happens in the
+ * buyer's editor and the history is git. Copy is the only affordance, and it
+ * copies the path rather than the file.
+ */
+function FilePath({ path }: { path: string }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(t);
+  }, [copied]);
+
+  const copy = (): void => {
+    const clip = navigator.clipboard;
+    if (!clip) return;
+    clip
+      .writeText(path)
+      .then(() => setCopied(true))
+      .catch(() => undefined);
+  };
+
+  return (
+    <div
+      className="row"
+      style={{ gap: 8, flexWrap: "nowrap", justifyContent: "space-between" }}
+    >
+      <span
+        style={{
+          fontFamily: "var(--font-mono)",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+        title={path}
+      >
+        {path}
+      </span>
+      <Button size="sm" variant="ghost" onClick={copy} title={`Copy ${path}`}>
+        {copied ? "Copied" : "Copy path"}
+      </Button>
+    </div>
   );
 }
 
@@ -188,8 +229,6 @@ export function AgentDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [agents, setAgents] = useState<AgentSummary[] | null>(null);
   const [error, setError] = useState(false);
-  const [promptOpen, setPromptOpen] = useState(false);
-  const promptTrigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -501,36 +540,10 @@ export function AgentDetail() {
                 <tr>
                   <td className="fnt">Prompt</td>
                   {/* The one row on this table that is not a declaration in
-                      code. It is a file, so it is editable here, and the next
-                      call reads it. */}
+                      code. It is a file, so what belongs here is where the file
+                      is, not a box to type into. */}
                   <td className="pri">
-                    <div
-                      className="row"
-                      style={{
-                        gap: 8,
-                        flexWrap: "nowrap",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        title={agent.prompt_path}
-                      >
-                        {agent.prompt_path}
-                      </span>
-                      <button
-                        ref={promptTrigger}
-                        type="button"
-                        className="btn sm"
-                        onClick={() => setPromptOpen(true)}
-                      >
-                        Edit
-                      </button>
-                    </div>
+                    <FilePath path={agent.prompt_path} />
                   </td>
                 </tr>
               </tbody>
@@ -557,9 +570,12 @@ export function AgentDetail() {
               <Ann>
                 Declared in {agent.declared_in}, not read back from the running
                 process. Swapping a provider is a code change and a worker
-                restart, not a setting here. The prompt is the exception: it is
-                a file the worker re-reads for every call, so editing it here
-                takes effect on the next one.
+                restart, not a setting here. The prompt is a file: edit{" "}
+                <span style={{ fontFamily: "var(--font-mono)" }}>
+                  {agent.prompt_path}
+                </span>{" "}
+                in your editor and the worker reads it again when it builds the
+                agent for the next call.
               </Ann>
             </div>
           </div>
@@ -584,14 +600,6 @@ export function AgentDetail() {
         </div>
       </div>
 
-      {promptOpen && (
-        <PromptDialog
-          slug={agent.slug}
-          path={agent.prompt_path}
-          onClose={() => setPromptOpen(false)}
-          returnFocusTo={promptTrigger}
-        />
-      )}
     </>
   );
 }

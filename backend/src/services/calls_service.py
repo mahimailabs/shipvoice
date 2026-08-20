@@ -179,10 +179,6 @@ class CallsService:
             transcript=[TurnRead.model_validate(turn) for turn in turns],
         )
 
-    async def delete_call(self, call_id: int) -> None:
-        if not await self._repository.delete(call_id):
-            raise NotFoundError(detail=f"No call {call_id} in the log.")
-
     async def rollup(self, days: int = 7) -> CallRollupResponse:
         """Calls in the last `days`, split by agent and by channel.
 

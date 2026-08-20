@@ -10,13 +10,7 @@ import { NavLink } from "react-router";
  */
 const MARK = `${import.meta.env.BASE_URL}logo-boat.svg`;
 
-type Item = {
-  label: string;
-  to?: string;
-  count?: number | null;
-  inactive?: boolean;
-};
-type Group = { title: string; items: Item[] };
+type Item = { label: string; to: string; count?: number | null };
 
 export function Rail({
   counts = {},
@@ -25,32 +19,15 @@ export function Rail({
   counts?: Record<string, number | null>;
   deployment?: string;
 }) {
-  const groups: Group[] = [
-    {
-      title: "Watch",
-      items: [
-        { label: "Overview", to: "/" },
-        { label: "Calls", to: "/calls", count: counts.calls ?? null },
-      ],
-    },
-    {
-      // Designed in the reference console, with no backend in this starter.
-      // Shown so the shape of the product is visible, inert because there is
-      // nothing behind them.
-      title: "Run",
-      items: [
-        { label: "Campaigns", inactive: true },
-        { label: "Channels", inactive: true },
-        { label: "Customers", inactive: true },
-      ],
-    },
-    {
-      title: "Build",
-      items: [
-        { label: "Agents", to: "/agents", count: counts.agents ?? null },
-        { label: "Evaluations", inactive: true },
-      ],
-    },
+  // Every entry here is a page this repo serves. A boilerplate has no module
+  // behind a campaigns tab, so there is no campaigns tab, greyed out or
+  // otherwise. The section headings went with those entries: three links do
+  // not need filing under two titles, and a heading called Build would name
+  // something that happens in an editor rather than in here.
+  const items: Item[] = [
+    { label: "Overview", to: "/" },
+    { label: "Calls", to: "/calls", count: counts.calls ?? null },
+    { label: "Agents", to: "/agents", count: counts.agents ?? null },
   ];
 
   return (
@@ -61,39 +38,21 @@ export function Rail({
       </div>
 
       <div className="scroll">
-        {groups.map((group) => (
-          <div key={group.title}>
-            <div className="sec">{group.title}</div>
-            <nav aria-label={group.title}>
-              {group.items.map((item) =>
-                item.inactive ? (
-                  <span
-                    key={item.label}
-                    className="pro-item"
-                    aria-disabled="true"
-                    data-testid="nav-inactive"
-                  >
-                    {item.label}
-                  </span>
-                ) : (
-                  <NavLink
-                    key={item.label}
-                    to={item.to as string}
-                    end={item.to === "/"}
-                    className={({ isActive }) => (isActive ? "on" : "")}
-                  >
-                    {item.label}
-                    {item.count != null && (
-                      <span className="ct num">
-                        {item.count.toLocaleString()}
-                      </span>
-                    )}
-                  </NavLink>
-                ),
+        <nav aria-label="Console">
+          {items.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) => (isActive ? "on" : "")}
+            >
+              {item.label}
+              {item.count != null && (
+                <span className="ct num">{item.count.toLocaleString()}</span>
               )}
-            </nav>
-          </div>
-        ))}
+            </NavLink>
+          ))}
+        </nav>
       </div>
 
       <div className="foot">
