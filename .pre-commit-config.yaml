@@ -1,6 +1,9 @@
 default_language_version:
   python: python3
 
+# Vendored from pbakaus/impeccable. Updated with 'npx impeccable update', not edited here.
+exclude: ^\.claude/(skills/impeccable/|agents/impeccable-)
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
