@@ -1,0 +1,3 @@
+# The Windows launcher of the vendored impeccable skill parses labels, which
+# needs CRLF line endings on checkout.
+.claude/skills/impeccable/scripts/impeccable.cmd text eol=crlf
